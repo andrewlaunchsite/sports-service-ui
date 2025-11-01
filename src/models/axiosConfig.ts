@@ -14,7 +14,6 @@ axiosInstance.interceptors.response.use(
     console.error("Axios response error:", error);
     if (error.response) {
       const { status, data, statusText } = error.response;
-      // if data is an object, spread it; otherwise wrap it
       const payload =
         typeof data === "object"
           ? { ...data, status }

@@ -5,7 +5,6 @@ import {
 } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 
-// Create listener - types will be inferred from store
 export const toastListener = createListenerMiddleware();
 
 toastListener.startListening({

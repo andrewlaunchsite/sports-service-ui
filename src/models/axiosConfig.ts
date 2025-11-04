@@ -3,30 +3,53 @@ import { ROOT_URL } from "../config/constants";
 
 const axiosInstance = axios.create({
   baseURL: ROOT_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
+
+// Helpers
+const isPlainObject = (v: any) =>
+  v !== null && typeof v === "object" && v.constructor === Object;
+
+const pickMessage = (data: any, statusText?: string) => {
+  if (!data) return statusText || "Request failed";
+  if (typeof data === "string") return data;
+  return (
+    data.message || data.detail || data.error || statusText || "Request failed"
+  );
+};
 
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("Axios response error:", error);
-    if (error.response) {
-      const { status, data, statusText } = error.response;
-      const payload =
-        typeof data === "object"
-          ? { ...data, status }
-          : { message: data || statusText, status };
+    // Normalize into a SERIALIZABLE object the Redux store can handle
+    if (error?.response) {
+      const { status, statusText, data } = error.response;
+      const message = pickMessage(data, statusText);
+      const payload: any = {
+        __isAxiosError: true,
+        status,
+        message,
+      };
+      // Keep server payload only if it's a plain JSON object
+      if (isPlainObject(data)) payload.data = data;
 
+      // Reject with a plain object (NOT an Error instance)
       return Promise.reject(payload);
-    } else if (error.request) {
-      console.error("Axios request error:", error.request);
-      return Promise.reject({ message: "No response received", status: null });
-    } else {
-      console.error("Axios general error:", error.message);
-      return Promise.reject({ message: error.message, status: null });
     }
+
+    if (error?.request) {
+      return Promise.reject({
+        __isAxiosError: true,
+        status: null,
+        message: "No response received",
+      });
+    }
+
+    return Promise.reject({
+      __isAxiosError: true,
+      status: null,
+      message: error?.message || "Unknown error",
+    });
   }
 );
 

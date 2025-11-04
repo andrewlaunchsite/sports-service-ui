@@ -1,6 +1,7 @@
 import {
   createListenerMiddleware,
   isRejectedWithValue,
+  isRejected,
   isFulfilled,
 } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
@@ -9,20 +10,20 @@ export const toastListener = createListenerMiddleware();
 
 toastListener.startListening({
   predicate: (action: any) => {
-    const isRejected = isRejectedWithValue(action);
+    const isRejectedAction = isRejected(action);
     const isFulfilledWithToast =
       isFulfilled(action) && Boolean(action.meta?.toast);
-    return Boolean(isRejected || isFulfilledWithToast);
+    return Boolean(isRejectedAction || isFulfilledWithToast);
   },
   effect: async (action: any) => {
-    if (isRejectedWithValue(action)) {
-      const { payload, error } = action;
+    if (isRejected(action)) {
       const msg =
-        payload?.message ??
-        payload?.error ??
-        error?.message ??
+        action.payload?.message ??
+        action.payload?.error ??
+        action.error?.message ??
         "Something went wrong";
       toast.error(msg);
+      return;
     }
 
     if (isFulfilled(action) && action.meta?.toast) {

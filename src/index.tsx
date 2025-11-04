@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { store } from "./models/store";
 import App from "./App";
+import { ApiAuthProvider } from "./auth/ApiAuthProvider";
 
 const PUBLISHABLE_KEY = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
 
@@ -19,9 +20,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
-      <Provider store={store}>
-        <App />
-      </Provider>
+      <ApiAuthProvider>
+        <Provider store={store}>
+          <App />
+        </Provider>
+      </ApiAuthProvider>
     </ClerkProvider>
   </React.StrictMode>
 );

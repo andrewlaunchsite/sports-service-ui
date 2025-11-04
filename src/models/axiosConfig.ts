@@ -1,9 +1,28 @@
 import axios from "axios";
 import { ROOT_URL } from "../config/constants";
+import { fetchToken } from "../auth/tokenBridge";
 
 const axiosInstance = axios.create({
   baseURL: ROOT_URL,
   headers: { "Content-Type": "application/json" },
+});
+
+axiosInstance.interceptors.request.use(async (config) => {
+  const reqURL = new URL(config.url ?? "", config.baseURL ?? ROOT_URL);
+  const isSameOrigin =
+    typeof window !== "undefined" && reqURL.origin === window.location.origin;
+
+  // Only attach Authorization for cross-origin requests
+  if (!isSameOrigin) {
+    const token = await fetchToken().catch(() => null);
+    console.log("token", token);
+    if (token) {
+      config.headers = config.headers ?? {};
+      (config.headers as any).Authorization = `Bearer ${token}`;
+    }
+  }
+
+  return config;
 });
 
 // Helpers

@@ -1,18 +1,45 @@
 import React from "react";
+import { useUser } from "@clerk/clerk-react";
 import { NAVBAR_HEIGHT } from "../config/constants";
 
 const Home: React.FC = () => {
+  const { user } = useUser();
+
   return (
     <div
       style={{
         display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+        minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
         width: "100%",
+        padding: "2rem",
+        gap: "2rem",
       }}
     >
-      <div>hi there!</div>
+      <h1 style={{ fontSize: "2.5rem" }}>Welcome!</h1>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "800px",
+          backgroundColor: "#f8f9fa",
+          padding: "1.5rem",
+          borderRadius: "8px",
+          overflow: "auto",
+        }}
+      >
+        <pre
+          style={{
+            margin: 0,
+            fontSize: "0.875rem",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+          }}
+        >
+          {JSON.stringify(user, null, 2)}
+        </pre>
+      </div>
     </div>
   );
 };

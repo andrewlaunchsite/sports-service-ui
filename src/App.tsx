@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
+import { AuthenticateWithRedirectCallback, useAuth } from "@clerk/clerk-react";
 import { SignUp } from "@clerk/clerk-react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,7 +13,7 @@ import Home from "./screens/Home";
 import { ROUTES } from "./config/constants";
 
 function App() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
 
   return (
     <Router>
@@ -25,7 +25,7 @@ function App() {
           flexDirection: "column",
         }}
       >
-        {isSignedIn && <Navbar />}
+        {isLoaded && isSignedIn && <Navbar />}
 
         <Routes>
           <Route
@@ -35,6 +35,10 @@ function App() {
                 <Landing />
               </PublicRoute>
             }
+          />
+          <Route
+            path="/sso-callback"
+            element={<AuthenticateWithRedirectCallback />}
           />
           <Route
             path={`${ROUTES.SIGN_UP}/*`}
@@ -48,6 +52,7 @@ function App() {
               </PublicRoute>
             }
           />
+
           <Route
             path={ROUTES.HOME}
             element={

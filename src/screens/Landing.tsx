@@ -20,16 +20,7 @@ const Landing: React.FC = () => {
           maxWidth: "400px",
         }}
       >
-        <SignIn
-          routing="path"
-          path={ROUTES.LANDING}
-          signUpUrl={ROUTES.SIGN_UP}
-          appearance={{
-            elements: {
-              rootBox: "mx-auto",
-            },
-          }}
-        />
+        <SignIn />
       </div>
     </div>
   );

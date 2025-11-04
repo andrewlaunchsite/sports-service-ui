@@ -12,7 +12,8 @@ toastListener.startListening({
   predicate: (action: any) => {
     const isRejectedAction = isRejected(action);
     const isFulfilledWithToast =
-      isFulfilled(action) && Boolean(action.meta?.toast);
+      isFulfilled(action) &&
+      Boolean(action.meta?.meta?.toast || action.meta?.toast);
     return Boolean(isRejectedAction || isFulfilledWithToast);
   },
   effect: async (action: any) => {
@@ -26,12 +27,16 @@ toastListener.startListening({
       return;
     }
 
-    if (isFulfilled(action) && action.meta?.toast) {
+    if (
+      isFulfilled(action) &&
+      (action.meta?.meta?.toast || action.meta?.toast)
+    ) {
       const { meta } = action;
+      const toastMessage = meta?.meta?.toast || meta?.toast;
       const message =
-        typeof meta.toast === "string"
-          ? meta.toast
-          : String(meta.toast.message ?? meta.toast);
+        typeof toastMessage === "string"
+          ? toastMessage
+          : String(toastMessage?.message ?? toastMessage);
       toast.success(message);
     }
   },

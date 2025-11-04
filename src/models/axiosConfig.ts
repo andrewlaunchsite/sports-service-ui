@@ -12,10 +12,8 @@ axiosInstance.interceptors.request.use(async (config) => {
   const isSameOrigin =
     typeof window !== "undefined" && reqURL.origin === window.location.origin;
 
-  // Only attach Authorization for cross-origin requests
   if (!isSameOrigin) {
     const token = await fetchToken().catch(() => null);
-    console.log("token", token);
     if (token) {
       config.headers = config.headers ?? {};
       (config.headers as any).Authorization = `Bearer ${token}`;

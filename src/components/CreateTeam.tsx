@@ -1,31 +1,30 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createLeague, getLeagues } from "../models/leagueSlice";
+import { createTeam, getTeams } from "../models/teamSlice";
 import { AppDispatch, RootState } from "../models/store";
+
+interface CreateTeamProps {
+  leagueId: number;
+}
 
 interface FormState {
   name: string;
 }
 
-const CreateLeague: React.FC = () => {
+const CreateTeam: React.FC<CreateTeamProps> = ({ leagueId }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { loadingState, pagination } = useSelector(
-    (state: RootState) => state.league
+  const loadingState = useSelector(
+    (state: RootState) => state.team.loadingState
   );
   const [formState, setFormState] = useState<FormState>({ name: "" });
   const [showForm, setShowForm] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(createLeague(formState) as any);
+    dispatch(createTeam({ ...formState, league_id: leagueId }) as any);
     setFormState({ name: "" });
     setShowForm(false);
-    dispatch(
-      getLeagues({
-        offset: pagination.offset,
-        limit: pagination.limit,
-      }) as any
-    );
+    dispatch(getTeams({ league_id: leagueId }) as any);
   };
 
   const handleChange =
@@ -47,7 +46,7 @@ const CreateLeague: React.FC = () => {
           fontSize: "1rem",
         }}
       >
-        Create League
+        Create Team
       </button>
     );
   }
@@ -62,7 +61,7 @@ const CreateLeague: React.FC = () => {
         maxWidth: "500px",
       }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: "1rem" }}>Create League</h3>
+      <h3 style={{ marginTop: 0, marginBottom: "1rem" }}>Create Team</h3>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "1rem" }}>
           <label
@@ -73,7 +72,7 @@ const CreateLeague: React.FC = () => {
               fontWeight: "500",
             }}
           >
-            League Name
+            Team Name
           </label>
           <input
             id="name"
@@ -105,7 +104,7 @@ const CreateLeague: React.FC = () => {
               opacity: loadingState.loadingCreate ? 0.6 : 1,
             }}
           >
-            {loadingState.loadingCreate ? "Creating..." : "Create League"}
+            {loadingState.loadingCreate ? "Creating..." : "Create Team"}
           </button>
           <button
             type="button"
@@ -131,4 +130,4 @@ const CreateLeague: React.FC = () => {
   );
 };
 
-export default CreateLeague;
+export default CreateTeam;

@@ -20,20 +20,33 @@ export interface TeamsState {
   error: string | null;
 }
 
+export interface TeamCreate {
+  name: string;
+  league_id: number;
+}
+
 export const getTeam = createAsyncThunk("teams/get", async (teamId: number) => {
-  const { data } = await axiosInstance.get(`/teams/${teamId}`);
+  const { data } = await axiosInstance.get(`/api/v1/teams/${teamId}`);
   return data;
 });
 
-export const getTeams = createAsyncThunk("teams/getAll", async () => {
-  const { data } = await axiosInstance.get(`/teams`);
-  return data;
-});
+export const getTeams = createAsyncThunk(
+  "teams/getAll",
+  async (params?: { league_id?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.league_id !== undefined)
+      queryParams.append("league_id", params.league_id.toString());
+    const queryString = queryParams.toString();
+    const url = `/api/v1/teams${queryString ? `?${queryString}` : ""}`;
+    const { data } = await axiosInstance.get(url);
+    return data;
+  }
+);
 
 export const createTeam = createAsyncThunk(
   "teams/create",
-  async (teamData: Partial<Team>, { fulfillWithValue }) => {
-    const { data } = await axiosInstance.post(`/teams`, teamData);
+  async (teamData: TeamCreate, { fulfillWithValue }) => {
+    const { data } = await axiosInstance.post(`/api/v1/teams`, teamData);
     return (fulfillWithValue as any)(data, {
       meta: { toast: "Team created successfully" },
     });
@@ -45,7 +58,7 @@ export const updateTeam = createAsyncThunk(
   async (teamData: { id: number; data: Partial<Team> }) => {
     const { id, data } = teamData;
     const { data: responseData } = await axiosInstance.put(
-      `/teams/${id}`,
+      `/api/v1/teams/${id}`,
       data
     );
     return responseData;
@@ -55,7 +68,7 @@ export const updateTeam = createAsyncThunk(
 export const deleteTeam = createAsyncThunk(
   "teams/delete",
   async (teamId: number) => {
-    const { data } = await axiosInstance.delete(`/teams/${teamId}`);
+    const { data } = await axiosInstance.delete(`/api/v1/teams/${teamId}`);
     return data;
   }
 );

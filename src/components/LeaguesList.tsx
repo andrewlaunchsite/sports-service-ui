@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { getLeagues } from "../models/leagueSlice";
 import { AppDispatch, RootState } from "../models/store";
 
 const LeaguesList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { leagues, pagination, loadingState } = useSelector(
     (state: RootState) => state.league
   );
@@ -55,12 +57,21 @@ const LeaguesList: React.FC = () => {
         {leagues.map((league) => (
           <div
             key={league.id}
+            onClick={() => navigate(`/leagues?id=${league.id}`)}
             style={{
               padding: "1rem",
               marginBottom: "0.5rem",
               backgroundColor: "white",
               borderRadius: "4px",
               border: "1px solid #dee2e6",
+              cursor: "pointer",
+              transition: "background-color 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#f8f9fa";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "white";
             }}
           >
             <div style={{ fontWeight: "500", fontSize: "1.1rem" }}>

@@ -10,6 +10,7 @@ import Protected from "./components/Protected";
 import PublicRoute from "./components/PublicRoute";
 import Landing from "./screens/Landing";
 import Home from "./screens/Home";
+import League from "./screens/League";
 import { ROUTES } from "./config/constants";
 
 function App() {
@@ -58,6 +59,14 @@ function App() {
             element={
               <Protected>
                 <Home />
+              </Protected>
+            }
+          />
+          <Route
+            path={ROUTES.LEAGUES}
+            element={
+              <Protected>
+                <League />
               </Protected>
             }
           />

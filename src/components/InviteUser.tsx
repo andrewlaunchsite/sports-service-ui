@@ -19,15 +19,11 @@ const InviteUser: React.FC = () => {
   });
   const [showForm, setShowForm] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await dispatch(createInvitation(formState) as any).unwrap();
-      setFormState({ email: "", role: "org:player" });
-      setShowForm(false);
-    } catch (error) {
-      console.error("Failed to send invitation:", error);
-    }
+    dispatch(createInvitation(formState) as any);
+    setFormState({ email: "", role: "org:player" });
+    setShowForm(false);
   };
 
   const handleChange =
@@ -119,6 +115,7 @@ const InviteUser: React.FC = () => {
           >
             <option value="org:league_admin">League Admin</option>
             <option value="org:team_admin">Team Admin</option>
+            <option value="org:team_manager">Team Manager</option>
             <option value="org:player">Player</option>
           </select>
         </div>

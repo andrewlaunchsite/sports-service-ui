@@ -3,6 +3,7 @@ import type { UserResource } from "@clerk/types";
 export type UserRole =
   | "org:league_admin"
   | "org:team_admin"
+  | "org:team_manager"
   | "org:player"
   | null;
 
@@ -28,6 +29,12 @@ export const isLeagueAdmin = (
 
 export const isTeamAdmin = (user: UserResource | null | undefined): boolean => {
   return getUserRole(user) === "org:team_admin";
+};
+
+export const isTeamManager = (
+  user: UserResource | null | undefined
+): boolean => {
+  return getUserRole(user) === "org:team_manager";
 };
 
 export const isPlayer = (user: UserResource | null | undefined): boolean => {

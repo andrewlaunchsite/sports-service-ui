@@ -11,9 +11,11 @@ export interface Player {
 export interface PlayersState {
   players: Player[];
   player: Player | null;
+  myPlayer: Player | null;
   loadingState: {
     loadingPlayers: boolean;
     loadingPlayer: boolean;
+    loadingMyPlayer: boolean;
     loadingByTeam: boolean;
     loadingCreate: boolean;
     loadingUpdate: boolean;
@@ -25,20 +27,25 @@ export interface PlayersState {
 export const getPlayer = createAsyncThunk(
   "players/get",
   async (playerId: number) => {
-    const { data } = await axiosInstance.get(`/players/${playerId}`);
+    const { data } = await axiosInstance.get(`/api/v1/players/${playerId}`);
     return data;
   }
 );
 
 export const getPlayers = createAsyncThunk("players/getAll", async () => {
-  const { data } = await axiosInstance.get(`/players`);
+  const { data } = await axiosInstance.get(`/api/v1/players`);
+  return data;
+});
+
+export const getMyPlayer = createAsyncThunk("players/getMe", async () => {
+  const { data } = await axiosInstance.get(`/api/v1/players/me`);
   return data;
 });
 
 export const getPlayersByTeam = createAsyncThunk(
   "players/getByTeam",
   async (teamId: number) => {
-    const { data } = await axiosInstance.get(`/teams/${teamId}/players`);
+    const { data } = await axiosInstance.get(`/api/v1/teams/${teamId}/players`);
     return data;
   }
 );
@@ -46,7 +53,7 @@ export const getPlayersByTeam = createAsyncThunk(
 export const createPlayer = createAsyncThunk(
   "players/create",
   async (playerData: Partial<Player>, { fulfillWithValue }) => {
-    const { data } = await axiosInstance.post(`/players`, playerData);
+    const { data } = await axiosInstance.post(`/api/v1/players`, playerData);
     return (fulfillWithValue as any)(data, {
       meta: { toast: "Player created successfully" },
     });
@@ -58,7 +65,7 @@ export const updatePlayer = createAsyncThunk(
   async (playerData: { id: number; data: Partial<Player> }) => {
     const { id, data } = playerData;
     const { data: responseData } = await axiosInstance.put(
-      `/players/${id}`,
+      `/api/v1/players/${id}`,
       data
     );
     return responseData;
@@ -68,7 +75,7 @@ export const updatePlayer = createAsyncThunk(
 export const deletePlayer = createAsyncThunk(
   "players/delete",
   async (playerId: number) => {
-    const { data } = await axiosInstance.delete(`/players/${playerId}`);
+    const { data } = await axiosInstance.delete(`/api/v1/players/${playerId}`);
     return data;
   }
 );
@@ -78,9 +85,11 @@ const playerSlice = createSlice({
   initialState: {
     players: [],
     player: null,
+    myPlayer: null,
     loadingState: {
       loadingPlayers: false,
       loadingPlayer: false,
+      loadingMyPlayer: false,
       loadingByTeam: false,
       loadingCreate: false,
       loadingUpdate: false,
@@ -98,6 +107,7 @@ const playerSlice = createSlice({
       actionType: string
     ): keyof PlayersState["loadingState"] | null => {
       if (actionType.includes("/getByTeam")) return "loadingByTeam";
+      if (actionType.includes("/getMe")) return "loadingMyPlayer";
       if (actionType.includes("/getAll")) return "loadingPlayers";
       if (actionType.includes("/get")) return "loadingPlayer";
       if (actionType.includes("/create")) return "loadingCreate";
@@ -111,6 +121,10 @@ const playerSlice = createSlice({
         state.player = payload;
         state.loadingState.loadingPlayer = false;
       })
+      .addCase(getMyPlayer.fulfilled, (state, { payload }) => {
+        state.myPlayer = payload;
+        state.loadingState.loadingMyPlayer = false;
+      })
       .addCase(getPlayers.fulfilled, (state, { payload }) => {
         state.players = payload;
         state.loadingState.loadingPlayers = false;
@@ -123,6 +137,7 @@ const playerSlice = createSlice({
         state.players = [...state.players, payload];
         state.loadingState.loadingCreate = false;
         state.player = payload;
+        state.myPlayer = payload;
       })
       .addCase(updatePlayer.fulfilled, (state, { payload }) => {
         state.player = payload;

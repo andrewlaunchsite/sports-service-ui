@@ -1,34 +1,37 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { getTeams } from "../models/teamSlice";
+import { getPlayersByTeam } from "../models/playerSlice";
 import { AppDispatch, RootState } from "../models/store";
+import Loading from "./Loading";
 
-interface TeamsListProps {
-  leagueId: number;
+interface PlayersListProps {
+  teamId: number;
 }
 
-const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
+const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
-  const { teams, loadingState } = useSelector((state: RootState) => state.team);
+  const { players, loadingState } = useSelector(
+    (state: RootState) => state.player
+  );
 
   useEffect(() => {
-    dispatch(getTeams({ league_id: leagueId }) as any);
-  }, [dispatch, leagueId]);
+    if (teamId) {
+      dispatch(getPlayersByTeam(teamId) as any);
+    }
+  }, [teamId, dispatch]);
 
-  if (loadingState.loadingTeams && teams.length === 0) {
+  if (loadingState.loadingByTeam && players.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "2rem" }}>
-        <div>Loading teams...</div>
+        <Loading />
       </div>
     );
   }
 
-  if (teams.length === 0) {
+  if (players.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "2rem" }}>
-        <div>No teams found.</div>
+        <div>No players found for this team.</div>
       </div>
     );
   }
@@ -43,32 +46,23 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
         borderRadius: "8px",
       }}
     >
-      <h2 style={{ marginTop: 0, marginBottom: "1rem" }}>Teams</h2>
+      <h2 style={{ marginTop: 0, marginBottom: "1rem" }}>Players</h2>
       <div style={{ marginBottom: "1rem" }}>
-        {teams.map((team) => (
+        {players.map((player) => (
           <div
-            key={team.id}
-            onClick={() => navigate(`/teams?id=${team.id}`)}
+            key={player.id}
             style={{
               padding: "1rem",
               marginBottom: "0.5rem",
               backgroundColor: "white",
               borderRadius: "4px",
               border: "1px solid #dee2e6",
-              cursor: "pointer",
-              transition: "background-color 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#f8f9fa";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "white";
             }}
           >
             <div style={{ fontWeight: "500", fontSize: "1.1rem" }}>
-              {team.name}
+              {player.name}
             </div>
-            {team.id && (
+            {player.id && (
               <div
                 style={{
                   fontSize: "0.875rem",
@@ -76,7 +70,7 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
                   marginTop: "0.25rem",
                 }}
               >
-                ID: {team.id}
+                ID: {player.id}
               </div>
             )}
           </div>
@@ -86,4 +80,4 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
   );
 };
 
-export default TeamsList;
+export default PlayersList;

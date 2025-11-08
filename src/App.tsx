@@ -11,6 +11,7 @@ import PublicRoute from "./components/PublicRoute";
 import Landing from "./screens/Landing";
 import Home from "./screens/Home";
 import League from "./screens/League";
+import Team from "./screens/Team";
 import { ROUTES } from "./config/constants";
 
 function App() {
@@ -67,6 +68,14 @@ function App() {
             element={
               <Protected>
                 <League />
+              </Protected>
+            }
+          />
+          <Route
+            path={ROUTES.TEAMS}
+            element={
+              <Protected>
+                <Team />
               </Protected>
             }
           />

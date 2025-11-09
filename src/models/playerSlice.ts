@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "./axiosConfig";
+import { PaginatedResponse } from "./types";
 
 export interface Player {
   id: number;
@@ -12,6 +13,12 @@ export interface PlayersState {
   players: Player[];
   player: Player | null;
   myPlayer: Player | null;
+  pagination: {
+    totalCount: number;
+    count: number;
+    offset: number;
+    limit: number;
+  };
   loadingState: {
     loadingPlayers: boolean;
     loadingPlayer: boolean;
@@ -32,20 +39,48 @@ export const getPlayer = createAsyncThunk(
   }
 );
 
-export const getPlayers = createAsyncThunk("players/getAll", async () => {
-  const { data } = await axiosInstance.get(`/api/v1/players`);
-  return data;
-});
+export const getPlayers = createAsyncThunk(
+  "players/getAll",
+  async (params?: { offset?: number; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.offset !== undefined)
+      queryParams.append("offset", params.offset.toString());
+    if (params?.limit !== undefined)
+      queryParams.append("limit", params.limit.toString());
+    const queryString = queryParams.toString();
+    const url = `/api/v1/players${queryString ? `?${queryString}` : ""}`;
+    const { data } = await axiosInstance.get(url);
+    return data;
+  }
+);
 
-export const getMyPlayer = createAsyncThunk("players/getMe", async () => {
-  const { data } = await axiosInstance.get(`/api/v1/players/me`);
-  return data;
-});
+export const getMyPlayer = createAsyncThunk(
+  "players/getMe",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosInstance.get(`/api/v1/players/me`);
+      return data;
+    } catch (error: any) {
+      if (error?.status === 404) {
+        return rejectWithValue({ ...error, silentError: true });
+      }
+      return rejectWithValue(error);
+    }
+  }
+);
 
 export const getPlayersByTeam = createAsyncThunk(
   "players/getByTeam",
-  async (teamId: number) => {
-    const { data } = await axiosInstance.get(`/api/v1/teams/${teamId}/players`);
+  async (params: { teamId: number; offset?: number; limit?: number }) => {
+    const { teamId, offset, limit } = params;
+    const queryParams = new URLSearchParams();
+    if (offset !== undefined) queryParams.append("offset", offset.toString());
+    if (limit !== undefined) queryParams.append("limit", limit.toString());
+    const queryString = queryParams.toString();
+    const url = `/api/v1/teams/${teamId}/players${
+      queryString ? `?${queryString}` : ""
+    }`;
+    const { data } = await axiosInstance.get(url);
     return data;
   }
 );
@@ -86,6 +121,12 @@ const playerSlice = createSlice({
     players: [],
     player: null,
     myPlayer: null,
+    pagination: {
+      totalCount: 0,
+      count: 0,
+      offset: 0,
+      limit: 100,
+    },
     loadingState: {
       loadingPlayers: false,
       loadingPlayer: false,
@@ -125,12 +166,41 @@ const playerSlice = createSlice({
         state.myPlayer = payload;
         state.loadingState.loadingMyPlayer = false;
       })
+      .addCase(getMyPlayer.rejected, (state, action) => {
+        state.myPlayer = null;
+        state.loadingState.loadingMyPlayer = false;
+        const actionAny = action as any;
+        if (!actionAny.payload?.silentError) {
+          const errorMessage = actionAny.error?.message;
+          state.error = errorMessage || "An error occurred";
+        }
+      })
       .addCase(getPlayers.fulfilled, (state, { payload }) => {
-        state.players = payload;
+        if (payload.content && Array.isArray(payload.content)) {
+          state.players = payload.content;
+          state.pagination = {
+            totalCount: payload.totalCount ?? 0,
+            count: payload.count ?? 0,
+            offset: payload.offset ?? 0,
+            limit: payload.limit ?? 100,
+          };
+        } else {
+          state.players = Array.isArray(payload) ? payload : [];
+        }
         state.loadingState.loadingPlayers = false;
       })
       .addCase(getPlayersByTeam.fulfilled, (state, { payload }) => {
-        state.players = payload;
+        if (payload.content && Array.isArray(payload.content)) {
+          state.players = payload.content;
+          state.pagination = {
+            totalCount: payload.totalCount ?? 0,
+            count: payload.count ?? 0,
+            offset: payload.offset ?? 0,
+            limit: payload.limit ?? 100,
+          };
+        } else {
+          state.players = Array.isArray(payload) ? payload : [];
+        }
         state.loadingState.loadingByTeam = false;
       })
       .addCase(createPlayer.fulfilled, (state, { payload }) => {

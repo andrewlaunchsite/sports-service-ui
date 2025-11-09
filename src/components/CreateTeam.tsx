@@ -24,7 +24,7 @@ const CreateTeam: React.FC<CreateTeamProps> = ({ leagueId }) => {
     dispatch(createTeam({ ...formState, league_id: leagueId }) as any);
     setFormState({ name: "" });
     setShowForm(false);
-    dispatch(getTeams({ league_id: leagueId }) as any);
+    dispatch(getTeams({ offset: 0, limit: 100 }) as any);
   };
 
   const handleChange =

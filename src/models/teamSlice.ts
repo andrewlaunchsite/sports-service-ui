@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "./axiosConfig";
+import { PaginatedResponse } from "./types";
 
 export interface Team {
   id: number;
@@ -10,6 +11,12 @@ export interface Team {
 export interface TeamsState {
   teams: Team[];
   team: Team | null;
+  pagination: {
+    totalCount: number;
+    count: number;
+    offset: number;
+    limit: number;
+  };
   loadingState: {
     loadingTeams: boolean;
     loadingTeam: boolean;
@@ -32,10 +39,12 @@ export const getTeam = createAsyncThunk("teams/get", async (teamId: number) => {
 
 export const getTeams = createAsyncThunk(
   "teams/getAll",
-  async (params?: { league_id?: number }) => {
+  async (params?: { offset?: number; limit?: number }) => {
     const queryParams = new URLSearchParams();
-    if (params?.league_id !== undefined)
-      queryParams.append("league_id", params.league_id.toString());
+    if (params?.offset !== undefined)
+      queryParams.append("offset", params.offset.toString());
+    if (params?.limit !== undefined)
+      queryParams.append("limit", params.limit.toString());
     const queryString = queryParams.toString();
     const url = `/api/v1/teams${queryString ? `?${queryString}` : ""}`;
     const { data } = await axiosInstance.get(url);
@@ -78,6 +87,12 @@ const teamSlice = createSlice({
   initialState: {
     teams: [],
     team: null,
+    pagination: {
+      totalCount: 0,
+      count: 0,
+      offset: 0,
+      limit: 100,
+    },
     loadingState: {
       loadingTeams: false,
       loadingTeam: false,
@@ -111,7 +126,17 @@ const teamSlice = createSlice({
         state.loadingState.loadingTeam = false;
       })
       .addCase(getTeams.fulfilled, (state, { payload }) => {
-        state.teams = payload;
+        if (payload.content && Array.isArray(payload.content)) {
+          state.teams = payload.content;
+          state.pagination = {
+            totalCount: payload.totalCount ?? 0,
+            count: payload.count ?? 0,
+            offset: payload.offset ?? 0,
+            limit: payload.limit ?? 100,
+          };
+        } else {
+          state.teams = Array.isArray(payload) ? payload : [];
+        }
         state.loadingState.loadingTeams = false;
       })
       .addCase(createTeam.fulfilled, (state, { payload }) => {

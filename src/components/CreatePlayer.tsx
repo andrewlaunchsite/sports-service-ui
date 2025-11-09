@@ -12,7 +12,10 @@ interface CreatePlayerProps {
 }
 
 interface FormState {
-  name: string;
+  teamId: number;
+  nickname: string;
+  heightInches: string;
+  weightLbs: string;
 }
 
 const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
@@ -20,16 +23,32 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
   const loadingState = useSelector(
     (state: RootState) => state.player.loadingState
   );
-  const [formState, setFormState] = useState<FormState>({ name: "" });
+  const [formState, setFormState] = useState<FormState>({
+    teamId: teamId,
+    nickname: "",
+    heightInches: "",
+    weightLbs: "",
+  });
   const [showForm, setShowForm] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(createPlayer({ ...formState, teamId }) as any);
-    setFormState({ name: "" });
+    const payload: any = { teamId: formState.teamId };
+    if (formState.nickname) payload.nickname = formState.nickname;
+    if (formState.heightInches)
+      payload.heightInches = parseInt(formState.heightInches, 10);
+    if (formState.weightLbs)
+      payload.weightLbs = parseInt(formState.weightLbs, 10);
+    dispatch(createPlayer(payload) as any);
+    setFormState({
+      teamId: teamId,
+      nickname: "",
+      heightInches: "",
+      weightLbs: "",
+    });
     setShowForm(false);
     dispatch(getMyPlayer() as any);
-    dispatch(getPlayersByTeam(teamId) as any);
+    dispatch(getPlayersByTeam({ teamId, offset: 0, limit: 100 }) as any);
   };
 
   const handleChange =
@@ -72,21 +91,75 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "1rem" }}>
           <label
-            htmlFor="name"
+            htmlFor="nickname"
             style={{
               display: "block",
               marginBottom: "0.5rem",
               fontWeight: "500",
             }}
           >
-            Player Name
+            Nickname
           </label>
           <input
-            id="name"
+            id="nickname"
             type="text"
-            value={formState.name}
-            onChange={handleChange("name")}
-            required
+            value={formState.nickname}
+            onChange={handleChange("nickname")}
+            maxLength={50}
+            style={{
+              width: "100%",
+              padding: "0.5rem",
+              border: "1px solid #dee2e6",
+              borderRadius: "4px",
+              fontSize: "1rem",
+            }}
+          />
+        </div>
+        <div style={{ marginBottom: "1rem" }}>
+          <label
+            htmlFor="heightInches"
+            style={{
+              display: "block",
+              marginBottom: "0.5rem",
+              fontWeight: "500",
+            }}
+          >
+            Height (inches, 48-108)
+          </label>
+          <input
+            id="heightInches"
+            type="number"
+            value={formState.heightInches}
+            onChange={handleChange("heightInches")}
+            min={48}
+            max={108}
+            style={{
+              width: "100%",
+              padding: "0.5rem",
+              border: "1px solid #dee2e6",
+              borderRadius: "4px",
+              fontSize: "1rem",
+            }}
+          />
+        </div>
+        <div style={{ marginBottom: "1rem" }}>
+          <label
+            htmlFor="weightLbs"
+            style={{
+              display: "block",
+              marginBottom: "0.5rem",
+              fontWeight: "500",
+            }}
+          >
+            Weight (lbs, 100-500)
+          </label>
+          <input
+            id="weightLbs"
+            type="number"
+            value={formState.weightLbs}
+            onChange={handleChange("weightLbs")}
+            min={100}
+            max={500}
             style={{
               width: "100%",
               padding: "0.5rem",
@@ -117,7 +190,12 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
             type="button"
             onClick={() => {
               setShowForm(false);
-              setFormState({ name: "" });
+              setFormState({
+                teamId: teamId,
+                nickname: "",
+                heightInches: "",
+                weightLbs: "",
+              });
             }}
             style={{
               padding: "0.5rem 1rem",

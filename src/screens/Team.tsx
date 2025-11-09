@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getTeam } from "../models/teamSlice";
@@ -8,12 +8,14 @@ import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreatePlayer from "../components/CreatePlayer";
 import PlayersList from "../components/PlayersList";
+import AllTeamsList from "../components/AllTeamsList";
 import AuthAware from "../components/AuthAware";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 
 const Team: React.FC = () => {
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
+  const hasFetchedMyPlayer = useRef(false);
   const { team, loadingState: teamLoadingState } = useSelector(
     (state: RootState) => state.team
   );
@@ -31,16 +33,45 @@ const Team: React.FC = () => {
       const id = parseInt(teamId, 10);
       if (!isNaN(id)) {
         dispatch(getTeam(id) as any);
-        dispatch(getMyPlayer() as any);
       }
     }
   }, [teamId, dispatch]);
+
+  useEffect(() => {
+    if (
+      teamId &&
+      !hasFetchedMyPlayer.current &&
+      !playerLoadingState.loadingMyPlayer
+    ) {
+      hasFetchedMyPlayer.current = true;
+      dispatch(getMyPlayer() as any);
+    }
+  }, [teamId, playerLoadingState.loadingMyPlayer, dispatch]);
 
   useEffect(() => {
     if (team?.league_id) {
       dispatch(getLeague(team.league_id) as any);
     }
   }, [team?.league_id, dispatch]);
+
+  if (!teamId) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+          width: "100%",
+          padding: "2rem",
+          gap: "2rem",
+        }}
+      >
+        <h1 style={{ fontSize: "2.5rem" }}>Teams</h1>
+        <AllTeamsList />
+      </div>
+    );
+  }
 
   if (teamLoadingState.loadingTeam || playerLoadingState.loadingMyPlayer) {
     return <Loading />;

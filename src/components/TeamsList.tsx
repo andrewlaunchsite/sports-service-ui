@@ -14,8 +14,10 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
   const { teams, loadingState } = useSelector((state: RootState) => state.team);
 
   useEffect(() => {
-    dispatch(getTeams({ league_id: leagueId }) as any);
-  }, [dispatch, leagueId]);
+    dispatch(getTeams({ offset: 0, limit: 100 }) as any);
+  }, [dispatch]);
+
+  const filteredTeams = teams.filter((team) => team.leagueId === leagueId);
 
   if (loadingState.loadingTeams && teams.length === 0) {
     return (
@@ -25,10 +27,10 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
     );
   }
 
-  if (teams.length === 0) {
+  if (filteredTeams.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "2rem" }}>
-        <div>No teams found.</div>
+        <div>No teams found for this league.</div>
       </div>
     );
   }
@@ -45,7 +47,7 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
     >
       <h2 style={{ marginTop: 0, marginBottom: "1rem" }}>Teams</h2>
       <div style={{ marginBottom: "1rem" }}>
-        {teams.map((team) => (
+        {filteredTeams.map((team) => (
           <div
             key={team.id}
             onClick={() => navigate(`/teams?id=${team.id}`)}

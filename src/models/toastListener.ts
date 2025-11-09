@@ -18,6 +18,9 @@ toastListener.startListening({
   },
   effect: async (action: any) => {
     if (isRejected(action)) {
+      if (action.payload?.silentError) {
+        return;
+      }
       const msg =
         action.payload?.message ??
         action.payload?.error ??

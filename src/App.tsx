@@ -12,6 +12,7 @@ import Landing from "./screens/Landing";
 import Home from "./screens/Home";
 import League from "./screens/League";
 import Team from "./screens/Team";
+import Game from "./screens/Game";
 import { ROUTES } from "./config/constants";
 
 function App() {
@@ -76,6 +77,14 @@ function App() {
             element={
               <Protected>
                 <Team />
+              </Protected>
+            }
+          />
+          <Route
+            path={ROUTES.GAMES}
+            element={
+              <Protected>
+                <Game />
               </Protected>
             }
           />

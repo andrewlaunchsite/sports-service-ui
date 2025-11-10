@@ -7,6 +7,7 @@ import { getMyPlayer } from "../models/playerSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreatePlayer from "../components/CreatePlayer";
+import CreateGame from "../components/CreateGame";
 import PlayersList from "../components/PlayersList";
 import AllTeamsList from "../components/AllTeamsList";
 import AuthAware from "../components/AuthAware";
@@ -116,25 +117,45 @@ const Team: React.FC = () => {
         }}
       >
         <h1 style={{ fontSize: "2.5rem", margin: 0 }}>{team.name}</h1>
-        {isLoadingLeague ? (
-          <div style={{ fontSize: "0.875rem", color: "#6c757d" }}>
-            Loading league...
-          </div>
-        ) : league ? (
+        <div
+          style={{
+            display: "flex",
+            gap: "1rem",
+            alignItems: "center",
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          {isLoadingLeague ? (
+            <div style={{ fontSize: "0.875rem", color: "#6c757d" }}>
+              Loading league...
+            </div>
+          ) : league ? (
+            <Link
+              to={`${ROUTES.LEAGUES}?id=${league.id}`}
+              style={{
+                fontSize: "0.875rem",
+                color: "#007bff",
+                textDecoration: "none",
+              }}
+            >
+              ← Back to League: {league.name}
+            </Link>
+          ) : null}
           <Link
-            to={`${ROUTES.LEAGUES}?id=${league.id}`}
+            to={`${ROUTES.GAMES}?id=${team.id}`}
             style={{
               fontSize: "0.875rem",
               color: "#007bff",
               textDecoration: "none",
             }}
           >
-            ← Back to League: {league.name}
+            View Games →
           </Link>
-        ) : null}
+        </div>
       </div>
 
-      {myPlayer ? (
+      {myPlayer && myPlayer.teamId === team.id ? (
         <div
           style={{
             width: "100%",
@@ -171,7 +192,7 @@ const Team: React.FC = () => {
             )}
           </div>
         </div>
-      ) : (
+      ) : !myPlayer ? (
         <AuthAware
           roles={[
             "org:league_admin",
@@ -218,7 +239,13 @@ const Team: React.FC = () => {
             <CreatePlayer teamId={team.id} />
           </div>
         </AuthAware>
-      )}
+      ) : null}
+
+      <AuthAware
+        roles={["org:league_admin", "org:team_admin", "org:team_manager"]}
+      >
+        <CreateGame teamId={team.id} />
+      </AuthAware>
 
       <PlayersList teamId={team.id} />
     </div>

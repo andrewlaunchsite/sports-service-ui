@@ -39,6 +39,9 @@ const Navbar: React.FC = () => {
             <Link to={ROUTES.TEAMS} style={getLinkStyle(ROUTES.TEAMS)}>
               Teams
             </Link>
+            <Link to={ROUTES.GAMES} style={getLinkStyle(ROUTES.GAMES)}>
+              Games
+            </Link>
           </>
         ) : (
           <Link to={ROUTES.LANDING} style={getLinkStyle(ROUTES.LANDING)}>

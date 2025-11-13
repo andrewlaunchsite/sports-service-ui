@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getTeam } from "../models/teamSlice";
+import { getTeam, getTeams } from "../models/teamSlice";
 import { getLeague } from "../models/leagueSlice";
 import { getMyPlayer } from "../models/playerSlice";
+import { getGamesByTeam } from "../models/gameSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreatePlayer from "../components/CreatePlayer";
@@ -15,6 +16,7 @@ import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 
 const Team: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const hasFetchedMyPlayer = useRef(false);
   const { team, loadingState: teamLoadingState } = useSelector(
@@ -26,6 +28,10 @@ const Team: React.FC = () => {
   const { myPlayer, loadingState: playerLoadingState } = useSelector(
     (state: RootState) => state.player
   );
+  const { games, loadingState: gameLoadingState } = useSelector(
+    (state: RootState) => state.game
+  );
+  const { teams } = useSelector((state: RootState) => state.team);
 
   const teamId = searchParams.get("id");
 
@@ -55,6 +61,16 @@ const Team: React.FC = () => {
     }
   }, [team?.league_id, dispatch]);
 
+  useEffect(() => {
+    if (teamId) {
+      const id = parseInt(teamId, 10);
+      if (!isNaN(id)) {
+        dispatch(getGamesByTeam({ teamId: id, offset: 0, limit: 100 }) as any);
+        dispatch(getTeams({ offset: 0, limit: 100 }) as any);
+      }
+    }
+  }, [teamId, dispatch]);
+
   if (!teamId) {
     return (
       <div
@@ -74,7 +90,11 @@ const Team: React.FC = () => {
     );
   }
 
-  if (teamLoadingState.loadingTeam || playerLoadingState.loadingMyPlayer) {
+  if (
+    teamLoadingState.loadingTeam ||
+    playerLoadingState.loadingMyPlayer ||
+    gameLoadingState.loadingByTeam
+  ) {
     return <Loading />;
   }
 
@@ -246,6 +266,84 @@ const Team: React.FC = () => {
       >
         <CreateGame teamId={team.id} />
       </AuthAware>
+
+      {games.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <div>No games found for this team.</div>
+        </div>
+      ) : (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "800px",
+            backgroundColor: "#f8f9fa",
+            padding: "1.5rem",
+            borderRadius: "8px",
+          }}
+        >
+          <h2 style={{ marginTop: 0, marginBottom: "1rem" }}>Games</h2>
+          <div style={{ marginBottom: "1rem" }}>
+            {games.map((game) => {
+              const homeTeam = teams.find(
+                (t) => t.id === (game as any).homeTeamId
+              );
+              const awayTeam = teams.find(
+                (t) => t.id === (game as any).awayTeamId
+              );
+              return (
+                <div
+                  key={game.id}
+                  onClick={() => navigate(`${ROUTES.GAMES}?id=${game.id}`)}
+                  style={{
+                    padding: "1rem",
+                    marginBottom: "0.5rem",
+                    backgroundColor: "white",
+                    borderRadius: "4px",
+                    border: "1px solid #dee2e6",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f8f9fa";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "white";
+                  }}
+                >
+                  <div style={{ fontWeight: "500", fontSize: "1.1rem" }}>
+                    {homeTeam?.name || `Team ${(game as any).homeTeamId}`} vs{" "}
+                    {awayTeam?.name || `Team ${(game as any).awayTeamId}`}
+                  </div>
+                  {(game as any).scheduledDateTime && (
+                    <div
+                      style={{
+                        fontSize: "0.875rem",
+                        color: "#6c757d",
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      {new Date(
+                        (game as any).scheduledDateTime
+                      ).toLocaleString()}
+                    </div>
+                  )}
+                  {(game as any).status && (
+                    <div
+                      style={{
+                        fontSize: "0.875rem",
+                        color: "#6c757d",
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      Status: {(game as any).status}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <PlayersList teamId={team.id} />
     </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createGame, getGames } from "../models/gameSlice";
+import { createGame, getGamesByTeam } from "../models/gameSlice";
 import { getTeams } from "../models/teamSlice";
 import { AppDispatch, RootState } from "../models/store";
 
@@ -49,7 +49,7 @@ const CreateGame: React.FC<CreateGameProps> = ({ teamId }) => {
       status: "scheduled",
     });
     setShowForm(false);
-    dispatch(getGames({ team_id: teamId, offset: 0, limit: 100 }) as any);
+    dispatch(getGamesByTeam({ teamId, offset: 0, limit: 100 }) as any);
   };
 
   const handleChange =

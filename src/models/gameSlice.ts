@@ -19,6 +19,7 @@ export interface GamesState {
   loadingState: {
     loadingGames: boolean;
     loadingGame: boolean;
+    loadingByTeam: boolean;
     loadingCreate: boolean;
     loadingUpdate: boolean;
     loadingDelete: boolean;
@@ -40,26 +41,30 @@ export const getGame = createAsyncThunk("games/get", async (gameId: number) => {
 
 export const getGames = createAsyncThunk(
   "games/getAll",
-  async (params?: {
-    offset?: number;
-    limit?: number;
-    team_id?: number;
-    homeTeamId?: number;
-    awayTeamId?: number;
-  }) => {
+  async (params?: { offset?: number; limit?: number }) => {
     const queryParams = new URLSearchParams();
     if (params?.offset !== undefined)
       queryParams.append("offset", params.offset.toString());
     if (params?.limit !== undefined)
       queryParams.append("limit", params.limit.toString());
-    if (params?.team_id !== undefined)
-      queryParams.append("team_id", params.team_id.toString());
-    if (params?.homeTeamId !== undefined)
-      queryParams.append("homeTeamId", params.homeTeamId.toString());
-    if (params?.awayTeamId !== undefined)
-      queryParams.append("awayTeamId", params.awayTeamId.toString());
     const queryString = queryParams.toString();
     const url = `/api/v1/games${queryString ? `?${queryString}` : ""}`;
+    const { data } = await axiosInstance.get(url);
+    return data;
+  }
+);
+
+export const getGamesByTeam = createAsyncThunk(
+  "games/getByTeam",
+  async (params: { teamId: number; offset?: number; limit?: number }) => {
+    const { teamId, offset, limit } = params;
+    const queryParams = new URLSearchParams();
+    if (offset !== undefined) queryParams.append("offset", offset.toString());
+    if (limit !== undefined) queryParams.append("limit", limit.toString());
+    const queryString = queryParams.toString();
+    const url = `/api/v1/teams/${teamId}/games${
+      queryString ? `?${queryString}` : ""
+    }`;
     const { data } = await axiosInstance.get(url);
     return data;
   }
@@ -109,6 +114,7 @@ const gameSlice = createSlice({
     loadingState: {
       loadingGames: false,
       loadingGame: false,
+      loadingByTeam: false,
       loadingCreate: false,
       loadingUpdate: false,
       loadingDelete: false,
@@ -124,6 +130,7 @@ const gameSlice = createSlice({
     const getLoadingKey = (
       actionType: string
     ): keyof GamesState["loadingState"] | null => {
+      if (actionType.includes("/getByTeam")) return "loadingByTeam";
       if (actionType.includes("/getAll")) return "loadingGames";
       if (actionType.includes("/get")) return "loadingGame";
       if (actionType.includes("/create")) return "loadingCreate";
@@ -150,6 +157,20 @@ const gameSlice = createSlice({
           state.games = Array.isArray(payload) ? payload : [];
         }
         state.loadingState.loadingGames = false;
+      })
+      .addCase(getGamesByTeam.fulfilled, (state, { payload }) => {
+        if (payload.content && Array.isArray(payload.content)) {
+          state.games = payload.content;
+          state.pagination = {
+            totalCount: payload.totalCount ?? 0,
+            count: payload.count ?? 0,
+            offset: payload.offset ?? 0,
+            limit: payload.limit ?? 100,
+          };
+        } else {
+          state.games = Array.isArray(payload) ? payload : [];
+        }
+        state.loadingState.loadingByTeam = false;
       })
       .addCase(createGame.fulfilled, (state, { payload }) => {
         state.games = [...state.games, payload];

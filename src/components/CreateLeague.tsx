@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createLeague, getLeagues } from "../models/leagueSlice";
 import { AppDispatch, RootState } from "../models/store";
+import { BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
 
 interface FormState {
   name: string;
@@ -37,15 +38,8 @@ const CreateLeague: React.FC = () => {
     return (
       <button
         onClick={() => setShowForm(true)}
-        style={{
-          padding: "0.5rem 1rem",
-          backgroundColor: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-          fontSize: "1rem",
-        }}
+        style={BUTTON_STYLES.primary}
+        {...getButtonHoverStyle("primary")}
       >
         Create League
       </button>
@@ -53,81 +47,75 @@ const CreateLeague: React.FC = () => {
   }
 
   return (
-    <div
-      style={{
-        backgroundColor: "#f8f9fa",
-        padding: "1.5rem",
-        borderRadius: "8px",
-        marginBottom: "2rem",
-        maxWidth: "500px",
-      }}
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: "1rem" }}>Create League</h3>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label
-            htmlFor="name"
-            style={{
-              display: "block",
-              marginBottom: "0.5rem",
-              fontWeight: "500",
-            }}
-          >
-            League Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            value={formState.name}
-            onChange={handleChange("name")}
-            required
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              border: "1px solid #dee2e6",
-              borderRadius: "4px",
-              fontSize: "1rem",
-            }}
-          />
-        </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button
-            type="submit"
-            disabled={loadingState.loadingCreate}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: loadingState.loadingCreate ? "not-allowed" : "pointer",
-              fontSize: "1rem",
-              opacity: loadingState.loadingCreate ? 0.6 : 1,
-            }}
-          >
-            {loadingState.loadingCreate ? "Creating..." : "Create League"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setShowForm(false);
-              setFormState({ name: "" });
-            }}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#6c757d",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "1rem",
-            }}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+      <div>
+        <label
+          htmlFor="name"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: "#212529",
+          }}
+        >
+          League Name
+        </label>
+        <input
+          id="name"
+          type="text"
+          value={formState.name}
+          onChange={handleChange("name")}
+          required
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: "1px solid #dee2e6",
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = "#007bff";
+            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = "#dee2e6";
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        />
+      </div>
+      <div style={{ display: "flex", gap: "0.5rem" }}>
+        <button
+          type="submit"
+          disabled={loadingState.loadingCreate}
+          style={{
+            ...BUTTON_STYLES.primaryFull,
+            cursor: loadingState.loadingCreate ? "not-allowed" : "pointer",
+            opacity: loadingState.loadingCreate ? 0.6 : 1,
+          }}
+          {...(loadingState.loadingCreate
+            ? {}
+            : getButtonHoverStyle("primary"))}
+        >
+          {loadingState.loadingCreate ? "Creating..." : "Create League"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setShowForm(false);
+            setFormState({ name: "" });
+          }}
+          style={BUTTON_STYLES.secondaryFull}
+          {...getButtonHoverStyle("secondary")}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 };
 

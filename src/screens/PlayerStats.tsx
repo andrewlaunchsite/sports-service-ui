@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
+import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
 
 interface Player {
   id: number;
@@ -433,47 +434,57 @@ const PlayerStats: React.FC = () => {
           minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
           width: "100%",
           padding: "2rem",
-          backgroundColor: "#f5f5f5",
+          backgroundColor: COLORS.background.light,
         }}
       >
         <div
           style={{
-            maxWidth: "1200px",
+            maxWidth: "1400px",
             margin: "0 auto",
             display: "flex",
             flexDirection: "column",
-            gap: "1.5rem",
+            gap: "2rem",
           }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "1rem",
+              gap: "0.5rem",
+              fontSize: "0.875rem",
+              color: COLORS.text.secondary,
               marginBottom: "0.5rem",
             }}
           >
-            <button
-              onClick={() => setSearchParams({})}
+            <Link
+              to={ROUTES.PLAYER_STATS}
               style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: "#6c757d",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
+                color: COLORS.primary,
+                textDecoration: "none",
+                fontWeight: 500,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.textDecoration = "underline";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.textDecoration = "none";
               }}
             >
-              ← Back to Stats
-            </button>
+              Player Stats
+            </Link>
+            <span>/</span>
+            <span style={{ color: COLORS.text.primary, fontWeight: 500 }}>
+              {selectedPlayer.name}
+            </span>
           </div>
 
           <div
             style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
+              backgroundColor: COLORS.background.default,
+              borderRadius: "12px",
               padding: "2rem",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              border: `1px solid ${COLORS.border.default}`,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
             }}
           >
             <div
@@ -482,6 +493,8 @@ const PlayerStats: React.FC = () => {
                 alignItems: "center",
                 gap: "2rem",
                 marginBottom: "2rem",
+                paddingBottom: "2rem",
+                borderBottom: `1px solid ${COLORS.border.light}`,
               }}
             >
               <div
@@ -489,7 +502,7 @@ const PlayerStats: React.FC = () => {
                   width: "120px",
                   height: "120px",
                   borderRadius: "50%",
-                  backgroundColor: "#007bff",
+                  backgroundColor: COLORS.primary,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -501,13 +514,20 @@ const PlayerStats: React.FC = () => {
                 #{selectedPlayer.number}
               </div>
               <div>
-                <h1 style={{ margin: 0, fontSize: "2rem", fontWeight: 700 }}>
+                <h1
+                  style={{
+                    margin: 0,
+                    fontSize: "2.5rem",
+                    fontWeight: 600,
+                    color: COLORS.text.primary,
+                  }}
+                >
                   {selectedPlayer.name}
                 </h1>
                 <div
                   style={{
-                    fontSize: "1.25rem",
-                    color: "#6c757d",
+                    fontSize: "1.125rem",
+                    color: COLORS.text.secondary,
                     marginTop: "0.5rem",
                   }}
                 >
@@ -519,54 +539,64 @@ const PlayerStats: React.FC = () => {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                 gap: "1rem",
                 marginBottom: "2rem",
               }}
             >
               <div
                 style={{
-                  backgroundColor: "#f8f9fa",
-                  padding: "1rem",
-                  borderRadius: "8px",
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
                   textAlign: "center",
+                  border: `1px solid ${COLORS.border.default}`,
                 }}
               >
                 <div
                   style={{
                     fontSize: "0.875rem",
-                    color: "#6c757d",
-                    marginBottom: "0.5rem",
+                    color: COLORS.text.secondary,
+                    marginBottom: "0.75rem",
+                    fontWeight: 500,
                   }}
                 >
                   Games Played
                 </div>
-                <div style={{ fontSize: "2rem", fontWeight: 700 }}>
+                <div
+                  style={{
+                    fontSize: "2.5rem",
+                    fontWeight: 700,
+                    color: COLORS.text.primary,
+                  }}
+                >
                   {selectedPlayer.stats.gamesPlayed}
                 </div>
               </div>
               <div
                 style={{
-                  backgroundColor: "#f8f9fa",
-                  padding: "1rem",
-                  borderRadius: "8px",
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
                   textAlign: "center",
+                  border: `1px solid ${COLORS.border.default}`,
                 }}
               >
                 <div
                   style={{
                     fontSize: "0.875rem",
-                    color: "#6c757d",
-                    marginBottom: "0.5rem",
+                    color: COLORS.text.secondary,
+                    marginBottom: "0.75rem",
+                    fontWeight: 500,
                   }}
                 >
                   Points/Game
                 </div>
                 <div
                   style={{
-                    fontSize: "2rem",
+                    fontSize: "2.5rem",
                     fontWeight: 700,
-                    color: "#28a745",
+                    color: COLORS.success,
                   }}
                 >
                   {selectedPlayer.stats.points.toFixed(1)}
@@ -574,26 +604,28 @@ const PlayerStats: React.FC = () => {
               </div>
               <div
                 style={{
-                  backgroundColor: "#f8f9fa",
-                  padding: "1rem",
-                  borderRadius: "8px",
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
                   textAlign: "center",
+                  border: `1px solid ${COLORS.border.default}`,
                 }}
               >
                 <div
                   style={{
                     fontSize: "0.875rem",
-                    color: "#6c757d",
-                    marginBottom: "0.5rem",
+                    color: COLORS.text.secondary,
+                    marginBottom: "0.75rem",
+                    fontWeight: 500,
                   }}
                 >
                   Rebounds/Game
                 </div>
                 <div
                   style={{
-                    fontSize: "2rem",
+                    fontSize: "2.5rem",
                     fontWeight: 700,
-                    color: "#007bff",
+                    color: COLORS.primary,
                   }}
                 >
                   {selectedPlayer.stats.rebounds.toFixed(1)}
@@ -601,26 +633,28 @@ const PlayerStats: React.FC = () => {
               </div>
               <div
                 style={{
-                  backgroundColor: "#f8f9fa",
-                  padding: "1rem",
-                  borderRadius: "8px",
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
                   textAlign: "center",
+                  border: `1px solid ${COLORS.border.default}`,
                 }}
               >
                 <div
                   style={{
                     fontSize: "0.875rem",
-                    color: "#6c757d",
-                    marginBottom: "0.5rem",
+                    color: COLORS.text.secondary,
+                    marginBottom: "0.75rem",
+                    fontWeight: 500,
                   }}
                 >
                   Assists/Game
                 </div>
                 <div
                   style={{
-                    fontSize: "2rem",
+                    fontSize: "2.5rem",
                     fontWeight: 700,
-                    color: "#ffc107",
+                    color: COLORS.warning,
                   }}
                 >
                   {selectedPlayer.stats.assists.toFixed(1)}
@@ -628,22 +662,30 @@ const PlayerStats: React.FC = () => {
               </div>
               <div
                 style={{
-                  backgroundColor: "#f8f9fa",
-                  padding: "1rem",
-                  borderRadius: "8px",
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
                   textAlign: "center",
+                  border: `1px solid ${COLORS.border.default}`,
                 }}
               >
                 <div
                   style={{
                     fontSize: "0.875rem",
-                    color: "#6c757d",
-                    marginBottom: "0.5rem",
+                    color: COLORS.text.secondary,
+                    marginBottom: "0.75rem",
+                    fontWeight: 500,
                   }}
                 >
                   FG%
                 </div>
-                <div style={{ fontSize: "2rem", fontWeight: 700 }}>
+                <div
+                  style={{
+                    fontSize: "2.5rem",
+                    fontWeight: 700,
+                    color: COLORS.text.primary,
+                  }}
+                >
                   {selectedPlayer.stats.fieldGoalPercentage.toFixed(1)}%
                 </div>
               </div>
@@ -657,81 +699,170 @@ const PlayerStats: React.FC = () => {
                 marginBottom: "2rem",
               }}
             >
-              <div>
+              <div
+                style={{
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
+                  border: `1px solid ${COLORS.border.default}`,
+                }}
+              >
                 <h2
                   style={{
                     margin: 0,
-                    marginBottom: "1rem",
+                    marginBottom: "1.5rem",
                     fontSize: "1.5rem",
+                    fontWeight: 600,
+                    color: COLORS.text.primary,
                   }}
                 >
                   Points Per Game
                 </h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="game" />
-                    <YAxis />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={COLORS.border.default}
+                    />
+                    <XAxis dataKey="game" stroke={COLORS.text.secondary} />
+                    <YAxis stroke={COLORS.text.secondary} />
                     <Tooltip />
                     <Legend />
                     <Line
                       type="monotone"
                       dataKey="points"
-                      stroke="#28a745"
+                      stroke={COLORS.success}
                       strokeWidth={2}
                       name="Points"
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-              <div>
+              <div
+                style={{
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
+                  border: `1px solid ${COLORS.border.default}`,
+                }}
+              >
                 <h2
                   style={{
                     margin: 0,
-                    marginBottom: "1rem",
+                    marginBottom: "1.5rem",
                     fontSize: "1.5rem",
+                    fontWeight: 600,
+                    color: COLORS.text.primary,
                   }}
                 >
                   Stats Comparison
                 </h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="game" />
-                    <YAxis />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={COLORS.border.default}
+                    />
+                    <XAxis dataKey="game" stroke={COLORS.text.secondary} />
+                    <YAxis stroke={COLORS.text.secondary} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="points" fill="#28a745" name="Points" />
-                    <Bar dataKey="rebounds" fill="#007bff" name="Rebounds" />
-                    <Bar dataKey="assists" fill="#ffc107" name="Assists" />
+                    <Bar dataKey="points" fill={COLORS.success} name="Points" />
+                    <Bar
+                      dataKey="rebounds"
+                      fill={COLORS.primary}
+                      name="Rebounds"
+                    />
+                    <Bar
+                      dataKey="assists"
+                      fill={COLORS.warning}
+                      name="Assists"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div>
+            <div
+              style={{
+                backgroundColor: COLORS.background.light,
+                padding: "1.5rem",
+                borderRadius: "12px",
+                border: `1px solid ${COLORS.border.default}`,
+              }}
+            >
               <h2
-                style={{ margin: 0, marginBottom: "1rem", fontSize: "1.5rem" }}
+                style={{
+                  margin: 0,
+                  marginBottom: "1.5rem",
+                  fontSize: "1.5rem",
+                  fontWeight: 600,
+                  color: COLORS.text.primary,
+                }}
               >
                 Game-by-Game Stats
               </h2>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ borderBottom: "2px solid #dee2e6" }}>
-                      <th style={{ padding: "0.75rem", textAlign: "left" }}>
+                    <tr
+                      style={{
+                        borderBottom: `2px solid ${COLORS.border.default}`,
+                      }}
+                    >
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "left",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
                         Opponent
                       </th>
-                      <th style={{ padding: "0.75rem", textAlign: "left" }}>
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "left",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
                         Date
                       </th>
-                      <th style={{ padding: "0.75rem", textAlign: "center" }}>
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
                         Points
                       </th>
-                      <th style={{ padding: "0.75rem", textAlign: "center" }}>
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
                         Rebounds
                       </th>
-                      <th style={{ padding: "0.75rem", textAlign: "center" }}>
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
                         Assists
                       </th>
                     </tr>
@@ -741,28 +872,52 @@ const PlayerStats: React.FC = () => {
                       <tr
                         key={idx}
                         style={{
-                          borderBottom: "1px solid #e9ecef",
+                          borderBottom: `1px solid ${COLORS.border.light}`,
                         }}
                       >
-                        <td style={{ padding: "0.75rem", fontWeight: 600 }}>
+                        <td
+                          style={{
+                            padding: "0.75rem 0.5rem",
+                            fontWeight: 600,
+                            color: COLORS.text.primary,
+                          }}
+                        >
                           {game.opponent}
                         </td>
-                        <td style={{ padding: "0.75rem" }}>
+                        <td
+                          style={{
+                            padding: "0.75rem 0.5rem",
+                            color: COLORS.text.secondary,
+                          }}
+                        >
                           {new Date(game.date).toLocaleDateString()}
                         </td>
                         <td
                           style={{
-                            padding: "0.75rem",
+                            padding: "0.75rem 0.5rem",
                             textAlign: "center",
                             fontWeight: 600,
+                            color: COLORS.success,
                           }}
                         >
                           {game.points}
                         </td>
-                        <td style={{ padding: "0.75rem", textAlign: "center" }}>
+                        <td
+                          style={{
+                            padding: "0.75rem 0.5rem",
+                            textAlign: "center",
+                            color: COLORS.text.primary,
+                          }}
+                        >
                           {game.rebounds}
                         </td>
-                        <td style={{ padding: "0.75rem", textAlign: "center" }}>
+                        <td
+                          style={{
+                            padding: "0.75rem 0.5rem",
+                            textAlign: "center",
+                            color: COLORS.text.primary,
+                          }}
+                        >
                           {game.assists}
                         </td>
                       </tr>
@@ -787,19 +942,37 @@ const PlayerStats: React.FC = () => {
         minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
         width: "100%",
         padding: "2rem",
-        backgroundColor: "#f5f5f5",
+        backgroundColor: COLORS.background.light,
       }}
     >
       <div
         style={{
-          maxWidth: "1200px",
+          maxWidth: "1400px",
           margin: "0 auto",
           display: "flex",
           flexDirection: "column",
-          gap: "1.5rem",
+          gap: "2rem",
         }}
       >
-        <h1 style={{ fontSize: "2.5rem", margin: 0 }}>Player Statistics</h1>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "2.5rem",
+              fontWeight: 600,
+              margin: 0,
+              color: COLORS.text.primary,
+            }}
+          >
+            Player Statistics
+          </h1>
+        </div>
 
         <div
           style={{
@@ -813,20 +986,21 @@ const PlayerStats: React.FC = () => {
               key={player.id}
               onClick={() => setSearchParams({ id: player.id.toString() })}
               style={{
-                backgroundColor: "white",
-                borderRadius: "8px",
+                backgroundColor: COLORS.background.default,
+                borderRadius: "12px",
                 padding: "1.5rem",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                border: `1px solid ${COLORS.border.default}`,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                 cursor: "pointer",
                 transition: "transform 0.2s, box-shadow 0.2s",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+                e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.05)";
               }}
             >
               <div
@@ -834,7 +1008,7 @@ const PlayerStats: React.FC = () => {
                   display: "flex",
                   alignItems: "center",
                   gap: "1rem",
-                  marginBottom: "1rem",
+                  marginBottom: "1.25rem",
                 }}
               >
                 <div
@@ -842,7 +1016,7 @@ const PlayerStats: React.FC = () => {
                     width: "60px",
                     height: "60px",
                     borderRadius: "50%",
-                    backgroundColor: "#007bff",
+                    backgroundColor: COLORS.primary,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -854,10 +1028,22 @@ const PlayerStats: React.FC = () => {
                   #{player.number}
                 </div>
                 <div>
-                  <div style={{ fontSize: "1.25rem", fontWeight: 600 }}>
+                  <div
+                    style={{
+                      fontSize: "1.25rem",
+                      fontWeight: 600,
+                      color: COLORS.text.primary,
+                      marginBottom: "0.25rem",
+                    }}
+                  >
                     {player.name}
                   </div>
-                  <div style={{ fontSize: "0.875rem", color: "#6c757d" }}>
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      color: COLORS.text.secondary,
+                    }}
+                  >
                     {player.team} • {player.position}
                   </div>
                 </div>
@@ -868,47 +1054,66 @@ const PlayerStats: React.FC = () => {
                   display: "grid",
                   gridTemplateColumns: "repeat(3, 1fr)",
                   gap: "0.75rem",
+                  marginBottom: "1rem",
                 }}
               >
                 <div style={{ textAlign: "center" }}>
                   <div
                     style={{
-                      fontSize: "1.5rem",
+                      fontSize: "1.75rem",
                       fontWeight: 700,
-                      color: "#28a745",
+                      color: COLORS.success,
                     }}
                   >
                     {player.stats.points.toFixed(1)}
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#6c757d" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: COLORS.text.secondary,
+                      marginTop: "0.25rem",
+                    }}
+                  >
                     PPG
                   </div>
                 </div>
                 <div style={{ textAlign: "center" }}>
                   <div
                     style={{
-                      fontSize: "1.5rem",
+                      fontSize: "1.75rem",
                       fontWeight: 700,
-                      color: "#007bff",
+                      color: COLORS.primary,
                     }}
                   >
                     {player.stats.rebounds.toFixed(1)}
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#6c757d" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: COLORS.text.secondary,
+                      marginTop: "0.25rem",
+                    }}
+                  >
                     RPG
                   </div>
                 </div>
                 <div style={{ textAlign: "center" }}>
                   <div
                     style={{
-                      fontSize: "1.5rem",
+                      fontSize: "1.75rem",
                       fontWeight: 700,
-                      color: "#ffc107",
+                      color: COLORS.warning,
                     }}
                   >
                     {player.stats.assists.toFixed(1)}
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#6c757d" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: COLORS.text.secondary,
+                      marginTop: "0.25rem",
+                    }}
+                  >
                     APG
                   </div>
                 </div>
@@ -918,21 +1123,31 @@ const PlayerStats: React.FC = () => {
                 style={{
                   marginTop: "1rem",
                   paddingTop: "1rem",
-                  borderTop: "1px solid #e9ecef",
+                  borderTop: `1px solid ${COLORS.border.light}`,
                   display: "flex",
                   justifyContent: "space-between",
                   fontSize: "0.875rem",
                 }}
               >
                 <div>
-                  <span style={{ color: "#6c757d" }}>FG%: </span>
-                  <span style={{ fontWeight: 600 }}>
+                  <span style={{ color: COLORS.text.secondary }}>FG%: </span>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      color: COLORS.text.primary,
+                    }}
+                  >
                     {player.stats.fieldGoalPercentage.toFixed(1)}%
                   </span>
                 </div>
                 <div>
-                  <span style={{ color: "#6c757d" }}>Games: </span>
-                  <span style={{ fontWeight: 600 }}>
+                  <span style={{ color: COLORS.text.secondary }}>Games: </span>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      color: COLORS.text.primary,
+                    }}
+                  >
                     {player.stats.gamesPlayed}
                   </span>
                 </div>

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { createGame, getGamesByTeam } from "../models/gameSlice";
 import { getTeams } from "../models/teamSlice";
 import { AppDispatch, RootState } from "../models/store";
+import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
 
 interface CreateGameProps {
   teamId: number;
@@ -62,15 +63,8 @@ const CreateGame: React.FC<CreateGameProps> = ({ teamId }) => {
     return (
       <button
         onClick={() => setShowForm(true)}
-        style={{
-          padding: "0.5rem 1rem",
-          backgroundColor: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-          fontSize: "1rem",
-        }}
+        style={BUTTON_STYLES.primary}
+        {...getButtonHoverStyle("primary")}
       >
         Create Game
       </button>
@@ -78,149 +72,167 @@ const CreateGame: React.FC<CreateGameProps> = ({ teamId }) => {
   }
 
   return (
-    <div
-      style={{
-        backgroundColor: "#f8f9fa",
-        padding: "1.5rem",
-        borderRadius: "8px",
-        marginBottom: "2rem",
-        maxWidth: "500px",
-      }}
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: "1rem" }}>Create Game</h3>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label
-            htmlFor="awayTeamId"
-            style={{
-              display: "block",
-              marginBottom: "0.5rem",
-              fontWeight: "500",
-            }}
-          >
-            Away Team
-          </label>
-          <select
-            id="awayTeamId"
-            value={formState.awayTeamId}
-            onChange={handleChange("awayTeamId")}
-            required
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              border: "1px solid #dee2e6",
-              borderRadius: "4px",
-              fontSize: "1rem",
-            }}
-          >
-            <option value="">Select away team</option>
-            {teams
-              .filter((team) => team.id !== teamId)
-              .map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-          </select>
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label
-            htmlFor="scheduledDateTime"
-            style={{
-              display: "block",
-              marginBottom: "0.5rem",
-              fontWeight: "500",
-            }}
-          >
-            Scheduled Date & Time
-          </label>
-          <input
-            id="scheduledDateTime"
-            type="datetime-local"
-            value={formState.scheduledDateTime}
-            onChange={handleChange("scheduledDateTime")}
-            required
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              border: "1px solid #dee2e6",
-              borderRadius: "4px",
-              fontSize: "1rem",
-            }}
-          />
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label
-            htmlFor="status"
-            style={{
-              display: "block",
-              marginBottom: "0.5rem",
-              fontWeight: "500",
-            }}
-          >
-            Status
-          </label>
-          <select
-            id="status"
-            value={formState.status}
-            onChange={handleChange("status")}
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              border: "1px solid #dee2e6",
-              borderRadius: "4px",
-              fontSize: "1rem",
-            }}
-          >
-            <option value="scheduled">Scheduled</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button
-            type="submit"
-            disabled={loadingState.loadingCreate}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: loadingState.loadingCreate ? "not-allowed" : "pointer",
-              fontSize: "1rem",
-              opacity: loadingState.loadingCreate ? 0.6 : 1,
-            }}
-          >
-            {loadingState.loadingCreate ? "Creating..." : "Create Game"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setShowForm(false);
-              setFormState({
-                homeTeamId: teamId,
-                awayTeamId: "",
-                scheduledDateTime: "",
-                status: "scheduled",
-              });
-            }}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#6c757d",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "1rem",
-            }}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+      <div>
+        <label
+          htmlFor="awayTeamId"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: COLORS.text.primary,
+          }}
+        >
+          Away Team
+        </label>
+        <select
+          id="awayTeamId"
+          value={formState.awayTeamId}
+          onChange={handleChange("awayTeamId")}
+          required
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: `1px solid ${COLORS.border.default}`,
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            backgroundColor: "white",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = COLORS.primary;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = COLORS.border.default;
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        >
+          <option value="">Select away team</option>
+          {teams
+            .filter((team) => team.id !== teamId)
+            .map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+        </select>
+      </div>
+      <div>
+        <label
+          htmlFor="scheduledDateTime"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: COLORS.text.primary,
+          }}
+        >
+          Scheduled Date & Time
+        </label>
+        <input
+          id="scheduledDateTime"
+          type="datetime-local"
+          value={formState.scheduledDateTime}
+          onChange={handleChange("scheduledDateTime")}
+          required
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: `1px solid ${COLORS.border.default}`,
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = COLORS.primary;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = COLORS.border.default;
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="status"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: COLORS.text.primary,
+          }}
+        >
+          Status
+        </label>
+        <select
+          id="status"
+          value={formState.status}
+          onChange={handleChange("status")}
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: `1px solid ${COLORS.border.default}`,
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            backgroundColor: "white",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = COLORS.primary;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = COLORS.border.default;
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        >
+          <option value="scheduled">Scheduled</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div style={{ display: "flex", gap: "0.5rem" }}>
+        <button
+          type="submit"
+          disabled={loadingState.loadingCreate}
+          style={{
+            ...BUTTON_STYLES.primaryFull,
+            cursor: loadingState.loadingCreate ? "not-allowed" : "pointer",
+            opacity: loadingState.loadingCreate ? 0.6 : 1,
+          }}
+          {...(loadingState.loadingCreate
+            ? {}
+            : getButtonHoverStyle("primary"))}
+        >
+          {loadingState.loadingCreate ? "Creating..." : "Create Game"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setShowForm(false);
+            setFormState({
+              homeTeamId: teamId,
+              awayTeamId: "",
+              scheduledDateTime: "",
+              status: "scheduled",
+            });
+          }}
+          style={BUTTON_STYLES.secondaryFull}
+          {...getButtonHoverStyle("secondary")}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 };
 

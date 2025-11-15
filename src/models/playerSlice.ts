@@ -97,13 +97,18 @@ export const createPlayer = createAsyncThunk(
 
 export const updatePlayer = createAsyncThunk(
   "players/update",
-  async (playerData: { id: number; data: Partial<Player> }) => {
+  async (
+    playerData: { id: number; data: Partial<Player> },
+    { fulfillWithValue }
+  ) => {
     const { id, data } = playerData;
     const { data: responseData } = await axiosInstance.put(
       `/api/v1/players/${id}`,
       data
     );
-    return responseData;
+    return (fulfillWithValue as any)(responseData, {
+      meta: { toast: "Player updated successfully" },
+    });
   }
 );
 
@@ -214,6 +219,9 @@ const playerSlice = createSlice({
         state.players = state.players.map((player) =>
           player.id === payload.id ? payload : player
         );
+        if (state.myPlayer && state.myPlayer.id === payload.id) {
+          state.myPlayer = payload;
+        }
         state.loadingState.loadingUpdate = false;
       })
       .addCase(deletePlayer.fulfilled, (state, { meta: { arg: playerId } }) => {

@@ -6,6 +6,13 @@ import { getGame, getGames } from "../models/gameSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
+import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
+import EventIcon from "@mui/icons-material/Event";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 
 interface MockPlayer {
   id: number;
@@ -43,6 +50,7 @@ const Game: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<"home" | "away" | null>(
     null
   );
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
   const id = searchParams.get("id");
 
@@ -285,7 +293,9 @@ const Game: React.FC = () => {
             padding: "2rem",
           }}
         >
-          <div>Game not found</div>
+          <div style={{ color: COLORS.text.secondary, fontSize: "1.125rem" }}>
+            Game not found
+          </div>
         </div>
       );
     }
@@ -298,13 +308,25 @@ const Game: React.FC = () => {
     const homeBench = homePlayers.filter((p) => !p.onCourt);
     const awayBench = awayPlayers.filter((p) => !p.onCourt);
 
+    const formatDateTime = (dateStr: string) => {
+      if (!dateStr) return null;
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    };
+
     return (
       <div
         style={{
           minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
           width: "100%",
-          padding: "1rem",
-          backgroundColor: "#f5f5f5",
+          padding: "2rem",
+          backgroundColor: COLORS.background.light,
         }}
       >
         <div
@@ -313,47 +335,71 @@ const Game: React.FC = () => {
             margin: "0 auto",
             display: "flex",
             flexDirection: "column",
-            gap: "1rem",
+            gap: "2rem",
           }}
         >
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
               alignItems: "center",
+              gap: "0.5rem",
+              fontSize: "0.875rem",
+              color: COLORS.text.secondary,
               marginBottom: "0.5rem",
             }}
           >
             <Link
               to={ROUTES.GAMES}
               style={{
-                fontSize: "0.875rem",
-                color: "#007bff",
+                color: COLORS.primary,
                 textDecoration: "none",
+                fontWeight: 500,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.textDecoration = "underline";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.textDecoration = "none";
               }}
             >
-              ← Back to Games
+              Games
             </Link>
+            <span>/</span>
+            <span style={{ color: COLORS.text.primary, fontWeight: 500 }}>
+              {homeTeam?.name || `Team ${(game as any).homeTeamId}`} vs{" "}
+              {awayTeam?.name || `Team ${(game as any).awayTeamId}`}
+            </span>
           </div>
 
           <div
             style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
-              padding: "1.5rem",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              backgroundColor: COLORS.background.default,
+              borderRadius: "12px",
+              padding: "2rem",
+              border: `1px solid ${COLORS.border.default}`,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
             }}
           >
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "1rem",
+                alignItems: "flex-start",
+                marginBottom: "1.5rem",
+                flexWrap: "wrap",
+                gap: "1rem",
               }}
             >
               <div>
-                <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 600 }}>
+                <h1
+                  style={{
+                    margin: 0,
+                    fontSize: "2rem",
+                    fontWeight: 600,
+                    color: COLORS.text.primary,
+                    marginBottom: "0.5rem",
+                  }}
+                >
                   {homeTeam?.name || `Team ${(game as any).homeTeamId}`} vs{" "}
                   {awayTeam?.name || `Team ${(game as any).awayTeamId}`}
                 </h1>
@@ -361,31 +407,45 @@ const Game: React.FC = () => {
                   <div
                     style={{
                       fontSize: "0.875rem",
-                      color: "#6c757d",
-                      marginTop: "0.25rem",
+                      color: COLORS.text.secondary,
                     }}
                   >
-                    {new Date((game as any).scheduledDateTime).toLocaleString()}
+                    {formatDateTime((game as any).scheduledDateTime)}
                   </div>
                 )}
               </div>
               <div
                 style={{
                   display: "flex",
-                  gap: "1rem",
+                  gap: "0.75rem",
                   alignItems: "center",
+                  flexWrap: "wrap",
                 }}
               >
                 <button
                   onClick={() => setClockRunning(!clockRunning)}
                   style={{
-                    padding: "0.5rem 1rem",
-                    backgroundColor: clockRunning ? "#dc3545" : "#28a745",
+                    padding: "0.625rem 1.25rem",
+                    backgroundColor: clockRunning
+                      ? COLORS.danger
+                      : COLORS.success,
                     color: "white",
                     border: "none",
-                    borderRadius: "4px",
+                    borderRadius: "6px",
                     cursor: "pointer",
                     fontWeight: 600,
+                    fontSize: "0.9375rem",
+                    transition: "background-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = clockRunning
+                      ? COLORS.dangerHover
+                      : COLORS.successHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = clockRunning
+                      ? COLORS.danger
+                      : COLORS.success;
                   }}
                 >
                   {clockRunning ? "⏸ Pause" : "▶ Start"}
@@ -396,14 +456,8 @@ const Game: React.FC = () => {
                     setPeriod((prev) => prev + 1);
                     setClockRunning(false);
                   }}
-                  style={{
-                    padding: "0.5rem 1rem",
-                    backgroundColor: "#6c757d",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
+                  style={BUTTON_STYLES.secondary}
+                  {...getButtonHoverStyle("secondary")}
                 >
                   Next Period
                 </button>
@@ -415,11 +469,11 @@ const Game: React.FC = () => {
                 display: "flex",
                 justifyContent: "space-around",
                 alignItems: "center",
-                backgroundColor: "#1a1a1a",
+                backgroundColor: COLORS.text.primary,
                 color: "white",
-                padding: "1.5rem",
-                borderRadius: "8px",
-                marginBottom: "1rem",
+                padding: "2rem",
+                borderRadius: "12px",
+                marginBottom: "1.5rem",
               }}
             >
               <div style={{ textAlign: "center", flex: 1 }}>
@@ -476,10 +530,11 @@ const Game: React.FC = () => {
           >
             <div
               style={{
-                backgroundColor: "white",
-                borderRadius: "8px",
+                backgroundColor: COLORS.background.default,
+                borderRadius: "12px",
                 padding: "1.5rem",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                border: `1px solid ${COLORS.border.default}`,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
               <div
@@ -490,7 +545,14 @@ const Game: React.FC = () => {
                   marginBottom: "1rem",
                 }}
               >
-                <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: "1.25rem",
+                    fontWeight: 600,
+                    color: COLORS.text.primary,
+                  }}
+                >
                   {homeTeam?.name || "Home"} - On Court
                 </h2>
                 <button
@@ -499,14 +561,11 @@ const Game: React.FC = () => {
                     setShowSubstitutionModal(true);
                   }}
                   style={{
-                    padding: "0.375rem 0.75rem",
-                    backgroundColor: "#007bff",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
+                    ...BUTTON_STYLES.primary,
+                    padding: "0.5rem 1rem",
                     fontSize: "0.875rem",
                   }}
+                  {...getButtonHoverStyle("primary")}
                 >
                   Substitution
                 </button>
@@ -522,11 +581,11 @@ const Game: React.FC = () => {
                   <div
                     key={player.id}
                     style={{
-                      backgroundColor: "#f8f9fa",
+                      backgroundColor: COLORS.primaryLight,
                       padding: "0.75rem",
-                      borderRadius: "4px",
+                      borderRadius: "8px",
                       textAlign: "center",
-                      border: "2px solid #007bff",
+                      border: `2px solid ${COLORS.primary}`,
                     }}
                   >
                     <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
@@ -551,10 +610,11 @@ const Game: React.FC = () => {
 
             <div
               style={{
-                backgroundColor: "white",
-                borderRadius: "8px",
+                backgroundColor: COLORS.background.default,
+                borderRadius: "12px",
                 padding: "1.5rem",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                border: `1px solid ${COLORS.border.default}`,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
               <div
@@ -565,7 +625,14 @@ const Game: React.FC = () => {
                   marginBottom: "1rem",
                 }}
               >
-                <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: "1.25rem",
+                    fontWeight: 600,
+                    color: COLORS.text.primary,
+                  }}
+                >
                   {awayTeam?.name || "Away"} - On Court
                 </h2>
                 <button
@@ -574,14 +641,11 @@ const Game: React.FC = () => {
                     setShowSubstitutionModal(true);
                   }}
                   style={{
-                    padding: "0.375rem 0.75rem",
-                    backgroundColor: "#007bff",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
+                    ...BUTTON_STYLES.primary,
+                    padding: "0.5rem 1rem",
                     fontSize: "0.875rem",
                   }}
+                  {...getButtonHoverStyle("primary")}
                 >
                   Substitution
                 </button>
@@ -597,23 +661,35 @@ const Game: React.FC = () => {
                   <div
                     key={player.id}
                     style={{
-                      backgroundColor: "#f8f9fa",
+                      backgroundColor: "#fef2f2",
                       padding: "0.75rem",
-                      borderRadius: "4px",
+                      borderRadius: "8px",
                       textAlign: "center",
-                      border: "2px solid #dc3545",
+                      border: `2px solid ${COLORS.danger}`,
                     }}
                   >
-                    <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: "1.1rem",
+                        color: COLORS.text.primary,
+                      }}
+                    >
                       #{player.number}
                     </div>
-                    <div style={{ fontSize: "0.75rem", marginTop: "0.25rem" }}>
+                    <div
+                      style={{
+                        fontSize: "0.75rem",
+                        marginTop: "0.25rem",
+                        color: COLORS.text.primary,
+                      }}
+                    >
                       {player.name.split(" ")[0]}
                     </div>
                     <div
                       style={{
                         fontSize: "0.7rem",
-                        color: "#6c757d",
+                        color: COLORS.text.secondary,
                         marginTop: "0.25rem",
                       }}
                     >
@@ -634,10 +710,11 @@ const Game: React.FC = () => {
           >
             <div
               style={{
-                backgroundColor: "white",
-                borderRadius: "8px",
+                backgroundColor: COLORS.background.default,
+                borderRadius: "12px",
                 padding: "1.5rem",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                border: `1px solid ${COLORS.border.default}`,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
               <h2
@@ -646,6 +723,7 @@ const Game: React.FC = () => {
                   marginBottom: "1rem",
                   fontSize: "1.25rem",
                   fontWeight: 600,
+                  color: COLORS.text.primary,
                 }}
               >
                 {homeTeam?.name || "Home"} - Player Stats
@@ -653,7 +731,11 @@ const Game: React.FC = () => {
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ borderBottom: "2px solid #dee2e6" }}>
+                    <tr
+                      style={{
+                        borderBottom: `2px solid ${COLORS.border.default}`,
+                      }}
+                    >
                       <th
                         style={{
                           padding: "0.5rem",
@@ -724,7 +806,7 @@ const Game: React.FC = () => {
                       <tr
                         key={player.id}
                         style={{
-                          borderBottom: "1px solid #e9ecef",
+                          borderBottom: `1px solid ${COLORS.border.light}`,
                           backgroundColor: player.onCourt
                             ? "#f0f8ff"
                             : "transparent",
@@ -754,7 +836,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: COLORS.danger,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -779,7 +861,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#28a745",
+                                backgroundColor: COLORS.success,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -812,7 +894,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: COLORS.danger,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -842,7 +924,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#28a745",
+                                backgroundColor: COLORS.success,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -875,7 +957,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: COLORS.danger,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -905,7 +987,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#28a745",
+                                backgroundColor: COLORS.success,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -933,7 +1015,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: COLORS.danger,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -958,7 +1040,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: COLORS.danger,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -980,10 +1062,11 @@ const Game: React.FC = () => {
 
             <div
               style={{
-                backgroundColor: "white",
-                borderRadius: "8px",
+                backgroundColor: COLORS.background.default,
+                borderRadius: "12px",
                 padding: "1.5rem",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                border: `1px solid ${COLORS.border.default}`,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
               <h2
@@ -992,6 +1075,7 @@ const Game: React.FC = () => {
                   marginBottom: "1rem",
                   fontSize: "1.25rem",
                   fontWeight: 600,
+                  color: COLORS.text.primary,
                 }}
               >
                 {awayTeam?.name || "Away"} - Player Stats
@@ -999,7 +1083,11 @@ const Game: React.FC = () => {
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ borderBottom: "2px solid #dee2e6" }}>
+                    <tr
+                      style={{
+                        borderBottom: `2px solid ${COLORS.border.default}`,
+                      }}
+                    >
                       <th
                         style={{
                           padding: "0.5rem",
@@ -1061,7 +1149,7 @@ const Game: React.FC = () => {
                       <tr
                         key={player.id}
                         style={{
-                          borderBottom: "1px solid #e9ecef",
+                          borderBottom: `1px solid ${COLORS.border.light}`,
                           backgroundColor: player.onCourt
                             ? "#fff0f0"
                             : "transparent",
@@ -1091,7 +1179,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: COLORS.danger,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -1116,7 +1204,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#28a745",
+                                backgroundColor: COLORS.success,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -1149,7 +1237,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: COLORS.danger,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -1179,7 +1267,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#28a745",
+                                backgroundColor: COLORS.success,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -1212,7 +1300,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: COLORS.danger,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -1242,7 +1330,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#28a745",
+                                backgroundColor: COLORS.success,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -1270,7 +1358,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: COLORS.danger,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -1295,7 +1383,7 @@ const Game: React.FC = () => {
                               }
                               style={{
                                 padding: "0.125rem 0.375rem",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: COLORS.danger,
                                 color: "white",
                                 border: "none",
                                 borderRadius: "2px",
@@ -1337,17 +1425,27 @@ const Game: React.FC = () => {
             >
               <div
                 style={{
-                  backgroundColor: "white",
-                  borderRadius: "8px",
+                  backgroundColor: COLORS.background.default,
+                  borderRadius: "12px",
                   padding: "2rem",
                   maxWidth: "500px",
                   width: "90%",
                   maxHeight: "80vh",
                   overflow: "auto",
+                  border: `1px solid ${COLORS.border.default}`,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <h2 style={{ margin: 0, marginBottom: "1.5rem" }}>
+                <h2
+                  style={{
+                    margin: 0,
+                    marginBottom: "1.5rem",
+                    fontSize: "1.5rem",
+                    fontWeight: 600,
+                    color: COLORS.text.primary,
+                  }}
+                >
                   Substitution -{" "}
                   {selectedTeam === "home" ? homeTeam?.name : awayTeam?.name}
                 </h2>
@@ -1355,8 +1453,10 @@ const Game: React.FC = () => {
                   <h3
                     style={{
                       margin: 0,
-                      marginBottom: "0.5rem",
-                      fontSize: "1rem",
+                      marginBottom: "0.75rem",
+                      fontSize: "1.125rem",
+                      fontWeight: 600,
+                      color: COLORS.text.primary,
                     }}
                   >
                     Player Out
@@ -1386,11 +1486,26 @@ const Game: React.FC = () => {
                           }}
                           style={{
                             padding: "0.75rem",
-                            backgroundColor: "#f8f9fa",
-                            border: "1px solid #dee2e6",
-                            borderRadius: "4px",
+                            backgroundColor: COLORS.background.light,
+                            border: `1px solid ${COLORS.border.default}`,
+                            borderRadius: "8px",
                             cursor: "pointer",
                             textAlign: "left",
+                            fontSize: "0.9375rem",
+                            color: COLORS.text.primary,
+                            transition:
+                              "background-color 0.2s, border-color 0.2s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              COLORS.primaryLight;
+                            e.currentTarget.style.borderColor = COLORS.primary;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              COLORS.background.light;
+                            e.currentTarget.style.borderColor =
+                              COLORS.border.default;
                           }}
                         >
                           #{player.number} {player.name} - {player.position}
@@ -1403,8 +1518,10 @@ const Game: React.FC = () => {
                   <h3
                     style={{
                       margin: 0,
-                      marginBottom: "0.5rem",
-                      fontSize: "1rem",
+                      marginBottom: "0.75rem",
+                      fontSize: "1.125rem",
+                      fontWeight: 600,
+                      color: COLORS.text.primary,
                     }}
                   >
                     Player In
@@ -1422,9 +1539,11 @@ const Game: React.FC = () => {
                           key={player.id}
                           style={{
                             padding: "0.75rem",
-                            backgroundColor: "#f8f9fa",
-                            border: "1px solid #dee2e6",
-                            borderRadius: "4px",
+                            backgroundColor: COLORS.background.light,
+                            border: `1px solid ${COLORS.border.default}`,
+                            borderRadius: "8px",
+                            fontSize: "0.9375rem",
+                            color: COLORS.text.secondary,
                           }}
                         >
                           #{player.number} {player.name} - {player.position}
@@ -1439,15 +1558,10 @@ const Game: React.FC = () => {
                     setSelectedTeam(null);
                   }}
                   style={{
+                    ...BUTTON_STYLES.secondaryFull,
                     marginTop: "1.5rem",
-                    padding: "0.5rem 1rem",
-                    backgroundColor: "#6c757d",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    width: "100%",
                   }}
+                  {...getButtonHoverStyle("secondary")}
                 >
                   Cancel
                 </button>
@@ -1463,6 +1577,90 @@ const Game: React.FC = () => {
     return <Loading />;
   }
 
+  const formatDateTime = (dateStr: string) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return COLORS.success;
+      case "in_progress":
+        return COLORS.primary;
+      case "cancelled":
+        return COLORS.danger;
+      default:
+        return COLORS.text.secondary;
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return <CheckCircleIcon style={{ fontSize: "1.25rem" }} />;
+      case "in_progress":
+        return <PlayCircleOutlineIcon style={{ fontSize: "1.25rem" }} />;
+      case "cancelled":
+        return <CancelIcon style={{ fontSize: "1.25rem" }} />;
+      default:
+        return <EventIcon style={{ fontSize: "1.25rem" }} />;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return "Completed";
+      case "in_progress":
+        return "In Progress";
+      case "cancelled":
+        return "Cancelled";
+      case "scheduled":
+        return "Scheduled";
+      default:
+        return status || "Scheduled";
+    }
+  };
+
+  const groupedGames = games.reduce((acc, game) => {
+    const status = (game as any).status?.toLowerCase() || "scheduled";
+    if (!acc[status]) {
+      acc[status] = [];
+    }
+    acc[status].push(game);
+    return acc;
+  }, {} as Record<string, typeof games>);
+
+  const statusOrder = ["in_progress", "scheduled", "completed", "cancelled"];
+  const allStatuses = statusOrder.concat(
+    Object.keys(groupedGames).filter((status) => !statusOrder.includes(status))
+  );
+
+  const getGamesToDisplay = () => {
+    if (selectedStatus === "all") {
+      return statusOrder
+        .filter((status) => groupedGames[status])
+        .map((status) => ({
+          status,
+          games: groupedGames[status],
+        }));
+    }
+    return [
+      {
+        status: selectedStatus,
+        games: groupedGames[selectedStatus] || [],
+      },
+    ];
+  };
+
   return (
     <div
       style={{
@@ -1473,85 +1671,240 @@ const Game: React.FC = () => {
         width: "100%",
         padding: "2rem",
         gap: "2rem",
+        maxWidth: "1400px",
+        margin: "0 auto",
       }}
     >
-      <h1 style={{ fontSize: "2.5rem" }}>Games</h1>
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1.5rem",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "1rem",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "2.5rem",
+              fontWeight: 600,
+              margin: 0,
+              color: COLORS.text.primary,
+            }}
+          >
+            Games
+          </h1>
+          {games.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                flexWrap: "wrap",
+              }}
+            >
+              <FilterListIcon
+                style={{
+                  fontSize: "1.25rem",
+                  color: COLORS.text.secondary,
+                }}
+              />
+              <FormControl
+                style={{
+                  minWidth: "200px",
+                }}
+              >
+                <InputLabel
+                  id="status-filter-label"
+                  style={{
+                    color: COLORS.text.secondary,
+                  }}
+                >
+                  Filter by Status
+                </InputLabel>
+                <Select
+                  labelId="status-filter-label"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  label="Filter by Status"
+                  style={{
+                    backgroundColor: COLORS.background.default,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  <MenuItem value="all">All Games</MenuItem>
+                  {allStatuses.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {getStatusLabel(status)} (
+                      {groupedGames[status]?.length || 0})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
+          )}
+        </div>
+      </div>
 
       {games.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "2rem" }}>
-          <div>No games found.</div>
+        <div style={{ textAlign: "center", padding: "2rem", width: "100%" }}>
+          <div style={{ color: COLORS.text.secondary }}>No games found.</div>
         </div>
       ) : (
         <div
           style={{
             width: "100%",
-            maxWidth: "800px",
-            backgroundColor: "#f8f9fa",
-            padding: "1.5rem",
-            borderRadius: "8px",
+            maxWidth: "1200px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "2rem",
           }}
         >
-          <h2 style={{ marginTop: 0, marginBottom: "1rem" }}>All Games</h2>
-          <div style={{ marginBottom: "1rem" }}>
-            {games.map((game) => {
-              const homeTeam = teams.find(
-                (t) => t.id === (game as any).homeTeamId
-              );
-              const awayTeam = teams.find(
-                (t) => t.id === (game as any).awayTeamId
-              );
-              return (
+          {getGamesToDisplay().map(({ status, games: statusGames }) => {
+            const statusColor = getStatusColor(status);
+
+            return (
+              <div key={status} style={{ width: "100%" }}>
                 <div
-                  key={game.id}
-                  onClick={() => navigate(`${ROUTES.GAMES}?id=${game.id}`)}
                   style={{
-                    padding: "1rem",
-                    marginBottom: "0.5rem",
-                    backgroundColor: "white",
-                    borderRadius: "4px",
-                    border: "1px solid #dee2e6",
-                    cursor: "pointer",
-                    transition: "background-color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f8f9fa";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "white";
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    marginBottom: "1rem",
+                    paddingBottom: "0.75rem",
+                    borderBottom: `2px solid ${statusColor}`,
                   }}
                 >
-                  <div style={{ fontWeight: "500", fontSize: "1.1rem" }}>
-                    {homeTeam?.name || `Team ${(game as any).homeTeamId}`} vs{" "}
-                    {awayTeam?.name || `Team ${(game as any).awayTeamId}`}
+                  <div style={{ color: statusColor }}>
+                    {getStatusIcon(status)}
                   </div>
-                  {(game as any).scheduledDateTime && (
-                    <div
-                      style={{
-                        fontSize: "0.875rem",
-                        color: "#6c757d",
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      {new Date(
-                        (game as any).scheduledDateTime
-                      ).toLocaleString()}
-                    </div>
-                  )}
-                  {(game as any).status && (
-                    <div
-                      style={{
-                        fontSize: "0.875rem",
-                        color: "#6c757d",
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      Status: {(game as any).status}
-                    </div>
-                  )}
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: "1.5rem",
+                      fontWeight: 600,
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    {getStatusLabel(status)} ({statusGames.length})
+                  </h2>
                 </div>
-              );
-            })}
-          </div>
+                {statusGames.length === 0 ? (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "3rem 2rem",
+                      color: COLORS.text.secondary,
+                      fontSize: "1rem",
+                    }}
+                  >
+                    No games in "{getStatusLabel(status)}" status
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fill, minmax(280px, 1fr))",
+                      gap: "1rem",
+                    }}
+                  >
+                    {statusGames.map((game) => {
+                      const homeTeam = teams.find(
+                        (t) => t.id === (game as any).homeTeamId
+                      );
+                      const awayTeam = teams.find(
+                        (t) => t.id === (game as any).awayTeamId
+                      );
+                      const gameStatus = (game as any).status;
+                      return (
+                        <div
+                          key={game.id}
+                          onClick={() =>
+                            navigate(`${ROUTES.GAMES}?id=${game.id}`)
+                          }
+                          style={{
+                            backgroundColor: COLORS.background.default,
+                            borderRadius: "12px",
+                            padding: "1.5rem",
+                            border: `1px solid ${COLORS.border.default}`,
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                            transition: "transform 0.2s, box-shadow 0.2s",
+                            cursor: "pointer",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform =
+                              "translateY(-2px)";
+                            e.currentTarget.style.boxShadow =
+                              "0 4px 8px rgba(0,0,0,0.1)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow =
+                              "0 2px 4px rgba(0,0,0,0.05)";
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "0.75rem",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                              }}
+                            >
+                              <div style={{ color: statusColor }}>
+                                {getStatusIcon(gameStatus)}
+                              </div>
+                              <div
+                                style={{
+                                  fontWeight: 600,
+                                  fontSize: "1.1rem",
+                                  color: COLORS.text.primary,
+                                  flex: 1,
+                                }}
+                              >
+                                {homeTeam?.name ||
+                                  `Team ${(game as any).homeTeamId}`}{" "}
+                                vs{" "}
+                                {awayTeam?.name ||
+                                  `Team ${(game as any).awayTeamId}`}
+                              </div>
+                            </div>
+                            {(game as any).scheduledDateTime && (
+                              <div
+                                style={{
+                                  fontSize: "0.875rem",
+                                  color: COLORS.text.secondary,
+                                }}
+                              >
+                                {formatDateTime(
+                                  (game as any).scheduledDateTime
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

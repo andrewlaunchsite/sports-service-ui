@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   BarChart,
   Bar,
@@ -14,6 +15,12 @@ import {
 } from "recharts";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
+import { getMyPlayer } from "../models/playerSlice";
+import { getTeams } from "../models/teamSlice";
+import { AppDispatch, RootState } from "../models/store";
+import Loading from "../components/Loading";
+import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import FilterListIcon from "@mui/icons-material/FilterList";
 
 interface Player {
   id: number;
@@ -414,11 +421,57 @@ const mockPlayers: Player[] = [
 
 const PlayerStats: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const dispatch = useDispatch<AppDispatch>();
+  const hasFetchedMyPlayer = useRef(false);
+  const { myPlayer, loadingState: playerLoadingState } = useSelector(
+    (state: RootState) => state.player
+  );
+  const { teams, loadingState: teamLoadingState } = useSelector(
+    (state: RootState) => state.team
+  );
+  const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<
+    "points" | "rebounds" | "assists" | "fieldGoalPercentage"
+  >("points");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
   const playerId = searchParams.get("id");
+
+  useEffect(() => {
+    if (!hasFetchedMyPlayer.current && !playerLoadingState.loadingMyPlayer) {
+      hasFetchedMyPlayer.current = true;
+      dispatch(getMyPlayer() as any);
+    }
+  }, [playerLoadingState.loadingMyPlayer, dispatch]);
+
+  useEffect(() => {
+    dispatch(getTeams({ offset: 0, limit: 100 }) as any);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (
+      myPlayer &&
+      myPlayer.teamId &&
+      selectedTeamFilter === "all" &&
+      teams.length > 0
+    ) {
+      const myTeam = teams.find((t) => t.id === myPlayer.teamId);
+      if (myTeam) {
+        setSelectedTeamFilter(myPlayer.teamId.toString());
+      }
+    }
+  }, [myPlayer, teams]);
 
   const selectedPlayer = playerId
     ? mockPlayers.find((p) => p.id === parseInt(playerId, 10))
     : null;
+
+  const getMyPlayerMock = (): Player | null => {
+    if (!myPlayer) return null;
+    return mockPlayers[0];
+  };
+
+  const myPlayerMock = getMyPlayerMock();
 
   if (selectedPlayer) {
     const chartData = selectedPlayer.gameStats.map((game) => ({
@@ -432,6 +485,7 @@ const PlayerStats: React.FC = () => {
       <div
         style={{
           minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+          height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
           width: "100%",
           padding: "2rem",
           backgroundColor: COLORS.background.light,
@@ -932,14 +986,250 @@ const PlayerStats: React.FC = () => {
     );
   }
 
-  const sortedPlayers = [...mockPlayers].sort(
-    (a, b) => b.stats.points - a.stats.points
+  if (playerLoadingState.loadingMyPlayer || teamLoadingState.loadingTeams) {
+    return <Loading />;
+  }
+
+  const getFilteredPlayers = () => {
+    let filtered = [...mockPlayers];
+
+    if (selectedTeamFilter === "all") {
+      return filtered;
+    }
+
+    const selectedTeam = teams.find(
+      (t) => t.id === parseInt(selectedTeamFilter, 10)
+    );
+    if (selectedTeam) {
+      return filtered.filter((p) => p.team === selectedTeam.name);
+    }
+
+    return filtered;
+  };
+
+  const filteredPlayers = getFilteredPlayers();
+  const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+    let aValue: number;
+    let bValue: number;
+
+    switch (sortBy) {
+      case "points":
+        aValue = a.stats.points;
+        bValue = b.stats.points;
+        break;
+      case "rebounds":
+        aValue = a.stats.rebounds;
+        bValue = b.stats.rebounds;
+        break;
+      case "assists":
+        aValue = a.stats.assists;
+        bValue = b.stats.assists;
+        break;
+      case "fieldGoalPercentage":
+        aValue = a.stats.fieldGoalPercentage;
+        bValue = b.stats.fieldGoalPercentage;
+        break;
+      default:
+        aValue = a.stats.points;
+        bValue = b.stats.points;
+    }
+
+    return sortOrder === "desc" ? bValue - aValue : aValue - bValue;
+  });
+
+  const handleSort = (newSortBy: typeof sortBy) => {
+    if (sortBy === newSortBy) {
+      setSortOrder(sortOrder === "desc" ? "asc" : "desc");
+    } else {
+      setSortBy(newSortBy);
+      setSortOrder("desc");
+    }
+  };
+
+  const getSortIcon = (column: typeof sortBy) => {
+    if (sortBy !== column) return null;
+    return sortOrder === "desc" ? "↓" : "↑";
+  };
+
+  const renderPlayerCard = (player: Player) => (
+    <div
+      key={player.id}
+      onClick={() => setSearchParams({ id: player.id.toString() })}
+      style={{
+        backgroundColor: COLORS.background.default,
+        borderRadius: "12px",
+        padding: "1.5rem",
+        border: `1px solid ${COLORS.border.default}`,
+        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+        cursor: "pointer",
+        transition: "transform 0.2s, box-shadow 0.2s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.05)";
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "1rem",
+          marginBottom: "1.25rem",
+        }}
+      >
+        <div
+          style={{
+            width: "60px",
+            height: "60px",
+            borderRadius: "50%",
+            backgroundColor: COLORS.primary,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 700,
+          }}
+        >
+          #{player.number}
+        </div>
+        <div>
+          <div
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: 600,
+              color: COLORS.text.primary,
+              marginBottom: "0.25rem",
+            }}
+          >
+            {player.name}
+          </div>
+          <div
+            style={{
+              fontSize: "0.875rem",
+              color: COLORS.text.secondary,
+            }}
+          >
+            {player.team} • {player.position}
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "0.75rem",
+          marginBottom: "1rem",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 700,
+              color: COLORS.success,
+            }}
+          >
+            {player.stats.points.toFixed(1)}
+          </div>
+          <div
+            style={{
+              fontSize: "0.75rem",
+              color: COLORS.text.secondary,
+              marginTop: "0.25rem",
+            }}
+          >
+            PPG
+          </div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 700,
+              color: COLORS.primary,
+            }}
+          >
+            {player.stats.rebounds.toFixed(1)}
+          </div>
+          <div
+            style={{
+              fontSize: "0.75rem",
+              color: COLORS.text.secondary,
+              marginTop: "0.25rem",
+            }}
+          >
+            RPG
+          </div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 700,
+              color: COLORS.warning,
+            }}
+          >
+            {player.stats.assists.toFixed(1)}
+          </div>
+          <div
+            style={{
+              fontSize: "0.75rem",
+              color: COLORS.text.secondary,
+              marginTop: "0.25rem",
+            }}
+          >
+            APG
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          marginTop: "1rem",
+          paddingTop: "1rem",
+          borderTop: `1px solid ${COLORS.border.light}`,
+          display: "flex",
+          justifyContent: "space-between",
+          fontSize: "0.875rem",
+        }}
+      >
+        <div>
+          <span style={{ color: COLORS.text.secondary }}>FG%: </span>
+          <span
+            style={{
+              fontWeight: 600,
+              color: COLORS.text.primary,
+            }}
+          >
+            {player.stats.fieldGoalPercentage.toFixed(1)}%
+          </span>
+        </div>
+        <div>
+          <span style={{ color: COLORS.text.secondary }}>Games: </span>
+          <span
+            style={{
+              fontWeight: 600,
+              color: COLORS.text.primary,
+            }}
+          >
+            {player.stats.gamesPlayed}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 
   return (
     <div
       style={{
         minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+        height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
         width: "100%",
         padding: "2rem",
         backgroundColor: COLORS.background.light,
@@ -962,199 +1252,451 @@ const PlayerStats: React.FC = () => {
             gap: "1.5rem",
           }}
         >
-          <h1
+          <div
             style={{
-              fontSize: "2.5rem",
-              fontWeight: 600,
-              margin: 0,
-              color: COLORS.text.primary,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "1rem",
             }}
           >
-            Player Statistics
-          </h1>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: "1.5rem",
-          }}
-        >
-          {sortedPlayers.map((player) => (
-            <div
-              key={player.id}
-              onClick={() => setSearchParams({ id: player.id.toString() })}
+            <h1
               style={{
-                backgroundColor: COLORS.background.default,
-                borderRadius: "12px",
-                padding: "1.5rem",
-                border: `1px solid ${COLORS.border.default}`,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                cursor: "pointer",
-                transition: "transform 0.2s, box-shadow 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.05)";
+                fontSize: "2.5rem",
+                fontWeight: 600,
+                margin: 0,
+                color: COLORS.text.primary,
               }}
             >
+              Player Statistics
+            </h1>
+            {mockPlayers.length > 0 && (
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "1.25rem",
+                  gap: "0.75rem",
+                  flexWrap: "wrap",
                 }}
               >
-                <div
+                <FilterListIcon
                   style={{
-                    width: "60px",
-                    height: "60px",
-                    borderRadius: "50%",
-                    backgroundColor: COLORS.primary,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
-                    fontSize: "1.5rem",
-                    fontWeight: 700,
+                    fontSize: "1.25rem",
+                    color: COLORS.text.secondary,
+                  }}
+                />
+                <FormControl
+                  style={{
+                    minWidth: "200px",
                   }}
                 >
-                  #{player.number}
-                </div>
-                <div>
-                  <div
+                  <InputLabel
+                    id="team-filter-label"
                     style={{
-                      fontSize: "1.25rem",
-                      fontWeight: 600,
-                      color: COLORS.text.primary,
-                      marginBottom: "0.25rem",
-                    }}
-                  >
-                    {player.name}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.875rem",
                       color: COLORS.text.secondary,
                     }}
                   >
-                    {player.team} • {player.position}
-                  </div>
-                </div>
+                    Filter by Team
+                  </InputLabel>
+                  <Select
+                    labelId="team-filter-label"
+                    value={selectedTeamFilter}
+                    onChange={(e) => setSelectedTeamFilter(e.target.value)}
+                    label="Filter by Team"
+                    style={{
+                      backgroundColor: COLORS.background.default,
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    <MenuItem value="all">All Teams</MenuItem>
+                    {teams.map((team) => (
+                      <MenuItem key={team.id} value={team.id.toString()}>
+                        {team.name}
+                        {myPlayer &&
+                          myPlayer.teamId === team.id &&
+                          " (My Team)"}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </div>
+            )}
+          </div>
+        </div>
 
-              <div
+        {myPlayerMock && (
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                marginBottom: "1rem",
+                paddingBottom: "0.75rem",
+                borderBottom: `2px solid ${COLORS.primary}`,
+              }}
+            >
+              <h2
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: "0.75rem",
-                  marginBottom: "1rem",
+                  margin: 0,
+                  fontSize: "1.5rem",
+                  fontWeight: 600,
+                  color: COLORS.text.primary,
                 }}
               >
-                <div style={{ textAlign: "center" }}>
-                  <div
-                    style={{
-                      fontSize: "1.75rem",
-                      fontWeight: 700,
-                      color: COLORS.success,
-                    }}
-                  >
-                    {player.stats.points.toFixed(1)}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: COLORS.text.secondary,
-                      marginTop: "0.25rem",
-                    }}
-                  >
-                    PPG
-                  </div>
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div
-                    style={{
-                      fontSize: "1.75rem",
-                      fontWeight: 700,
-                      color: COLORS.primary,
-                    }}
-                  >
-                    {player.stats.rebounds.toFixed(1)}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: COLORS.text.secondary,
-                      marginTop: "0.25rem",
-                    }}
-                  >
-                    RPG
-                  </div>
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div
-                    style={{
-                      fontSize: "1.75rem",
-                      fontWeight: 700,
-                      color: COLORS.warning,
-                    }}
-                  >
-                    {player.stats.assists.toFixed(1)}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: COLORS.text.secondary,
-                      marginTop: "0.25rem",
-                    }}
-                  >
-                    APG
-                  </div>
-                </div>
-              </div>
+                My Stats
+              </h2>
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                gap: "1.5rem",
+                marginBottom: "2rem",
+              }}
+            >
+              {renderPlayerCard(myPlayerMock)}
+            </div>
+          </div>
+        )}
 
-              <div
+        {sortedPlayers.length > 0 && (
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                marginBottom: "1rem",
+                paddingBottom: "0.75rem",
+                borderBottom: `2px solid ${COLORS.border.default}`,
+              }}
+            >
+              <h2
                 style={{
-                  marginTop: "1rem",
-                  paddingTop: "1rem",
-                  borderTop: `1px solid ${COLORS.border.light}`,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "0.875rem",
+                  margin: 0,
+                  fontSize: "1.5rem",
+                  fontWeight: 600,
+                  color: COLORS.text.primary,
                 }}
               >
-                <div>
-                  <span style={{ color: COLORS.text.secondary }}>FG%: </span>
+                Leaderboard
+                {selectedTeamFilter !== "all" && (
                   <span
                     style={{
-                      fontWeight: 600,
-                      color: COLORS.text.primary,
+                      fontSize: "1rem",
+                      fontWeight: 400,
+                      color: COLORS.text.secondary,
+                      marginLeft: "0.5rem",
                     }}
                   >
-                    {player.stats.fieldGoalPercentage.toFixed(1)}%
+                    ({sortedPlayers.length})
                   </span>
-                </div>
-                <div>
-                  <span style={{ color: COLORS.text.secondary }}>Games: </span>
-                  <span
-                    style={{
-                      fontWeight: 600,
-                      color: COLORS.text.primary,
-                    }}
-                  >
-                    {player.stats.gamesPlayed}
-                  </span>
-                </div>
+                )}
+              </h2>
+            </div>
+            <div
+              style={{
+                backgroundColor: COLORS.background.default,
+                borderRadius: "12px",
+                border: `1px solid ${COLORS.border.default}`,
+                overflow: "hidden",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              }}
+            >
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr
+                      style={{
+                        backgroundColor: COLORS.background.lighter,
+                        borderBottom: `2px solid ${COLORS.border.default}`,
+                      }}
+                    >
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "left",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Rank
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "left",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Player
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleSort("points")}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.primary;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.text.secondary;
+                        }}
+                      >
+                        PPG {getSortIcon("points")}
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleSort("rebounds")}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.primary;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.text.secondary;
+                        }}
+                      >
+                        RPG {getSortIcon("rebounds")}
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleSort("assists")}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.primary;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.text.secondary;
+                        }}
+                      >
+                        APG {getSortIcon("assists")}
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleSort("fieldGoalPercentage")}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.primary;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.text.secondary;
+                        }}
+                      >
+                        FG% {getSortIcon("fieldGoalPercentage")}
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Games
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedPlayers
+                      .filter((p) => !myPlayerMock || p.id !== myPlayerMock.id)
+                      .map((player, index) => {
+                        const rank = index + 1;
+                        const isMyPlayer =
+                          myPlayerMock && player.id === myPlayerMock.id;
+                        return (
+                          <tr
+                            key={player.id}
+                            onClick={() =>
+                              setSearchParams({ id: player.id.toString() })
+                            }
+                            style={{
+                              borderBottom: `1px solid ${COLORS.border.light}`,
+                              cursor: "pointer",
+                              transition: "background-color 0.2s",
+                              backgroundColor: isMyPlayer
+                                ? COLORS.primaryLight
+                                : "transparent",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = isMyPlayer
+                                ? COLORS.primaryLight
+                                : COLORS.background.lighter;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = isMyPlayer
+                                ? COLORS.primaryLight
+                                : "transparent";
+                            }}
+                          >
+                            <td
+                              style={{
+                                padding: "1rem",
+                                fontSize: "1rem",
+                                fontWeight: 600,
+                                color: COLORS.text.primary,
+                              }}
+                            >
+                              {rank}
+                            </td>
+                            <td style={{ padding: "1rem" }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "0.75rem",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    borderRadius: "50%",
+                                    backgroundColor: COLORS.primary,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: "white",
+                                    fontSize: "1rem",
+                                    fontWeight: 700,
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  #{player.number}
+                                </div>
+                                <div>
+                                  <div
+                                    style={{
+                                      fontSize: "1rem",
+                                      fontWeight: 600,
+                                      color: COLORS.text.primary,
+                                      marginBottom: "0.25rem",
+                                    }}
+                                  >
+                                    {player.name}
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontSize: "0.875rem",
+                                      color: COLORS.text.secondary,
+                                    }}
+                                  >
+                                    {player.team} • {player.position}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem",
+                                textAlign: "center",
+                                fontSize: "1rem",
+                                fontWeight: 600,
+                                color: COLORS.success,
+                              }}
+                            >
+                              {player.stats.points.toFixed(1)}
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem",
+                                textAlign: "center",
+                                fontSize: "1rem",
+                                fontWeight: 600,
+                                color: COLORS.primary,
+                              }}
+                            >
+                              {player.stats.rebounds.toFixed(1)}
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem",
+                                textAlign: "center",
+                                fontSize: "1rem",
+                                fontWeight: 600,
+                                color: COLORS.warning,
+                              }}
+                            >
+                              {player.stats.assists.toFixed(1)}
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem",
+                                textAlign: "center",
+                                fontSize: "1rem",
+                                fontWeight: 600,
+                                color: COLORS.text.primary,
+                              }}
+                            >
+                              {player.stats.fieldGoalPercentage.toFixed(1)}%
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem",
+                                textAlign: "center",
+                                fontSize: "1rem",
+                                color: COLORS.text.secondary,
+                              }}
+                            >
+                              {player.stats.gamesPlayed}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {sortedPlayers.length === 0 && (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "3rem 2rem",
+              color: COLORS.text.secondary,
+              fontSize: "1rem",
+            }}
+          >
+            No players found for the selected filter.
+          </div>
+        )}
       </div>
     </div>
   );

@@ -7,9 +7,39 @@ export interface Game {
   [key: string]: any;
 }
 
+export interface LineupPlayer {
+  playerId: number;
+  position: string;
+}
+
+export interface Lineup {
+  id: number;
+  gameId: number;
+  teamId: number;
+  period: number;
+  startClockS: number;
+  endClockS: number | null;
+  players: LineupPlayer[];
+}
+
+export interface LineupCreate {
+  teamId: number;
+  period: number;
+  players: LineupPlayer[];
+}
+
+export interface LineupBatchCreate {
+  lineups: LineupCreate[];
+}
+
+export interface LineupBatchOut {
+  lineups: Lineup[];
+}
+
 export interface GamesState {
   games: Game[];
   game: Game | null;
+  currentLineups: { [teamId: number]: Lineup | null };
   pagination: {
     totalCount: number;
     count: number;
@@ -23,6 +53,9 @@ export interface GamesState {
     loadingCreate: boolean;
     loadingUpdate: boolean;
     loadingDelete: boolean;
+    loadingLineup: boolean;
+    loadingLineupCreate: boolean;
+    loadingLineupBatch: boolean;
   };
   error: string | null;
 }
@@ -100,11 +133,70 @@ export const deleteGame = createAsyncThunk(
   }
 );
 
+export const createLineup = createAsyncThunk(
+  "games/createLineup",
+  async (
+    params: { gameId: number; lineup: LineupCreate; toastMessage?: string },
+    { fulfillWithValue }
+  ) => {
+    const { gameId, lineup, toastMessage } = params;
+    const { data } = await axiosInstance.post(
+      `/api/v1/games/${gameId}/lineups`,
+      lineup
+    );
+    return (fulfillWithValue as any)(data, {
+      meta: {
+        toast: toastMessage || "Lineup updated successfully",
+      },
+    });
+  }
+);
+
+export const createLineupsBatch = createAsyncThunk(
+  "games/createLineupsBatch",
+  async (
+    params: { gameId: number; batch: LineupBatchCreate },
+    { fulfillWithValue }
+  ) => {
+    const { gameId, batch } = params;
+    const { data } = await axiosInstance.post(
+      `/api/v1/games/${gameId}/lineups/batch`,
+      batch
+    );
+    return (fulfillWithValue as any)(data, {
+      meta: { toast: "Lineups set successfully" },
+    });
+  }
+);
+
+export const getCurrentLineup = createAsyncThunk(
+  "games/getCurrentLineup",
+  async (params: { gameId: number; teamId: number }, { rejectWithValue }) => {
+    const { gameId, teamId } = params;
+    try {
+      const { data } = await axiosInstance.get(
+        `/api/v1/games/${gameId}/lineups/current?team_id=${teamId}`
+      );
+      return data;
+    } catch (error: any) {
+      if (error?.status === 404) {
+        const silentPayload: any = {
+          ...error,
+          silentError: true,
+        };
+        return rejectWithValue(silentPayload);
+      }
+      return rejectWithValue(error);
+    }
+  }
+);
+
 const gameSlice = createSlice({
   name: "game",
   initialState: {
     games: [],
     game: null,
+    currentLineups: {},
     pagination: {
       totalCount: 0,
       count: 0,
@@ -118,12 +210,18 @@ const gameSlice = createSlice({
       loadingCreate: false,
       loadingUpdate: false,
       loadingDelete: false,
+      loadingLineup: false,
+      loadingLineupCreate: false,
+      loadingLineupBatch: false,
     },
     error: null,
   } as GamesState,
   reducers: {
     clearGame: (state) => {
       state.game = null;
+    },
+    clearLineups: (state) => {
+      state.currentLineups = {};
     },
   },
   extraReducers: (builder) => {
@@ -132,6 +230,10 @@ const gameSlice = createSlice({
     ): keyof GamesState["loadingState"] | null => {
       if (actionType.includes("/getByTeam")) return "loadingByTeam";
       if (actionType.includes("/getAll")) return "loadingGames";
+      if (actionType.includes("/getCurrentLineup")) return "loadingLineup";
+      if (actionType.includes("/createLineupsBatch"))
+        return "loadingLineupBatch";
+      if (actionType.includes("/createLineup")) return "loadingLineupCreate";
       if (actionType.includes("/get")) return "loadingGame";
       if (actionType.includes("/create")) return "loadingCreate";
       if (actionType.includes("/update")) return "loadingUpdate";
@@ -188,6 +290,33 @@ const gameSlice = createSlice({
         state.games = state.games.filter((game) => game.id !== gameId);
         state.loadingState.loadingDelete = false;
       })
+      .addCase(createLineup.fulfilled, (state, { payload }) => {
+        state.currentLineups[payload.teamId] = payload;
+        state.loadingState.loadingLineupCreate = false;
+      })
+      .addCase(createLineupsBatch.fulfilled, (state, { payload }) => {
+        payload.lineups.forEach((lineup: Lineup) => {
+          state.currentLineups[lineup.teamId] = lineup;
+        });
+        state.loadingState.loadingLineupBatch = false;
+      })
+      .addCase(getCurrentLineup.fulfilled, (state, { payload }) => {
+        state.currentLineups[payload.teamId] = payload;
+        state.loadingState.loadingLineup = false;
+      })
+      .addCase(getCurrentLineup.rejected, (state, action) => {
+        const actionAny = action as any;
+        if (actionAny.meta?.arg) {
+          const teamId = actionAny.meta.arg.teamId;
+          if (
+            actionAny.payload?.silentError ||
+            actionAny.error?.status === 404
+          ) {
+            state.currentLineups[teamId] = null;
+          }
+        }
+        state.loadingState.loadingLineup = false;
+      })
       .addMatcher(
         (action) =>
           action.type.startsWith("games/") && action.type.endsWith("/pending"),
@@ -219,5 +348,5 @@ const gameSlice = createSlice({
   },
 });
 
-export const { clearGame } = gameSlice.actions;
+export const { clearGame, clearLineups } = gameSlice.actions;
 export default gameSlice.reducer;

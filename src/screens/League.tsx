@@ -159,101 +159,106 @@ const League: React.FC = () => {
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
         minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
         width: "100%",
         padding: "2rem",
-        gap: "2rem",
-        maxWidth: "1400px",
-        margin: "0 auto",
+        backgroundColor: COLORS.background.light,
       }}
     >
       <div
         style={{
-          width: "100%",
+          maxWidth: "1400px",
+          margin: "0 auto",
           display: "flex",
           flexDirection: "column",
-          gap: "1.5rem",
+          gap: "2rem",
         }}
       >
-        <h1
+        <div
           style={{
-            fontSize: "2.5rem",
-            fontWeight: 600,
-            margin: 0,
-            color: COLORS.text.primary,
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem",
           }}
         >
-          {league.name}
-        </h1>
-        <AuthAware roles={["org:league_admin", "org:team_admin"]}>
-          <div
+          <h1
             style={{
-              backgroundColor: COLORS.background.default,
-              borderRadius: "12px",
-              padding: "1.5rem",
-              border: `1px solid ${COLORS.border.default}`,
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "1rem",
-              minHeight: "200px",
-              maxWidth: "500px",
+              fontSize: "2.5rem",
+              fontWeight: 600,
+              margin: 0,
+              color: COLORS.text.primary,
             }}
           >
+            {league.name}
+          </h1>
+          <AuthAware roles={["org:league_admin", "org:team_admin"]}>
             <div
               style={{
+                backgroundColor: COLORS.background.default,
+                borderRadius: "12px",
+                padding: "1.5rem",
+                border: `1px solid ${COLORS.border.default}`,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                 display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
+                flexDirection: "column",
+                gap: "1rem",
+                minHeight: "200px",
+                maxWidth: "500px",
               }}
             >
               <div
                 style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "50%",
-                  backgroundColor: "#e0f2fe",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.5rem",
+                  gap: "0.75rem",
                 }}
               >
-                👥
-              </div>
-              <div>
-                <h3
+                <div
                   style={{
-                    margin: 0,
-                    fontSize: "1.25rem",
-                    fontWeight: 600,
-                    color: COLORS.text.primary,
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "50%",
+                    backgroundColor: "#e0f2fe",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1.5rem",
                   }}
                 >
-                  Create Team
-                </h3>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "0.875rem",
-                    color: COLORS.text.secondary,
-                  }}
-                >
-                  Add a new team to this league
-                </p>
+                  👥
+                </div>
+                <div>
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: "1.25rem",
+                      fontWeight: 600,
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    Create Team
+                  </h3>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.875rem",
+                      color: COLORS.text.secondary,
+                    }}
+                  >
+                    Add a new team to this league
+                  </p>
+                </div>
+              </div>
+              <div style={{ marginTop: "auto" }}>
+                <CreateTeam leagueId={league.id} />
               </div>
             </div>
-            <div style={{ marginTop: "auto" }}>
-              <CreateTeam leagueId={league.id} />
-            </div>
-          </div>
-        </AuthAware>
-      </div>
-      <div style={{ width: "100%" }}>
-        <TeamsList leagueId={league.id} />
+          </AuthAware>
+        </div>
+        <div style={{ width: "100%" }}>
+          <TeamsList leagueId={league.id} />
+        </div>
       </div>
     </div>
   );

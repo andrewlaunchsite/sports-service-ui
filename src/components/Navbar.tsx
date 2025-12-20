@@ -42,6 +42,12 @@ const Navbar: React.FC = () => {
             <Link to={ROUTES.GAMES} style={getLinkStyle(ROUTES.GAMES)}>
               Games
             </Link>
+            <Link
+              to={ROUTES.PLAYER_STATS}
+              style={getLinkStyle(ROUTES.PLAYER_STATS)}
+            >
+              Player Stats
+            </Link>
           </>
         ) : (
           <Link to={ROUTES.LANDING} style={getLinkStyle(ROUTES.LANDING)}>

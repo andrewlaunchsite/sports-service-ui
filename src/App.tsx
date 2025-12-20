@@ -13,6 +13,7 @@ import Home from "./screens/Home";
 import League from "./screens/League";
 import Team from "./screens/Team";
 import Game from "./screens/Game";
+import PlayerStats from "./screens/PlayerStats";
 import { ROUTES } from "./config/constants";
 
 function App() {
@@ -85,6 +86,14 @@ function App() {
             element={
               <Protected>
                 <Game />
+              </Protected>
+            }
+          />
+          <Route
+            path={ROUTES.PLAYER_STATS}
+            element={
+              <Protected>
+                <PlayerStats />
               </Protected>
             }
           />

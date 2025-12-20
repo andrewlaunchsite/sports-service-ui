@@ -9,6 +9,7 @@ export const ROUTES = {
   LEAGUES: "/leagues",
   TEAMS: "/teams",
   GAMES: "/games",
+  PLAYER_STATS: "/player-stats",
 } as const;
 
 export const NAVBAR_HEIGHT = 60;

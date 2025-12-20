@@ -2,27 +2,36 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createInvitation } from "../models/invitationSlice";
 import { AppDispatch, RootState } from "../models/store";
+import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
 
 interface FormState {
   email: string;
   role: string;
 }
 
-const InviteUser: React.FC = () => {
+interface InviteUserProps {
+  defaultRole?: string;
+  buttonText?: string;
+}
+
+const InviteUser: React.FC<InviteUserProps> = ({
+  defaultRole = "org:player",
+  buttonText = "Invite User",
+}) => {
   const dispatch = useDispatch<AppDispatch>();
   const loadingState = useSelector(
     (state: RootState) => state.invitation.loadingState
   );
   const [formState, setFormState] = useState<FormState>({
     email: "",
-    role: "org:player",
+    role: defaultRole,
   });
   const [showForm, setShowForm] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(createInvitation(formState) as any);
-    setFormState({ email: "", role: "org:player" });
+    setFormState({ email: "", role: defaultRole });
     setShowForm(false);
   };
 
@@ -36,127 +45,126 @@ const InviteUser: React.FC = () => {
     return (
       <button
         onClick={() => setShowForm(true)}
-        style={{
-          padding: "0.5rem 1rem",
-          backgroundColor: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-          fontSize: "1rem",
-        }}
+        style={BUTTON_STYLES.primary}
+        {...getButtonHoverStyle("primary")}
       >
-        Invite User
+        {buttonText}
       </button>
     );
   }
 
   return (
-    <div
-      style={{
-        backgroundColor: "#f8f9fa",
-        padding: "1.5rem",
-        borderRadius: "8px",
-        marginBottom: "2rem",
-        maxWidth: "500px",
-      }}
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: "1rem" }}>Invite User</h3>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label
-            htmlFor="email"
-            style={{
-              display: "block",
-              marginBottom: "0.5rem",
-              fontWeight: "500",
-            }}
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={formState.email}
-            onChange={handleChange("email")}
-            required
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              border: "1px solid #dee2e6",
-              borderRadius: "4px",
-              fontSize: "1rem",
-            }}
-          />
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label
-            htmlFor="role"
-            style={{
-              display: "block",
-              marginBottom: "0.5rem",
-              fontWeight: "500",
-            }}
-          >
-            Role
-          </label>
-          <select
-            id="role"
-            value={formState.role}
-            onChange={handleChange("role")}
-            required
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              border: "1px solid #dee2e6",
-              borderRadius: "4px",
-              fontSize: "1rem",
-            }}
-          >
-            <option value="org:league_admin">League Admin</option>
-            <option value="org:team_admin">Team Admin</option>
-            <option value="org:team_manager">Team Manager</option>
-            <option value="org:player">Player</option>
-          </select>
-        </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button
-            type="submit"
-            disabled={loadingState.loadingCreate}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: loadingState.loadingCreate ? "not-allowed" : "pointer",
-              fontSize: "1rem",
-              opacity: loadingState.loadingCreate ? 0.6 : 1,
-            }}
-          >
-            {loadingState.loadingCreate ? "Sending..." : "Send Invitation"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setShowForm(false);
-              setFormState({ email: "", role: "org:player" });
-            }}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#6c757d",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "1rem",
-            }}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+      <div>
+        <label
+          htmlFor="email"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: COLORS.text.primary,
+          }}
+        >
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={formState.email}
+          onChange={handleChange("email")}
+          required
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: `1px solid ${COLORS.border.default}`,
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = COLORS.primary;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = COLORS.border.default;
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="role"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: COLORS.text.primary,
+          }}
+        >
+          Role
+        </label>
+        <select
+          id="role"
+          value={formState.role}
+          onChange={handleChange("role")}
+          required
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: `1px solid ${COLORS.border.default}`,
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            backgroundColor: "white",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = COLORS.primary;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = COLORS.border.default;
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        >
+          <option value="org:league_admin">League Admin</option>
+          <option value="org:team_admin">Team Admin</option>
+          <option value="org:team_manager">Team Manager</option>
+          <option value="org:player">Player</option>
+        </select>
+      </div>
+      <div style={{ display: "flex", gap: "0.5rem" }}>
+        <button
+          type="submit"
+          disabled={loadingState.loadingCreate}
+          style={{
+            ...BUTTON_STYLES.primaryFull,
+            cursor: loadingState.loadingCreate ? "not-allowed" : "pointer",
+            opacity: loadingState.loadingCreate ? 0.6 : 1,
+          }}
+          {...(loadingState.loadingCreate
+            ? {}
+            : getButtonHoverStyle("primary"))}
+        >
+          {loadingState.loadingCreate ? "Sending..." : "Send Invitation"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setShowForm(false);
+            setFormState({ email: "", role: defaultRole });
+          }}
+          style={BUTTON_STYLES.secondaryFull}
+          {...getButtonHoverStyle("secondary")}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 };
 

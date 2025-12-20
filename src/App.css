@@ -10,6 +10,13 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+html {
+  background-color: #f8fafc;
+  min-height: 100vh;
 }
 
 code {

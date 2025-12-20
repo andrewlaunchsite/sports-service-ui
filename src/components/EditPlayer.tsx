@@ -1,19 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  createPlayer,
-  getMyPlayer,
-  getPlayersByTeam,
-} from "../models/playerSlice";
+import { updatePlayer, getMyPlayer } from "../models/playerSlice";
 import { AppDispatch, RootState } from "../models/store";
 import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
 
-interface CreatePlayerProps {
-  teamId: number;
+interface EditPlayerProps {
+  player: any;
 }
 
 interface FormState {
-  teamId: number;
   nickname: string;
   playerNumber: string;
   heightInches: string;
@@ -22,25 +17,37 @@ interface FormState {
   primaryPosition: string;
 }
 
-const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
+const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
   const dispatch = useDispatch<AppDispatch>();
   const loadingState = useSelector(
     (state: RootState) => state.player.loadingState
   );
   const [formState, setFormState] = useState<FormState>({
-    teamId: teamId,
-    nickname: "",
-    playerNumber: "",
-    heightInches: "",
-    weightLbs: "",
-    dateOfBirth: "",
-    primaryPosition: "",
+    nickname: (player as any).nickname || "",
+    playerNumber: (player as any).playerNumber?.toString() || "",
+    heightInches: (player as any).heightInches?.toString() || "",
+    weightLbs: (player as any).weightLbs?.toString() || "",
+    dateOfBirth: (player as any).dateOfBirth || "",
+    primaryPosition: (player as any).primaryPosition || "",
   });
   const [showForm, setShowForm] = useState(false);
 
+  useEffect(() => {
+    if (player) {
+      setFormState({
+        nickname: (player as any).nickname || "",
+        playerNumber: (player as any).playerNumber?.toString() || "",
+        heightInches: (player as any).heightInches?.toString() || "",
+        weightLbs: (player as any).weightLbs?.toString() || "",
+        dateOfBirth: (player as any).dateOfBirth || "",
+        primaryPosition: (player as any).primaryPosition || "",
+      });
+    }
+  }, [player]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: any = { teamId: formState.teamId };
+    const payload: any = {};
     if (formState.nickname) payload.nickname = formState.nickname;
     if (formState.playerNumber)
       payload.playerNumber = parseInt(formState.playerNumber, 10);
@@ -51,19 +58,9 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
     if (formState.dateOfBirth) payload.dateOfBirth = formState.dateOfBirth;
     if (formState.primaryPosition)
       payload.primaryPosition = formState.primaryPosition;
-    dispatch(createPlayer(payload) as any);
-    setFormState({
-      teamId: teamId,
-      nickname: "",
-      playerNumber: "",
-      heightInches: "",
-      weightLbs: "",
-      dateOfBirth: "",
-      primaryPosition: "",
-    });
+    dispatch(updatePlayer({ id: player.id, data: payload }) as any);
     setShowForm(false);
     dispatch(getMyPlayer() as any);
-    dispatch(getPlayersByTeam({ teamId, offset: 0, limit: 100 }) as any);
   };
 
   const handleChange =
@@ -76,10 +73,14 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
     return (
       <button
         onClick={() => setShowForm(true)}
-        style={BUTTON_STYLES.primary}
-        {...getButtonHoverStyle("primary")}
+        style={{
+          ...BUTTON_STYLES.secondary,
+          padding: "0.5rem 0.75rem",
+          fontSize: "0.875rem",
+        }}
+        {...getButtonHoverStyle("secondary")}
       >
-        Set Up Your Player Profile
+        ✏️ Edit
       </button>
     );
   }
@@ -91,7 +92,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
     >
       <div>
         <label
-          htmlFor="nickname"
+          htmlFor="edit-nickname"
           style={{
             display: "block",
             marginBottom: "0.5rem",
@@ -103,7 +104,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
           Nickname
         </label>
         <input
-          id="nickname"
+          id="edit-nickname"
           type="text"
           value={formState.nickname}
           onChange={handleChange("nickname")}
@@ -128,83 +129,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
       </div>
       <div>
         <label
-          htmlFor="heightInches"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Height (inches, 48-108)
-        </label>
-        <input
-          id="heightInches"
-          type="number"
-          value={formState.heightInches}
-          onChange={handleChange("heightInches")}
-          min={48}
-          max={108}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="weightLbs"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Weight (lbs, 100-500)
-        </label>
-        <input
-          id="weightLbs"
-          type="number"
-          value={formState.weightLbs}
-          onChange={handleChange("weightLbs")}
-          min={100}
-          max={500}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="playerNumber"
+          htmlFor="edit-playerNumber"
           style={{
             display: "block",
             marginBottom: "0.5rem",
@@ -216,7 +141,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
           Jersey Number (0-99)
         </label>
         <input
-          id="playerNumber"
+          id="edit-playerNumber"
           type="number"
           value={formState.playerNumber}
           onChange={handleChange("playerNumber")}
@@ -242,7 +167,83 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
       </div>
       <div>
         <label
-          htmlFor="dateOfBirth"
+          htmlFor="edit-heightInches"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: COLORS.text.primary,
+          }}
+        >
+          Height (inches, 48-108)
+        </label>
+        <input
+          id="edit-heightInches"
+          type="number"
+          value={formState.heightInches}
+          onChange={handleChange("heightInches")}
+          min={48}
+          max={108}
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: `1px solid ${COLORS.border.default}`,
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = COLORS.primary;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = COLORS.border.default;
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="edit-weightLbs"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: COLORS.text.primary,
+          }}
+        >
+          Weight (lbs, 100-500)
+        </label>
+        <input
+          id="edit-weightLbs"
+          type="number"
+          value={formState.weightLbs}
+          onChange={handleChange("weightLbs")}
+          min={100}
+          max={500}
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: `1px solid ${COLORS.border.default}`,
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = COLORS.primary;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = COLORS.border.default;
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="edit-dateOfBirth"
           style={{
             display: "block",
             marginBottom: "0.5rem",
@@ -254,7 +255,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
           Date of Birth
         </label>
         <input
-          id="dateOfBirth"
+          id="edit-dateOfBirth"
           type="date"
           value={formState.dateOfBirth}
           onChange={handleChange("dateOfBirth")}
@@ -278,7 +279,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
       </div>
       <div>
         <label
-          htmlFor="primaryPosition"
+          htmlFor="edit-primaryPosition"
           style={{
             display: "block",
             marginBottom: "0.5rem",
@@ -290,7 +291,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
           Primary Position
         </label>
         <select
-          id="primaryPosition"
+          id="edit-primaryPosition"
           value={formState.primaryPosition}
           onChange={handleChange("primaryPosition")}
           style={{
@@ -322,30 +323,29 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <button
           type="submit"
-          disabled={loadingState.loadingCreate}
+          disabled={loadingState.loadingUpdate}
           style={{
             ...BUTTON_STYLES.primaryFull,
-            cursor: loadingState.loadingCreate ? "not-allowed" : "pointer",
-            opacity: loadingState.loadingCreate ? 0.6 : 1,
+            cursor: loadingState.loadingUpdate ? "not-allowed" : "pointer",
+            opacity: loadingState.loadingUpdate ? 0.6 : 1,
           }}
-          {...(loadingState.loadingCreate
+          {...(loadingState.loadingUpdate
             ? {}
             : getButtonHoverStyle("primary"))}
         >
-          {loadingState.loadingCreate ? "Creating..." : "Create Player"}
+          {loadingState.loadingUpdate ? "Updating..." : "Update Player"}
         </button>
         <button
           type="button"
           onClick={() => {
             setShowForm(false);
             setFormState({
-              teamId: teamId,
-              nickname: "",
-              playerNumber: "",
-              heightInches: "",
-              weightLbs: "",
-              dateOfBirth: "",
-              primaryPosition: "",
+              nickname: (player as any).nickname || "",
+              playerNumber: (player as any).playerNumber?.toString() || "",
+              heightInches: (player as any).heightInches?.toString() || "",
+              weightLbs: (player as any).weightLbs?.toString() || "",
+              dateOfBirth: (player as any).dateOfBirth || "",
+              primaryPosition: (player as any).primaryPosition || "",
             });
           }}
           style={BUTTON_STYLES.secondaryFull}
@@ -358,4 +358,4 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
   );
 };
 
-export default CreatePlayer;
+export default EditPlayer;

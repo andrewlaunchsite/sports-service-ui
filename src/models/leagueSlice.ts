@@ -10,6 +10,7 @@ export interface League {
 
 export interface LeagueCreate {
   name: string;
+  logo?: File | null;
 }
 
 export interface LeaguesState {
@@ -54,10 +55,31 @@ export const getLeagues = createAsyncThunk(
   }
 );
 
+const buildFormData = (data: Record<string, any>): FormData => {
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else if (typeof value === "number" || typeof value === "boolean") {
+        formData.append(key, value.toString());
+      } else if (typeof value === "string") {
+        formData.append(key, value);
+      }
+    }
+  });
+  return formData;
+};
+
 export const createLeague = createAsyncThunk(
   "leagues/create",
   async (leagueData: LeagueCreate, { fulfillWithValue }) => {
-    const { data } = await axiosInstance.post(`/api/v1/leagues`, leagueData);
+    const formData = buildFormData(leagueData);
+    const { data } = await axiosInstance.post(`/api/v1/leagues`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return (fulfillWithValue as any)(data, {
       meta: { toast: "League created successfully" },
     });
@@ -66,13 +88,24 @@ export const createLeague = createAsyncThunk(
 
 export const updateLeague = createAsyncThunk(
   "leagues/update",
-  async (leagueData: { id: number; data: Partial<League> }) => {
+  async (
+    leagueData: { id: number; data: Partial<LeagueCreate> },
+    { fulfillWithValue }
+  ) => {
     const { id, data: leagueUpdateData } = leagueData;
+    const formData = buildFormData(leagueUpdateData);
     const { data } = await axiosInstance.put(
       `/api/v1/leagues/${id}`,
-      leagueUpdateData
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
-    return data;
+    return (fulfillWithValue as any)(data, {
+      meta: { toast: "League updated successfully" },
+    });
   }
 );
 

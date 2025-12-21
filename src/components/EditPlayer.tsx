@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updatePlayer, getMyPlayer } from "../models/playerSlice";
 import { AppDispatch, RootState } from "../models/store";
@@ -15,6 +15,7 @@ interface FormState {
   weightLbs: string;
   dateOfBirth: string;
   primaryPosition: string;
+  picture: File | null;
 }
 
 const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
@@ -29,8 +30,30 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
     weightLbs: (player as any).weightLbs?.toString() || "",
     dateOfBirth: (player as any).dateOfBirth || "",
     primaryPosition: (player as any).primaryPosition || "",
+    picture: null,
   });
   const [showForm, setShowForm] = useState(false);
+  const [picturePreview, setPicturePreview] = useState<string | null>(null);
+  const picturePreviewRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (formState.picture) {
+      const objectUrl = URL.createObjectURL(formState.picture);
+      picturePreviewRef.current = objectUrl;
+      setPicturePreview(objectUrl);
+    } else if ((player as any)?.pictureUrl) {
+      setPicturePreview((player as any).pictureUrl);
+    } else {
+      setPicturePreview(null);
+    }
+
+    return () => {
+      if (picturePreviewRef.current) {
+        URL.revokeObjectURL(picturePreviewRef.current);
+        picturePreviewRef.current = null;
+      }
+    };
+  }, [formState.picture, player]);
 
   useEffect(() => {
     if (player) {
@@ -41,6 +64,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
         weightLbs: (player as any).weightLbs?.toString() || "",
         dateOfBirth: (player as any).dateOfBirth || "",
         primaryPosition: (player as any).primaryPosition || "",
+        picture: null,
       });
     }
   }, [player]);
@@ -58,15 +82,38 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
     if (formState.dateOfBirth) payload.dateOfBirth = formState.dateOfBirth;
     if (formState.primaryPosition)
       payload.primaryPosition = formState.primaryPosition;
+    if (formState.picture) payload.picture = formState.picture;
     dispatch(updatePlayer({ id: player.id, data: payload }) as any);
+    if (picturePreviewRef.current) {
+      URL.revokeObjectURL(picturePreviewRef.current);
+      picturePreviewRef.current = null;
+    }
     setShowForm(false);
     dispatch(getMyPlayer() as any);
   };
 
-  const handleChange =
+  const isValidImageFile = (file: File): boolean => {
+    const validTypes = ["image/jpeg", "image/jpg", "image/png"];
+    return validTypes.includes(file.type);
+  };
+
+  const handleTextChange =
     (field: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setFormState((prev) => ({ ...prev, [field]: e.target.value }));
+    };
+
+  const handleFileChange =
+    (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (!isValidImageFile(file)) {
+        alert("Please select a valid image file (JPEG, JPG, or PNG)");
+        return;
+      }
+
+      setFormState((prev) => ({ ...prev, [field]: file }));
     };
 
   if (!showForm) {
@@ -107,7 +154,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
           id="edit-nickname"
           type="text"
           value={formState.nickname}
-          onChange={handleChange("nickname")}
+          onChange={handleTextChange("nickname")}
           maxLength={50}
           style={{
             width: "100%",
@@ -144,7 +191,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
           id="edit-playerNumber"
           type="number"
           value={formState.playerNumber}
-          onChange={handleChange("playerNumber")}
+          onChange={handleTextChange("playerNumber")}
           min={0}
           max={99}
           style={{
@@ -182,7 +229,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
           id="edit-heightInches"
           type="number"
           value={formState.heightInches}
-          onChange={handleChange("heightInches")}
+          onChange={handleTextChange("heightInches")}
           min={48}
           max={108}
           style={{
@@ -220,7 +267,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
           id="edit-weightLbs"
           type="number"
           value={formState.weightLbs}
-          onChange={handleChange("weightLbs")}
+          onChange={handleTextChange("weightLbs")}
           min={100}
           max={500}
           style={{
@@ -258,7 +305,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
           id="edit-dateOfBirth"
           type="date"
           value={formState.dateOfBirth}
-          onChange={handleChange("dateOfBirth")}
+          onChange={handleTextChange("dateOfBirth")}
           style={{
             width: "100%",
             padding: "0.625rem 0.75rem",
@@ -293,7 +340,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
         <select
           id="edit-primaryPosition"
           value={formState.primaryPosition}
-          onChange={handleChange("primaryPosition")}
+          onChange={handleTextChange("primaryPosition")}
           style={{
             width: "100%",
             padding: "0.625rem 0.75rem",
@@ -320,6 +367,57 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
           <option value="C">C - Center</option>
         </select>
       </div>
+      <div>
+        <label
+          htmlFor="edit-picture"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: COLORS.text.primary,
+          }}
+        >
+          Picture (JPEG, JPG, or PNG)
+        </label>
+        <input
+          id="edit-picture"
+          type="file"
+          accept="image/jpeg,image/jpg,image/png"
+          onChange={handleFileChange("picture")}
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: `1px solid ${COLORS.border.default}`,
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = COLORS.primary;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = COLORS.border.default;
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        />
+        {picturePreview && (
+          <div style={{ marginTop: "0.75rem" }}>
+            <img
+              src={picturePreview}
+              alt="Picture preview"
+              style={{
+                maxWidth: "200px",
+                maxHeight: "200px",
+                borderRadius: "8px",
+                border: `1px solid ${COLORS.border.default}`,
+                objectFit: "contain",
+              }}
+            />
+          </div>
+        )}
+      </div>
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <button
           type="submit"
@@ -338,6 +436,10 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
         <button
           type="button"
           onClick={() => {
+            if (picturePreviewRef.current) {
+              URL.revokeObjectURL(picturePreviewRef.current);
+              picturePreviewRef.current = null;
+            }
             setShowForm(false);
             setFormState({
               nickname: (player as any).nickname || "",
@@ -346,7 +448,9 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
               weightLbs: (player as any).weightLbs?.toString() || "",
               dateOfBirth: (player as any).dateOfBirth || "",
               primaryPosition: (player as any).primaryPosition || "",
+              picture: null,
             });
+            setPicturePreview((player as any)?.pictureUrl || null);
           }}
           style={BUTTON_STYLES.secondaryFull}
           {...getButtonHoverStyle("secondary")}

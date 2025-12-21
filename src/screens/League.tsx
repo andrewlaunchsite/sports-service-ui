@@ -1,25 +1,38 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getLeague } from "../models/leagueSlice";
+import { getLeague, getLeagues } from "../models/leagueSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreateTeam from "../components/CreateTeam";
 import TeamsList from "../components/TeamsList";
 import LeaguesList from "../components/LeaguesList";
 import CreateLeague from "../components/CreateLeague";
+import EditLeague from "../components/EditLeague";
 import AuthAware from "../components/AuthAware";
 import { NAVBAR_HEIGHT } from "../config/constants";
-import { COLORS } from "../config/styles";
+import { COLORS, TILE_STYLE } from "../config/styles";
 
 const League: React.FC = () => {
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
-  const { league, loadingState } = useSelector(
+  const hasFetchedLeagues = useRef(false);
+  const { league, leagues, loadingState } = useSelector(
     (state: RootState) => state.league
   );
 
   const leagueId = searchParams.get("id");
+
+  useEffect(() => {
+    if (
+      !leagueId &&
+      !hasFetchedLeagues.current &&
+      !loadingState.loadingLeagues
+    ) {
+      hasFetchedLeagues.current = true;
+      dispatch(getLeagues({ offset: 0, limit: 10 }) as any);
+    }
+  }, [leagueId, loadingState.loadingLeagues, dispatch]);
 
   useEffect(() => {
     if (leagueId) {
@@ -29,6 +42,8 @@ const League: React.FC = () => {
       }
     }
   }, [leagueId, dispatch]);
+
+  const existingLeague = !leagueId && leagues.length > 0 ? leagues[0] : null;
 
   if (!leagueId) {
     return (
@@ -63,69 +78,71 @@ const League: React.FC = () => {
           >
             Leagues
           </h1>
-          <AuthAware roles={["org:league_admin"]}>
-            <div
-              style={{
-                backgroundColor: COLORS.background.default,
-                borderRadius: "12px",
-                padding: "1.5rem",
-                border: `1px solid ${COLORS.border.default}`,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-                minHeight: "200px",
-                maxWidth: "500px",
-              }}
-            >
+          {!existingLeague && (
+            <AuthAware roles={["org:league_admin"]}>
               <div
                 style={{
+                  backgroundColor: COLORS.background.default,
+                  borderRadius: "12px",
+                  padding: "1.5rem",
+                  border: `1px solid ${COLORS.border.default}`,
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                   display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
+                  flexDirection: "column",
+                  gap: "1rem",
+                  minHeight: "200px",
+                  maxWidth: "500px",
                 }}
               >
                 <div
                   style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "50%",
-                    backgroundColor: COLORS.primaryLight,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "1.5rem",
+                    gap: "0.75rem",
                   }}
                 >
-                  🏀
-                </div>
-                <div>
-                  <h3
+                  <div
                     style={{
-                      margin: 0,
-                      fontSize: "1.25rem",
-                      fontWeight: 600,
-                      color: COLORS.text.primary,
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
+                      backgroundColor: COLORS.primaryLight,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1.5rem",
                     }}
                   >
-                    Create League
-                  </h3>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "0.875rem",
-                      color: COLORS.text.secondary,
-                    }}
-                  >
-                    Start a new league
-                  </p>
+                    🏀
+                  </div>
+                  <div>
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: "1.25rem",
+                        fontWeight: 600,
+                        color: COLORS.text.primary,
+                      }}
+                    >
+                      Create League
+                    </h3>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "0.875rem",
+                        color: COLORS.text.secondary,
+                      }}
+                    >
+                      Start a new league
+                    </p>
+                  </div>
+                </div>
+                <div style={{ marginTop: "auto" }}>
+                  <CreateLeague />
                 </div>
               </div>
-              <div style={{ marginTop: "auto" }}>
-                <CreateLeague />
-              </div>
-            </div>
-          </AuthAware>
+            </AuthAware>
+          )}
         </div>
         <div style={{ width: "100%" }}>
           <LeaguesList />
@@ -192,6 +209,87 @@ const League: React.FC = () => {
           >
             {league.name}
           </h1>
+
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "1.5rem",
+            }}
+          >
+            <div style={TILE_STYLE}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "50%",
+                    backgroundColor: "#e3f2fd",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1.5rem",
+                  }}
+                >
+                  🏀
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: "1.25rem",
+                      fontWeight: 600,
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    League Details
+                  </h3>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.875rem",
+                      color: COLORS.text.secondary,
+                    }}
+                  >
+                    Manage your league information
+                  </p>
+                </div>
+                <AuthAware roles={["org:league_admin"]}>
+                  <EditLeague league={league} />
+                </AuthAware>
+              </div>
+              <AuthAware roles={["org:league_admin"]}>
+                <EditLeague league={league} renderFormOnly />
+              </AuthAware>
+              {league.logoUrl && (
+                <div
+                  style={{
+                    paddingTop: "1rem",
+                    borderTop: `1px solid ${COLORS.border.light}`,
+                  }}
+                >
+                  <img
+                    src={league.logoUrl}
+                    alt={`${league.name} logo`}
+                    style={{
+                      maxWidth: "200px",
+                      maxHeight: "200px",
+                      objectFit: "contain",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
           <AuthAware roles={["org:league_admin", "org:team_admin"]}>
             <div
               style={{

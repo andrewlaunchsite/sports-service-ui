@@ -4,7 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { getLeagues } from "../models/leagueSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "./Loading";
-import { COLORS } from "../config/styles";
+import EditLeague from "./EditLeague";
+import AuthAware from "./AuthAware";
+import { COLORS, TILE_STYLE } from "../config/styles";
 
 const LeaguesList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -74,8 +76,8 @@ const LeaguesList: React.FC = () => {
       </h2>
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+          display: "flex",
+          flexWrap: "wrap",
           gap: "1rem",
           marginBottom: "1.5rem",
         }}
@@ -83,19 +85,17 @@ const LeaguesList: React.FC = () => {
         {leagues.map((league) => {
           const createdDateTime = (league as any).createdDateTime;
           const lastModifiedDateTime = (league as any).lastModifiedDateTime;
+          const logoUrl = (league as any).logoUrl;
 
           return (
             <div
               key={league.id}
-              onClick={() => navigate(`/leagues?id=${league.id}`)}
               style={{
+                ...TILE_STYLE,
                 backgroundColor: COLORS.background.default,
-                borderRadius: "12px",
-                padding: "1.5rem",
                 border: `1px solid ${COLORS.border.default}`,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                 transition: "transform 0.2s, box-shadow 0.2s",
-                cursor: "pointer",
+                overflow: "hidden",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-2px)";
@@ -113,16 +113,51 @@ const LeaguesList: React.FC = () => {
                   gap: "0.75rem",
                 }}
               >
+                {logoUrl && (
+                  <div style={{ marginBottom: "0.5rem" }}>
+                    <img
+                      src={logoUrl}
+                      alt={`${league.name} logo`}
+                      style={{
+                        width: "100%",
+                        maxHeight: "120px",
+                        objectFit: "contain",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  </div>
+                )}
                 <div
                   style={{
-                    fontWeight: 600,
-                    fontSize: "1.25rem",
-                    color: COLORS.text.primary,
-                    marginBottom: "0.5rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "1rem",
                   }}
                 >
-                  {league.name}
+                  <div
+                    onClick={() => navigate(`/leagues?id=${league.id}`)}
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "1.25rem",
+                      color: COLORS.text.primary,
+                      cursor: "pointer",
+                      flex: 1,
+                    }}
+                  >
+                    {league.name}
+                  </div>
+                  <AuthAware roles={["org:league_admin"]}>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <EditLeague league={league} />
+                    </div>
+                  </AuthAware>
                 </div>
+                <AuthAware roles={["org:league_admin"]}>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <EditLeague league={league} renderFormOnly />
+                  </div>
+                </AuthAware>
                 {createdDateTime && (
                   <div
                     style={{

@@ -130,7 +130,20 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                   textAlign: "center",
                 }}
               >
-                {playerNumber && (
+                {(player as any).pictureUrl ? (
+                  <img
+                    src={(player as any).pictureUrl}
+                    alt={displayName || player.name}
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      marginBottom: "0.75rem",
+                      border: "2px solid #007bff",
+                    }}
+                  />
+                ) : playerNumber ? (
                   <div
                     style={{
                       width: "60px",
@@ -148,7 +161,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                   >
                     #{playerNumber}
                   </div>
-                )}
+                ) : null}
                 <div
                   style={{
                     fontWeight: 600,

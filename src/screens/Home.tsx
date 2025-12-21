@@ -2,14 +2,21 @@ import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useUser } from "@clerk/clerk-react";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
-import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
+import {
+  COLORS,
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  TILE_STYLE,
+} from "../config/styles";
 import InviteUser from "../components/InviteUser";
 import CreateLeague from "../components/CreateLeague";
 import LeaguesList from "../components/LeaguesList";
 import AuthAware from "../components/AuthAware";
 import { getMyPlayer } from "../models/playerSlice";
+import { getLeagues } from "../models/leagueSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
+import CreateTeam from "../components/CreateTeam";
 import { useNavigate } from "react-router-dom";
 
 const Home: React.FC = () => {
@@ -17,8 +24,12 @@ const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const hasFetchedMyPlayer = useRef(false);
+  const hasFetchedLeagues = useRef(false);
   const { myPlayer, loadingState: playerLoadingState } = useSelector(
     (state: RootState) => state.player
+  );
+  const { leagues, loadingState: leagueLoadingState } = useSelector(
+    (state: RootState) => state.league
   );
 
   useEffect(() => {
@@ -27,6 +38,15 @@ const Home: React.FC = () => {
       dispatch(getMyPlayer() as any);
     }
   }, [playerLoadingState.loadingMyPlayer, dispatch]);
+
+  useEffect(() => {
+    if (!hasFetchedLeagues.current && !leagueLoadingState.loadingLeagues) {
+      hasFetchedLeagues.current = true;
+      dispatch(getLeagues({ offset: 0, limit: 10 }) as any);
+    }
+  }, [leagueLoadingState.loadingLeagues, dispatch]);
+
+  const existingLeague = leagues.length > 0 ? leagues[0] : null;
 
   const getUserDisplayName = () => {
     if (!user) return "Welcome!";
@@ -81,74 +101,117 @@ const Home: React.FC = () => {
 
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              display: "flex",
+              flexWrap: "wrap",
               gap: "1.5rem",
               marginBottom: "1rem",
             }}
           >
-            <AuthAware roles={["org:league_admin"]}>
-              <div
-                style={{
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                  border: "1px solid #dee2e6",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  minHeight: "200px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                  }}
-                >
+            {!existingLeague && (
+              <AuthAware roles={["org:league_admin"]}>
+                <div style={TILE_STYLE}>
                   <div
                     style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      backgroundColor: "#e3f2fd",
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.5rem",
+                      gap: "0.75rem",
                     }}
                   >
-                    🏀
-                  </div>
-                  <div>
-                    <h3
+                    <div
                       style={{
-                        margin: 0,
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        color: "#212529",
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "50%",
+                        backgroundColor: "#e3f2fd",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "1.5rem",
                       }}
                     >
-                      Create League
-                    </h3>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.875rem",
-                        color: "#6c757d",
-                      }}
-                    >
-                      Start a new league
-                    </p>
+                      🏀
+                    </div>
+                    <div>
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: "1.25rem",
+                          fontWeight: 600,
+                          color: "#212529",
+                        }}
+                      >
+                        Create League
+                      </h3>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "0.875rem",
+                          color: "#6c757d",
+                        }}
+                      >
+                        Start a new league
+                      </p>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: "auto" }}>
+                    <CreateLeague />
                   </div>
                 </div>
-                <div style={{ marginTop: "auto" }}>
-                  <CreateLeague />
+              </AuthAware>
+            )}
+
+            {existingLeague && (
+              <AuthAware roles={["org:league_admin", "org:team_admin"]}>
+                <div style={TILE_STYLE}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "50%",
+                        backgroundColor: "#fff3e0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "1.5rem",
+                      }}
+                    >
+                      👥
+                    </div>
+                    <div>
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: "1.25rem",
+                          fontWeight: 600,
+                          color: "#212529",
+                        }}
+                      >
+                        Create Team
+                      </h3>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "0.875rem",
+                          color: "#6c757d",
+                        }}
+                      >
+                        Add a new team to {existingLeague.name}
+                      </p>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: "auto" }}>
+                    <CreateTeam leagueId={existingLeague.id} />
+                  </div>
                 </div>
-              </div>
-            </AuthAware>
+              </AuthAware>
+            )}
 
             <AuthAware roles={["org:league_admin"]}>
               <div
@@ -162,6 +225,9 @@ const Home: React.FC = () => {
                   flexDirection: "column",
                   gap: "1rem",
                   minHeight: "200px",
+                  width: "500px",
+                  maxWidth: "500px",
+                  boxSizing: "border-box",
                 }}
               >
                 <div
@@ -216,11 +282,7 @@ const Home: React.FC = () => {
             {playerLoadingState.loadingMyPlayer ? null : myPlayer ? (
               <div
                 style={{
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                  border: "1px solid #dee2e6",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                  ...TILE_STYLE,
                   cursor: "pointer",
                   transition: "transform 0.2s, box-shadow 0.2s",
                 }}
@@ -299,7 +361,19 @@ const Home: React.FC = () => {
                       gap: "1rem",
                     }}
                   >
-                    {(myPlayer as any).playerNumber && (
+                    {(myPlayer as any).pictureUrl ? (
+                      <img
+                        src={(myPlayer as any).pictureUrl}
+                        alt={(myPlayer as any).displayName || myPlayer.name}
+                        style={{
+                          width: "60px",
+                          height: "60px",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: "2px solid #007bff",
+                        }}
+                      />
+                    ) : (myPlayer as any).playerNumber ? (
                       <div
                         style={{
                           width: "50px",
@@ -316,7 +390,7 @@ const Home: React.FC = () => {
                       >
                         #{(myPlayer as any).playerNumber}
                       </div>
-                    )}
+                    ) : null}
                     <div style={{ flex: 1 }}>
                       <div
                         style={{
@@ -389,6 +463,9 @@ const Home: React.FC = () => {
                   flexDirection: "column",
                   gap: "1rem",
                   minHeight: "200px",
+                  width: "500px",
+                  maxWidth: "500px",
+                  boxSizing: "border-box",
                 }}
               >
                 <div

@@ -85,3 +85,18 @@ export const getButtonHoverStyle = (type: "primary" | "secondary") => ({
       type === "primary" ? COLORS.primary : COLORS.secondary;
   },
 });
+
+export const TILE_STYLE = {
+  backgroundColor: "white",
+  borderRadius: "12px",
+  padding: "1.5rem",
+  border: "1px solid #dee2e6",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "1rem",
+  minHeight: "200px",
+  width: "500px",
+  maxWidth: "500px",
+  boxSizing: "border-box",
+} as const;

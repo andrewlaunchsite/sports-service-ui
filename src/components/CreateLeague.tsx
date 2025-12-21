@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createLeague, getLeagues } from "../models/leagueSlice";
 import { AppDispatch, RootState } from "../models/store";
@@ -6,6 +6,7 @@ import { BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
 
 interface FormState {
   name: string;
+  logo: File | null;
 }
 
 const CreateLeague: React.FC = () => {
@@ -13,13 +14,63 @@ const CreateLeague: React.FC = () => {
   const { loadingState, pagination } = useSelector(
     (state: RootState) => state.league
   );
-  const [formState, setFormState] = useState<FormState>({ name: "" });
+  const [formState, setFormState] = useState<FormState>({
+    name: "",
+    logo: null,
+  });
   const [showForm, setShowForm] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const logoPreviewRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (formState.logo) {
+      const objectUrl = URL.createObjectURL(formState.logo);
+      logoPreviewRef.current = objectUrl;
+      setLogoPreview(objectUrl);
+    } else {
+      setLogoPreview(null);
+    }
+
+    return () => {
+      if (logoPreviewRef.current) {
+        URL.revokeObjectURL(logoPreviewRef.current);
+        logoPreviewRef.current = null;
+      }
+    };
+  }, [formState.logo]);
+
+  const isValidImageFile = (file: File): boolean => {
+    const validTypes = ["image/jpeg", "image/jpg", "image/png"];
+    return validTypes.includes(file.type);
+  };
+
+  const handleTextChange =
+    (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormState((prev) => ({ ...prev, [field]: e.target.value }));
+    };
+
+  const handleFileChange =
+    (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (!isValidImageFile(file)) {
+        alert("Please select a valid image file (JPEG, JPG, or PNG)");
+        return;
+      }
+
+      setFormState((prev) => ({ ...prev, [field]: file }));
+    };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(createLeague(formState) as any);
-    setFormState({ name: "" });
+    if (logoPreviewRef.current) {
+      URL.revokeObjectURL(logoPreviewRef.current);
+      logoPreviewRef.current = null;
+    }
+    setFormState({ name: "", logo: null });
+    setLogoPreview(null);
     setShowForm(false);
     dispatch(
       getLeagues({
@@ -28,11 +79,6 @@ const CreateLeague: React.FC = () => {
       }) as any
     );
   };
-
-  const handleChange =
-    (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormState((prev) => ({ ...prev, [field]: e.target.value }));
-    };
 
   if (!showForm) {
     return (
@@ -68,7 +114,7 @@ const CreateLeague: React.FC = () => {
           id="name"
           type="text"
           value={formState.name}
-          onChange={handleChange("name")}
+          onChange={handleTextChange("name")}
           required
           style={{
             width: "100%",
@@ -88,6 +134,57 @@ const CreateLeague: React.FC = () => {
           }}
         />
       </div>
+      <div>
+        <label
+          htmlFor="logo"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: "#212529",
+          }}
+        >
+          Logo (JPEG, JPG, or PNG)
+        </label>
+        <input
+          id="logo"
+          type="file"
+          accept="image/jpeg,image/jpg,image/png"
+          onChange={handleFileChange("logo")}
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: "1px solid #dee2e6",
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = "#007bff";
+            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = "#dee2e6";
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        />
+        {logoPreview && (
+          <div style={{ marginTop: "0.75rem" }}>
+            <img
+              src={logoPreview}
+              alt="Logo preview"
+              style={{
+                maxWidth: "200px",
+                maxHeight: "200px",
+                borderRadius: "8px",
+                border: "1px solid #dee2e6",
+                objectFit: "contain",
+              }}
+            />
+          </div>
+        )}
+      </div>
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <button
           type="submit"
@@ -106,8 +203,13 @@ const CreateLeague: React.FC = () => {
         <button
           type="button"
           onClick={() => {
+            if (logoPreviewRef.current) {
+              URL.revokeObjectURL(logoPreviewRef.current);
+              logoPreviewRef.current = null;
+            }
             setShowForm(false);
-            setFormState({ name: "" });
+            setFormState({ name: "", logo: null });
+            setLogoPreview(null);
           }}
           style={BUTTON_STYLES.secondaryFull}
           {...getButtonHoverStyle("secondary")}

@@ -85,10 +85,34 @@ export const getPlayersByTeam = createAsyncThunk(
   }
 );
 
+const buildFormData = (data: Record<string, any>): FormData => {
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else if (typeof value === "number" || typeof value === "boolean") {
+        formData.append(key, value.toString());
+      } else if (typeof value === "string") {
+        formData.append(key, value);
+      }
+    }
+  });
+  return formData;
+};
+
 export const createPlayer = createAsyncThunk(
   "players/create",
-  async (playerData: Partial<Player>, { fulfillWithValue }) => {
-    const { data } = await axiosInstance.post(`/api/v1/players`, playerData);
+  async (
+    playerData: Partial<Player> & { picture?: File | null },
+    { fulfillWithValue }
+  ) => {
+    const formData = buildFormData(playerData);
+    const { data } = await axiosInstance.post(`/api/v1/players`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return (fulfillWithValue as any)(data, {
       meta: { toast: "Player created successfully" },
     });
@@ -98,13 +122,22 @@ export const createPlayer = createAsyncThunk(
 export const updatePlayer = createAsyncThunk(
   "players/update",
   async (
-    playerData: { id: number; data: Partial<Player> },
+    playerData: {
+      id: number;
+      data: Partial<Player> & { picture?: File | null };
+    },
     { fulfillWithValue }
   ) => {
     const { id, data } = playerData;
+    const formData = buildFormData(data);
     const { data: responseData } = await axiosInstance.put(
       `/api/v1/players/${id}`,
-      data
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return (fulfillWithValue as any)(responseData, {
       meta: { toast: "Player updated successfully" },

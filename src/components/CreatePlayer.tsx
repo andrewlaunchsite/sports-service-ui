@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   createPlayer,
@@ -20,6 +20,7 @@ interface FormState {
   weightLbs: string;
   dateOfBirth: string;
   primaryPosition: string;
+  picture: File | null;
 }
 
 const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
@@ -35,8 +36,28 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
     weightLbs: "",
     dateOfBirth: "",
     primaryPosition: "",
+    picture: null,
   });
   const [showForm, setShowForm] = useState(false);
+  const [picturePreview, setPicturePreview] = useState<string | null>(null);
+  const picturePreviewRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (formState.picture) {
+      const objectUrl = URL.createObjectURL(formState.picture);
+      picturePreviewRef.current = objectUrl;
+      setPicturePreview(objectUrl);
+    } else {
+      setPicturePreview(null);
+    }
+
+    return () => {
+      if (picturePreviewRef.current) {
+        URL.revokeObjectURL(picturePreviewRef.current);
+        picturePreviewRef.current = null;
+      }
+    };
+  }, [formState.picture]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +72,12 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
     if (formState.dateOfBirth) payload.dateOfBirth = formState.dateOfBirth;
     if (formState.primaryPosition)
       payload.primaryPosition = formState.primaryPosition;
+    if (formState.picture) payload.picture = formState.picture;
     dispatch(createPlayer(payload) as any);
+    if (picturePreviewRef.current) {
+      URL.revokeObjectURL(picturePreviewRef.current);
+      picturePreviewRef.current = null;
+    }
     setFormState({
       teamId: teamId,
       nickname: "",
@@ -60,16 +86,36 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
       weightLbs: "",
       dateOfBirth: "",
       primaryPosition: "",
+      picture: null,
     });
+    setPicturePreview(null);
     setShowForm(false);
     dispatch(getMyPlayer() as any);
     dispatch(getPlayersByTeam({ teamId, offset: 0, limit: 100 }) as any);
   };
 
-  const handleChange =
+  const isValidImageFile = (file: File): boolean => {
+    const validTypes = ["image/jpeg", "image/jpg", "image/png"];
+    return validTypes.includes(file.type);
+  };
+
+  const handleTextChange =
     (field: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setFormState((prev) => ({ ...prev, [field]: e.target.value }));
+    };
+
+  const handleFileChange =
+    (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (!isValidImageFile(file)) {
+        alert("Please select a valid image file (JPEG, JPG, or PNG)");
+        return;
+      }
+
+      setFormState((prev) => ({ ...prev, [field]: file }));
     };
 
   if (!showForm) {
@@ -106,7 +152,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
           id="nickname"
           type="text"
           value={formState.nickname}
-          onChange={handleChange("nickname")}
+          onChange={handleTextChange("nickname")}
           maxLength={50}
           style={{
             width: "100%",
@@ -143,7 +189,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
           id="heightInches"
           type="number"
           value={formState.heightInches}
-          onChange={handleChange("heightInches")}
+          onChange={handleTextChange("heightInches")}
           min={48}
           max={108}
           style={{
@@ -181,7 +227,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
           id="weightLbs"
           type="number"
           value={formState.weightLbs}
-          onChange={handleChange("weightLbs")}
+          onChange={handleTextChange("weightLbs")}
           min={100}
           max={500}
           style={{
@@ -219,7 +265,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
           id="playerNumber"
           type="number"
           value={formState.playerNumber}
-          onChange={handleChange("playerNumber")}
+          onChange={handleTextChange("playerNumber")}
           min={0}
           max={99}
           style={{
@@ -257,7 +303,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
           id="dateOfBirth"
           type="date"
           value={formState.dateOfBirth}
-          onChange={handleChange("dateOfBirth")}
+          onChange={handleTextChange("dateOfBirth")}
           style={{
             width: "100%",
             padding: "0.625rem 0.75rem",
@@ -292,7 +338,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
         <select
           id="primaryPosition"
           value={formState.primaryPosition}
-          onChange={handleChange("primaryPosition")}
+          onChange={handleTextChange("primaryPosition")}
           style={{
             width: "100%",
             padding: "0.625rem 0.75rem",
@@ -318,6 +364,57 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
           <option value="PF">PF - Power Forward</option>
           <option value="C">C - Center</option>
         </select>
+      </div>
+      <div>
+        <label
+          htmlFor="picture"
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            color: COLORS.text.primary,
+          }}
+        >
+          Picture (JPEG, JPG, or PNG)
+        </label>
+        <input
+          id="picture"
+          type="file"
+          accept="image/jpeg,image/jpg,image/png"
+          onChange={handleFileChange("picture")}
+          style={{
+            width: "100%",
+            padding: "0.625rem 0.75rem",
+            border: `1px solid ${COLORS.border.default}`,
+            borderRadius: "6px",
+            fontSize: "0.9375rem",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = COLORS.primary;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = COLORS.border.default;
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        />
+        {picturePreview && (
+          <div style={{ marginTop: "0.75rem" }}>
+            <img
+              src={picturePreview}
+              alt="Picture preview"
+              style={{
+                maxWidth: "200px",
+                maxHeight: "200px",
+                borderRadius: "8px",
+                border: `1px solid ${COLORS.border.default}`,
+                objectFit: "contain",
+              }}
+            />
+          </div>
+        )}
       </div>
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <button
@@ -346,6 +443,7 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
               weightLbs: "",
               dateOfBirth: "",
               primaryPosition: "",
+              picture: null,
             });
           }}
           style={BUTTON_STYLES.secondaryFull}

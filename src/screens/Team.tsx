@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getTeam, getTeams } from "../models/teamSlice";
-import { getLeague } from "../models/leagueSlice";
+import { getLeague, getLeagues } from "../models/leagueSlice";
 import { getMyPlayer } from "../models/playerSlice";
 import { getGamesByTeam } from "../models/gameSlice";
 import { AppDispatch, RootState } from "../models/store";
@@ -10,6 +10,7 @@ import Loading from "../components/Loading";
 import CreatePlayer from "../components/CreatePlayer";
 import EditPlayer from "../components/EditPlayer";
 import CreateGame from "../components/CreateGame";
+import CreateTeam from "../components/CreateTeam";
 import PlayersList from "../components/PlayersList";
 import AllTeamsList from "../components/AllTeamsList";
 import InviteUser from "../components/InviteUser";
@@ -22,10 +23,11 @@ const Team: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const hasFetchedMyPlayer = useRef(false);
+  const hasFetchedLeagues = useRef(false);
   const { team, loadingState: teamLoadingState } = useSelector(
     (state: RootState) => state.team
   );
-  const { league, loadingState: leagueLoadingState } = useSelector(
+  const { league, leagues, loadingState: leagueLoadingState } = useSelector(
     (state: RootState) => state.league
   );
   const { myPlayer, loadingState: playerLoadingState } = useSelector(
@@ -60,10 +62,32 @@ const Team: React.FC = () => {
   }, [teamId, playerLoadingState.loadingMyPlayer, dispatch]);
 
   useEffect(() => {
+    if (!teamId && !hasFetchedLeagues.current && !leagueLoadingState.loadingLeagues) {
+      hasFetchedLeagues.current = true;
+      dispatch(getLeagues({ offset: 0, limit: 10 }) as any);
+    }
+  }, [teamId, leagueLoadingState.loadingLeagues, dispatch]);
+
+  useEffect(() => {
     if (team?.league_id) {
       dispatch(getLeague(team.league_id) as any);
     }
   }, [team?.league_id, dispatch]);
+
+  const getLeagueIdForCreateTeam = (): number | null => {
+    if (teamId && team?.league_id) {
+      return team.league_id;
+    }
+    if (teams.length > 0 && (teams[0] as any).league_id) {
+      return (teams[0] as any).league_id;
+    }
+    if (leagues.length > 0) {
+      return leagues[0].id;
+    }
+    return null;
+  };
+
+  const leagueIdForCreateTeam = getLeagueIdForCreateTeam();
 
   useEffect(() => {
     if (teamId) {
@@ -72,6 +96,8 @@ const Team: React.FC = () => {
         dispatch(getGamesByTeam({ teamId: id, offset: 0, limit: 100 }) as any);
         dispatch(getTeams({ offset: 0, limit: 100 }) as any);
       }
+    } else {
+      dispatch(getTeams({ offset: 0, limit: 100 }) as any);
     }
   }, [teamId, dispatch]);
 
@@ -108,6 +134,71 @@ const Team: React.FC = () => {
           >
             Teams
           </h1>
+          {leagueIdForCreateTeam && (
+            <AuthAware roles={["org:league_admin", "org:team_admin"]}>
+              <div
+                style={{
+                  backgroundColor: COLORS.background.default,
+                  borderRadius: "12px",
+                  padding: "1.5rem",
+                  border: `1px solid ${COLORS.border.default}`,
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                  minHeight: "200px",
+                  maxWidth: "500px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
+                      backgroundColor: "#e0f2fe",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1.5rem",
+                    }}
+                  >
+                    👥
+                  </div>
+                  <div>
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: "1.25rem",
+                        fontWeight: 600,
+                        color: COLORS.text.primary,
+                      }}
+                    >
+                      Create Team
+                    </h3>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "0.875rem",
+                        color: COLORS.text.secondary,
+                      }}
+                    >
+                      Add a new team to your league
+                    </p>
+                  </div>
+                </div>
+                <div style={{ marginTop: "auto" }}>
+                  <CreateTeam leagueId={leagueIdForCreateTeam} />
+                </div>
+              </div>
+            </AuthAware>
+          )}
         </div>
         <div style={{ width: "100%" }}>
           <AllTeamsList />
@@ -331,7 +422,19 @@ const Team: React.FC = () => {
                     marginTop: "auto",
                   }}
                 >
-                  {(myPlayer as any).playerNumber && (
+                  {(myPlayer as any).pictureUrl ? (
+                    <img
+                      src={(myPlayer as any).pictureUrl}
+                      alt={(myPlayer as any).displayName || myPlayer.name}
+                      style={{
+                        width: "60px",
+                        height: "60px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        border: `2px solid ${COLORS.primary}`,
+                      }}
+                    />
+                  ) : (myPlayer as any).playerNumber ? (
                     <div
                       style={{
                         width: "50px",
@@ -348,7 +451,7 @@ const Team: React.FC = () => {
                     >
                       #{(myPlayer as any).playerNumber}
                     </div>
-                  )}
+                  ) : null}
                   <div style={{ flex: 1 }}>
                     <div
                       style={{

@@ -1,6 +1,9 @@
 const nodeEnv = process.env.NODE_ENV;
 
-export const ROOT_URL = nodeEnv === "production" ? "" : "http://localhost:8000";
+export const ROOT_URL =
+  nodeEnv === "production"
+    ? "https://sports-service-api-production.up.railway.app"
+    : "http://localhost:8000";
 
 export const ROUTES = {
   LANDING: "/",

@@ -4,6 +4,19 @@ import { PaginatedResponse } from "./types";
 
 export interface Game {
   id: number;
+  homeTeamId: number;
+  awayTeamId: number;
+  status: "scheduled" | "live" | "paused" | "final" | "cancelled" | "postponed";
+  currentPeriod: number;
+  regulationPeriods: number;
+  periodLengthS: number;
+  otPeriodLengthS: number;
+  currentClockS: number;
+  clockRunning: boolean;
+  lastClockWallTs: number | null;
+  scheduledDateTime: string;
+  startedAt: string | null;
+  endedAt: string | null;
   [key: string]: any;
 }
 

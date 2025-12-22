@@ -8,6 +8,7 @@ import {
   getCurrentLineup,
   createLineupsBatch,
   createLineup,
+  updateGame,
   Lineup,
   LineupCreate,
   LineupPlayer,
@@ -31,6 +32,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { toast } from "react-toastify";
 
 interface PlayerWithStats {
   id: number;
@@ -67,10 +69,36 @@ const Game: React.FC = () => {
   } = useSelector((state: RootState) => state.game);
 
   const [clockRunning, setClockRunning] = useState(false);
-  const [gameTime, setGameTime] = useState(600);
+  const [gameTime, setGameTime] = useState(720); // Default to standard period length
   const [period, setPeriod] = useState(1);
   const [homeScore, setHomeScore] = useState(0);
   const [awayScore, setAwayScore] = useState(0);
+
+  // Initialize clock and period from backend game data
+  useEffect(() => {
+    if (game && !gameLoadingState.loadingGame) {
+      let initialTime = game.currentClockS ?? game.periodLengthS ?? 720;
+      const isRunning = game.clockRunning ?? false;
+
+      // Account for elapsed time if the clock was already running when we fetched it
+      if (isRunning && game.lastClockWallTs) {
+        const now = Date.now();
+        const elapsedMs = now - game.lastClockWallTs;
+        const elapsedS = Math.floor(elapsedMs / 1000);
+        initialTime = Math.max(0, initialTime - elapsedS);
+      }
+
+      setGameTime(initialTime);
+      setPeriod(game.currentPeriod ?? 1);
+      setClockRunning(isRunning);
+    }
+  }, [
+    game?.id,
+    game?.currentClockS,
+    game?.clockRunning,
+    game?.lastClockWallTs,
+    gameLoadingState.loadingGame,
+  ]);
   const [showSubstitutionModal, setShowSubstitutionModal] = useState(false);
   const [showLineupModal, setShowLineupModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<"home" | "away" | null>(
@@ -164,6 +192,7 @@ const Game: React.FC = () => {
   const homeLineup = currentLineups[(game as any)?.homeTeamId] || null;
   const awayLineup = currentLineups[(game as any)?.awayTeamId] || null;
   const lineupSet = homeLineup !== null && awayLineup !== null;
+  const canEnterStats = Boolean(lineupSet && clockRunning);
 
   // Initialize stats for on-court players when lineup is set
   useEffect(() => {
@@ -360,6 +389,25 @@ const Game: React.FC = () => {
     return () => clearInterval(interval);
   }, [clockRunning, gameTime]);
 
+  // Sync clock stop to backend when time reaches zero
+  useEffect(() => {
+    if (gameTime === 0 && clockRunning) {
+      setClockRunning(false);
+      if (game) {
+        dispatch(
+          updateGame({
+            id: (game as any).id,
+            data: {
+              clockRunning: false,
+              currentClockS: 0,
+              status: "paused",
+            },
+          }) as any
+        );
+      }
+    }
+  }, [gameTime, clockRunning, game, dispatch]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -425,6 +473,10 @@ const Game: React.FC = () => {
     delta: number
   ) => {
     if (!game) return;
+    if (!canEnterStats) {
+      toast.error("Start the game to record stats");
+      return;
+    }
     const gameId = (game as any).id;
     const teamId =
       team === "home" ? (game as any).homeTeamId : (game as any).awayTeamId;
@@ -503,6 +555,10 @@ const Game: React.FC = () => {
     delta: number
   ) => {
     if (!game) return;
+    if (!canEnterStats) {
+      toast.error("Start the game to record stats");
+      return;
+    }
     const gameId = (game as any).id;
     const teamId =
       team === "home" ? (game as any).homeTeamId : (game as any).awayTeamId;
@@ -864,11 +920,19 @@ const Game: React.FC = () => {
                 ) : (
                   <button
                     onClick={() => {
-                      const gameStatus = (game as any).status?.toLowerCase();
-                      if (gameStatus === "scheduled") {
-                        setClockRunning(true);
-                      } else {
-                        setClockRunning(!clockRunning);
+                      const newClockRunning = !clockRunning;
+                      setClockRunning(newClockRunning);
+                      if (game) {
+                        dispatch(
+                          updateGame({
+                            id: (game as any).id,
+                            data: {
+                              clockRunning: newClockRunning,
+                              currentClockS: gameTime,
+                              status: newClockRunning ? "live" : "paused",
+                            },
+                          }) as any
+                        );
                       }
                     }}
                     style={{
@@ -904,9 +968,24 @@ const Game: React.FC = () => {
                 )}
                 <button
                   onClick={() => {
-                    setGameTime(600);
-                    setPeriod((prev) => prev + 1);
+                    const newPeriod = period + 1;
+                    const newGameTime = (game as any)?.periodLengthS ?? 720;
+                    setGameTime(newGameTime);
+                    setPeriod(newPeriod);
                     setClockRunning(false);
+                    if (game) {
+                      dispatch(
+                        updateGame({
+                          id: (game as any).id,
+                          data: {
+                            currentPeriod: newPeriod,
+                            currentClockS: newGameTime,
+                            clockRunning: false,
+                            status: "paused",
+                          },
+                        }) as any
+                      );
+                    }
                   }}
                   style={BUTTON_STYLES.secondary}
                   {...getButtonHoverStyle("secondary")}

@@ -15,8 +15,9 @@ import {
 } from "recharts";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
-import { getMyPlayer } from "../models/playerSlice";
+import { getMyPlayer, getPlayers } from "../models/playerSlice";
 import { getTeams } from "../models/teamSlice";
+import { getGames } from "../models/gameSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
@@ -50,384 +51,174 @@ interface Player {
   }>;
 }
 
-const mockPlayers: Player[] = [
-  {
-    id: 1,
-    name: "John Doe",
-    number: 5,
-    team: "Lakers",
-    position: "PG",
-    stats: {
-      gamesPlayed: 12,
-      points: 18.5,
-      rebounds: 4.2,
-      assists: 7.8,
-      steals: 1.5,
-      blocks: 0.2,
-      fouls: 2.1,
-      fieldGoalPercentage: 45.2,
-      threePointPercentage: 38.5,
-      freeThrowPercentage: 82.3,
-    },
-    gameStats: [
-      {
-        gameId: 1,
-        opponent: "Warriors",
-        date: "2024-01-15",
-        points: 22,
-        rebounds: 5,
-        assists: 8,
-      },
-      {
-        gameId: 2,
-        opponent: "Celtics",
-        date: "2024-01-18",
-        points: 15,
-        rebounds: 3,
-        assists: 9,
-      },
-      {
-        gameId: 3,
-        opponent: "Heat",
-        date: "2024-01-22",
-        points: 20,
-        rebounds: 6,
-        assists: 7,
-      },
-      {
-        gameId: 4,
-        opponent: "Nuggets",
-        date: "2024-01-25",
-        points: 18,
-        rebounds: 4,
-        assists: 10,
-      },
-      {
-        gameId: 5,
-        opponent: "Bucks",
-        date: "2024-01-28",
-        points: 17,
-        rebounds: 3,
-        assists: 5,
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Mike Smith",
-    number: 10,
-    team: "Lakers",
-    position: "SG",
-    stats: {
-      gamesPlayed: 12,
-      points: 14.3,
-      rebounds: 3.1,
-      assists: 4.2,
-      steals: 1.8,
-      blocks: 0.3,
-      fouls: 1.9,
-      fieldGoalPercentage: 42.1,
-      threePointPercentage: 35.7,
-      freeThrowPercentage: 78.5,
-    },
-    gameStats: [
-      {
-        gameId: 1,
-        opponent: "Warriors",
-        date: "2024-01-15",
-        points: 16,
-        rebounds: 4,
-        assists: 5,
-      },
-      {
-        gameId: 2,
-        opponent: "Celtics",
-        date: "2024-01-18",
-        points: 12,
-        rebounds: 2,
-        assists: 3,
-      },
-      {
-        gameId: 3,
-        opponent: "Heat",
-        date: "2024-01-22",
-        points: 15,
-        rebounds: 4,
-        assists: 6,
-      },
-      {
-        gameId: 4,
-        opponent: "Nuggets",
-        date: "2024-01-25",
-        points: 14,
-        rebounds: 3,
-        assists: 4,
-      },
-      {
-        gameId: 5,
-        opponent: "Bucks",
-        date: "2024-01-28",
-        points: 13,
-        rebounds: 2,
-        assists: 3,
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Chris Johnson",
-    number: 15,
-    team: "Lakers",
-    position: "SF",
-    stats: {
-      gamesPlayed: 12,
-      points: 19.8,
-      rebounds: 7.5,
-      assists: 3.2,
-      steals: 1.2,
-      blocks: 0.8,
-      fouls: 2.5,
-      fieldGoalPercentage: 48.3,
-      threePointPercentage: 40.2,
-      freeThrowPercentage: 85.1,
-    },
-    gameStats: [
-      {
-        gameId: 1,
-        opponent: "Warriors",
-        date: "2024-01-15",
-        points: 24,
-        rebounds: 9,
-        assists: 4,
-      },
-      {
-        gameId: 2,
-        opponent: "Celtics",
-        date: "2024-01-18",
-        points: 18,
-        rebounds: 6,
-        assists: 2,
-      },
-      {
-        gameId: 3,
-        opponent: "Heat",
-        date: "2024-01-22",
-        points: 21,
-        rebounds: 8,
-        assists: 5,
-      },
-      {
-        gameId: 4,
-        opponent: "Nuggets",
-        date: "2024-01-25",
-        points: 17,
-        rebounds: 7,
-        assists: 2,
-      },
-      {
-        gameId: 5,
-        opponent: "Bucks",
-        date: "2024-01-28",
-        points: 19,
-        rebounds: 8,
-        assists: 3,
-      },
-    ],
-  },
-  {
-    id: 4,
-    name: "David Brown",
-    number: 20,
-    team: "Lakers",
-    position: "PF",
-    stats: {
-      gamesPlayed: 12,
-      points: 11.2,
-      rebounds: 9.8,
-      assists: 2.1,
-      steals: 0.9,
-      blocks: 1.5,
-      fouls: 3.2,
-      fieldGoalPercentage: 52.4,
-      threePointPercentage: 28.3,
-      freeThrowPercentage: 71.2,
-    },
-    gameStats: [
-      {
-        gameId: 1,
-        opponent: "Warriors",
-        date: "2024-01-15",
-        points: 13,
-        rebounds: 12,
-        assists: 2,
-      },
-      {
-        gameId: 2,
-        opponent: "Celtics",
-        date: "2024-01-18",
-        points: 9,
-        rebounds: 8,
-        assists: 1,
-      },
-      {
-        gameId: 3,
-        opponent: "Heat",
-        date: "2024-01-22",
-        points: 12,
-        rebounds: 11,
-        assists: 3,
-      },
-      {
-        gameId: 4,
-        opponent: "Nuggets",
-        date: "2024-01-25",
-        points: 10,
-        rebounds: 9,
-        assists: 2,
-      },
-      {
-        gameId: 5,
-        opponent: "Bucks",
-        date: "2024-01-28",
-        points: 11,
-        rebounds: 10,
-        assists: 2,
-      },
-    ],
-  },
-  {
-    id: 5,
-    name: "Tom Wilson",
-    number: 25,
-    team: "Lakers",
-    position: "C",
-    stats: {
-      gamesPlayed: 12,
-      points: 13.5,
-      rebounds: 11.2,
-      assists: 1.8,
-      steals: 0.7,
-      blocks: 2.3,
-      fouls: 3.8,
-      fieldGoalPercentage: 55.8,
-      threePointPercentage: 0,
-      freeThrowPercentage: 68.5,
-    },
-    gameStats: [
-      {
-        gameId: 1,
-        opponent: "Warriors",
-        date: "2024-01-15",
-        points: 15,
-        rebounds: 13,
-        assists: 2,
-      },
-      {
-        gameId: 2,
-        opponent: "Celtics",
-        date: "2024-01-18",
-        points: 12,
-        rebounds: 10,
-        assists: 1,
-      },
-      {
-        gameId: 3,
-        opponent: "Heat",
-        date: "2024-01-22",
-        points: 14,
-        rebounds: 12,
-        assists: 2,
-      },
-      {
-        gameId: 4,
-        opponent: "Nuggets",
-        date: "2024-01-25",
-        points: 13,
-        rebounds: 11,
-        assists: 2,
-      },
-      {
-        gameId: 5,
-        opponent: "Bucks",
-        date: "2024-01-28",
-        points: 13,
-        rebounds: 10,
-        assists: 2,
-      },
-    ],
-  },
-  {
-    id: 6,
-    name: "James Miller",
-    number: 3,
-    team: "Warriors",
-    position: "PG",
-    stats: {
-      gamesPlayed: 11,
-      points: 16.8,
-      rebounds: 3.5,
-      assists: 8.2,
-      steals: 2.1,
-      blocks: 0.1,
-      fouls: 1.8,
-      fieldGoalPercentage: 44.5,
-      threePointPercentage: 39.2,
-      freeThrowPercentage: 88.3,
-    },
-    gameStats: [
-      {
-        gameId: 6,
-        opponent: "Lakers",
-        date: "2024-01-15",
-        points: 20,
-        rebounds: 4,
-        assists: 9,
-      },
-      {
-        gameId: 7,
-        opponent: "Celtics",
-        date: "2024-01-19",
-        points: 14,
-        rebounds: 3,
-        assists: 7,
-      },
-      {
-        gameId: 8,
-        opponent: "Heat",
-        date: "2024-01-23",
-        points: 18,
-        rebounds: 4,
-        assists: 10,
-      },
-      {
-        gameId: 9,
-        opponent: "Nuggets",
-        date: "2024-01-26",
-        points: 15,
-        rebounds: 3,
-        assists: 6,
-      },
-      {
-        gameId: 10,
-        opponent: "Bucks",
-        date: "2024-01-29",
-        points: 17,
-        rebounds: 4,
-        assists: 9,
-      },
-    ],
-  },
-];
+// Helper function to aggregate stats from Redux
+const aggregatePlayerStats = (
+  gameStats: { [key: string]: any },
+  games: any[],
+  players: any[],
+  teams: any[]
+): Player[] => {
+  // Group stats by playerId
+  const playerStatsMap: {
+    [playerId: number]: {
+      gamesPlayed: Set<number>;
+      totalPoints: number;
+      totalRebounds: number;
+      totalAssists: number;
+      totalSteals: number;
+      totalBlocks: number;
+      totalFouls: number;
+      totalFieldGoalsMade: number;
+      totalFieldGoalsAttempted: number;
+      totalThreePointersMade: number;
+      totalThreePointersAttempted: number;
+      totalFreeThrowsMade: number;
+      totalFreeThrowsAttempted: number;
+      gameStats: Array<{
+        gameId: number;
+        opponent: string;
+        date: string;
+        points: number;
+        rebounds: number;
+        assists: number;
+      }>;
+    };
+  } = {};
+
+  // Aggregate stats from Redux
+  Object.values(gameStats).forEach((stat: any) => {
+    const playerId = stat.playerId;
+    if (!playerStatsMap[playerId]) {
+      playerStatsMap[playerId] = {
+        gamesPlayed: new Set(),
+        totalPoints: 0,
+        totalRebounds: 0,
+        totalAssists: 0,
+        totalSteals: 0,
+        totalBlocks: 0,
+        totalFouls: 0,
+        totalFieldGoalsMade: 0,
+        totalFieldGoalsAttempted: 0,
+        totalThreePointersMade: 0,
+        totalThreePointersAttempted: 0,
+        totalFreeThrowsMade: 0,
+        totalFreeThrowsAttempted: 0,
+        gameStats: [],
+      };
+    }
+
+    const playerStat = playerStatsMap[playerId];
+    playerStat.gamesPlayed.add(stat.gameId);
+    playerStat.totalPoints += stat.points || 0;
+    playerStat.totalRebounds += stat.rebounds || 0;
+    playerStat.totalAssists += stat.assists || 0;
+    playerStat.totalSteals += stat.steals || 0;
+    playerStat.totalBlocks += stat.blocks || 0;
+    playerStat.totalFouls += stat.fouls || 0;
+    playerStat.totalFieldGoalsMade += stat.fieldGoalsMade || 0;
+    playerStat.totalFieldGoalsAttempted += stat.fieldGoalsAttempted || 0;
+    playerStat.totalThreePointersMade += stat.threePointersMade || 0;
+    playerStat.totalThreePointersAttempted += stat.threePointersAttempted || 0;
+    playerStat.totalFreeThrowsMade += stat.freeThrowsMade || 0;
+    playerStat.totalFreeThrowsAttempted += stat.freeThrowsAttempted || 0;
+
+    // Add game-specific stats
+    const game = games.find((g) => g.id === stat.gameId);
+    if (game) {
+      const opponentTeamId =
+        game.homeTeamId === stat.teamId
+          ? game.awayTeamId
+          : game.homeTeamId;
+      const opponentTeam = teams.find((t) => t.id === opponentTeamId);
+      playerStat.gameStats.push({
+        gameId: stat.gameId,
+        opponent: opponentTeam?.name || "Unknown",
+        date: game.scheduledDateTime || new Date().toISOString(),
+        points: stat.points || 0,
+        rebounds: stat.rebounds || 0,
+        assists: stat.assists || 0,
+      });
+    }
+  });
+
+  // Convert to Player array
+  return players
+    .filter((player) => playerStatsMap[player.id])
+    .map((player) => {
+      const aggregated = playerStatsMap[player.id];
+      const gamesPlayed = aggregated.gamesPlayed.size;
+      const avgPoints = gamesPlayed > 0 ? aggregated.totalPoints / gamesPlayed : 0;
+      const avgRebounds =
+        gamesPlayed > 0 ? aggregated.totalRebounds / gamesPlayed : 0;
+      const avgAssists =
+        gamesPlayed > 0 ? aggregated.totalAssists / gamesPlayed : 0;
+      const avgSteals =
+        gamesPlayed > 0 ? aggregated.totalSteals / gamesPlayed : 0;
+      const avgBlocks =
+        gamesPlayed > 0 ? aggregated.totalBlocks / gamesPlayed : 0;
+      const avgFouls =
+        gamesPlayed > 0 ? aggregated.totalFouls / gamesPlayed : 0;
+      const fieldGoalPercentage =
+        aggregated.totalFieldGoalsAttempted > 0
+          ? (aggregated.totalFieldGoalsMade /
+              aggregated.totalFieldGoalsAttempted) *
+            100
+          : 0;
+      const threePointPercentage =
+        aggregated.totalThreePointersAttempted > 0
+          ? (aggregated.totalThreePointersMade /
+              aggregated.totalThreePointersAttempted) *
+            100
+          : 0;
+      const freeThrowPercentage =
+        aggregated.totalFreeThrowsAttempted > 0
+          ? (aggregated.totalFreeThrowsMade /
+              aggregated.totalFreeThrowsAttempted) *
+            100
+          : 0;
+
+      const team = teams.find((t) => t.id === player.teamId);
+
+      return {
+        id: player.id,
+        name:
+          player.displayName ||
+          player.name ||
+          player.nickname ||
+          `Player ${player.id}`,
+        number: player.playerNumber || player.id,
+        team: team?.name || "Unknown",
+        position: player.primaryPosition || "N/A",
+        stats: {
+          gamesPlayed,
+          points: avgPoints,
+          rebounds: avgRebounds,
+          assists: avgAssists,
+          steals: avgSteals,
+          blocks: avgBlocks,
+          fouls: avgFouls,
+          fieldGoalPercentage,
+          threePointPercentage,
+          freeThrowPercentage,
+        },
+        gameStats: aggregated.gameStats,
+      };
+    });
+};
 
 const PlayerStats: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const hasFetchedMyPlayer = useRef(false);
-  const { myPlayer, loadingState: playerLoadingState } = useSelector(
+  const { myPlayer, players, loadingState: playerLoadingState } = useSelector(
     (state: RootState) => state.player
   );
   const { teams, loadingState: teamLoadingState } = useSelector(
     (state: RootState) => state.team
+  );
+  const { games } = useSelector((state: RootState) => state.game);
+  const { stats: gameStats } = useSelector(
+    (state: RootState) => state.gameStats
   );
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<
@@ -446,6 +237,8 @@ const PlayerStats: React.FC = () => {
 
   useEffect(() => {
     dispatch(getTeams({ offset: 0, limit: 100 }) as any);
+    dispatch(getGames({ offset: 0, limit: 100 }) as any);
+    dispatch(getPlayers({ offset: 0, limit: 100 }) as any);
   }, [dispatch]);
 
   useEffect(() => {
@@ -462,16 +255,24 @@ const PlayerStats: React.FC = () => {
     }
   }, [myPlayer, teams]);
 
+  // Aggregate stats from Redux
+  const playersWithStats = aggregatePlayerStats(
+    gameStats,
+    games,
+    players,
+    teams
+  );
+
   const selectedPlayer = playerId
-    ? mockPlayers.find((p) => p.id === parseInt(playerId, 10))
+    ? playersWithStats.find((p) => p.id === parseInt(playerId, 10))
     : null;
 
-  const getMyPlayerMock = (): Player | null => {
+  const getMyPlayerStats = (): Player | null => {
     if (!myPlayer) return null;
-    return mockPlayers[0];
+    return playersWithStats.find((p) => p.id === myPlayer.id) || null;
   };
 
-  const myPlayerMock = getMyPlayerMock();
+  const myPlayerStats = getMyPlayerStats();
 
   if (selectedPlayer) {
     const chartData = selectedPlayer.gameStats.map((game) => ({
@@ -991,7 +792,7 @@ const PlayerStats: React.FC = () => {
   }
 
   const getFilteredPlayers = () => {
-    let filtered = [...mockPlayers];
+    let filtered = [...playersWithStats];
 
     if (selectedTeamFilter === "all") {
       return filtered;
@@ -1271,7 +1072,7 @@ const PlayerStats: React.FC = () => {
             >
               Player Statistics
             </h1>
-            {mockPlayers.length > 0 && (
+            {playersWithStats.length > 0 && (
               <div
                 style={{
                   display: "flex",
@@ -1325,7 +1126,7 @@ const PlayerStats: React.FC = () => {
           </div>
         </div>
 
-        {myPlayerMock && (
+        {myPlayerStats && (
           <div style={{ width: "100%" }}>
             <div
               style={{
@@ -1356,7 +1157,7 @@ const PlayerStats: React.FC = () => {
                 marginBottom: "2rem",
               }}
             >
-              {renderPlayerCard(myPlayerMock)}
+              {renderPlayerCard(myPlayerStats)}
             </div>
           </div>
         )}
@@ -1534,11 +1335,11 @@ const PlayerStats: React.FC = () => {
                   </thead>
                   <tbody>
                     {sortedPlayers
-                      .filter((p) => !myPlayerMock || p.id !== myPlayerMock.id)
+                      .filter((p) => !myPlayerStats || p.id !== myPlayerStats.id)
                       .map((player, index) => {
                         const rank = index + 1;
                         const isMyPlayer =
-                          myPlayerMock && player.id === myPlayerMock.id;
+                          myPlayerStats && player.id === myPlayerStats.id;
                         return (
                           <tr
                             key={player.id}

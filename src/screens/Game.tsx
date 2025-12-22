@@ -13,6 +13,12 @@ import {
   LineupPlayer,
 } from "../models/gameSlice";
 import { getPlayersByTeam } from "../models/playerSlice";
+import {
+  initializePlayerStats,
+  updatePlayerStat as updatePlayerStatAction,
+  getGameStats,
+  upsertPlayerGameStatValue,
+} from "../models/gameStatsSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import LineupModal from "../components/LineupModal";
@@ -26,7 +32,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 
-interface MockPlayer {
+interface PlayerWithStats {
   id: number;
   name: string;
   number: number;
@@ -37,6 +43,12 @@ interface MockPlayer {
     rebounds: number;
     assists: number;
     fouls: number;
+    fieldGoalsMade: number;
+    fieldGoalsAttempted: number;
+    threePointersMade: number;
+    threePointersAttempted: number;
+    freeThrowsMade: number;
+    freeThrowsAttempted: number;
   };
 }
 
@@ -68,131 +80,13 @@ const Game: React.FC = () => {
   const { players: homeTeamPlayers } = useSelector(
     (state: RootState) => state.player
   );
+  const { stats: gameStats } = useSelector(
+    (state: RootState) => state.gameStats
+  );
   const [homeTeamPlayersList, setHomeTeamPlayersList] = useState<any[]>([]);
   const [awayTeamPlayersList, setAwayTeamPlayersList] = useState<any[]>([]);
 
   const id = searchParams.get("id");
-
-  const mockHomePlayers: MockPlayer[] = [
-    {
-      id: 1,
-      name: "John Doe",
-      number: 5,
-      position: "PG",
-      onCourt: true,
-      stats: { points: 12, rebounds: 3, assists: 5, fouls: 1 },
-    },
-    {
-      id: 2,
-      name: "Mike Smith",
-      number: 10,
-      position: "SG",
-      onCourt: true,
-      stats: { points: 8, rebounds: 2, assists: 2, fouls: 0 },
-    },
-    {
-      id: 3,
-      name: "Chris Johnson",
-      number: 15,
-      position: "SF",
-      onCourt: true,
-      stats: { points: 15, rebounds: 7, assists: 3, fouls: 2 },
-    },
-    {
-      id: 4,
-      name: "David Brown",
-      number: 20,
-      position: "PF",
-      onCourt: true,
-      stats: { points: 6, rebounds: 8, assists: 1, fouls: 1 },
-    },
-    {
-      id: 5,
-      name: "Tom Wilson",
-      number: 25,
-      position: "C",
-      onCourt: true,
-      stats: { points: 10, rebounds: 12, assists: 2, fouls: 3 },
-    },
-    {
-      id: 6,
-      name: "Alex Davis",
-      number: 7,
-      position: "PG",
-      onCourt: false,
-      stats: { points: 0, rebounds: 0, assists: 0, fouls: 0 },
-    },
-    {
-      id: 7,
-      name: "Ryan Lee",
-      number: 12,
-      position: "SG",
-      onCourt: false,
-      stats: { points: 0, rebounds: 0, assists: 0, fouls: 0 },
-    },
-  ];
-
-  const mockAwayPlayers: MockPlayer[] = [
-    {
-      id: 8,
-      name: "James Miller",
-      number: 3,
-      position: "PG",
-      onCourt: true,
-      stats: { points: 14, rebounds: 2, assists: 6, fouls: 1 },
-    },
-    {
-      id: 9,
-      name: "Robert Taylor",
-      number: 8,
-      position: "SG",
-      onCourt: true,
-      stats: { points: 9, rebounds: 3, assists: 4, fouls: 0 },
-    },
-    {
-      id: 10,
-      name: "William Anderson",
-      number: 13,
-      position: "SF",
-      onCourt: true,
-      stats: { points: 11, rebounds: 5, assists: 2, fouls: 2 },
-    },
-    {
-      id: 11,
-      name: "Michael White",
-      number: 18,
-      position: "PF",
-      onCourt: true,
-      stats: { points: 7, rebounds: 9, assists: 1, fouls: 1 },
-    },
-    {
-      id: 12,
-      name: "Daniel Harris",
-      number: 23,
-      position: "C",
-      onCourt: true,
-      stats: { points: 13, rebounds: 11, assists: 3, fouls: 2 },
-    },
-    {
-      id: 13,
-      name: "Kevin Martinez",
-      number: 4,
-      position: "PG",
-      onCourt: false,
-      stats: { points: 0, rebounds: 0, assists: 0, fouls: 0 },
-    },
-    {
-      id: 14,
-      name: "Brian Garcia",
-      number: 9,
-      position: "SG",
-      onCourt: false,
-      stats: { points: 0, rebounds: 0, assists: 0, fouls: 0 },
-    },
-  ];
-
-  const [homePlayers, setHomePlayers] = useState<MockPlayer[]>(mockHomePlayers);
-  const [awayPlayers, setAwayPlayers] = useState<MockPlayer[]>(mockAwayPlayers);
 
   useEffect(() => {
     if (id) {
@@ -253,12 +147,61 @@ const Game: React.FC = () => {
           }) as any
         );
       }
+
+      // Fetch game stats
+      if ((game as any).id) {
+        dispatch(
+          getGameStats({
+            gameId: (game as any).id,
+            offset: 0,
+            limit: 100,
+          }) as any
+        );
+      }
     }
   }, [game, teams, dispatch]);
 
   const homeLineup = currentLineups[(game as any)?.homeTeamId] || null;
   const awayLineup = currentLineups[(game as any)?.awayTeamId] || null;
   const lineupSet = homeLineup !== null && awayLineup !== null;
+
+  // Initialize stats for on-court players when lineup is set
+  useEffect(() => {
+    if (!game || !lineupSet) return;
+    const gameId = (game as any).id;
+    const homeTeamId = (game as any).homeTeamId;
+    const awayTeamId = (game as any).awayTeamId;
+
+    if (homeLineup) {
+      homeLineup.players.forEach((lp) => {
+        const key = `${gameId}-${lp.playerId}`;
+        if (!gameStats[key]) {
+          dispatch(
+            initializePlayerStats({
+              gameId,
+              playerId: lp.playerId,
+              teamId: homeTeamId,
+            })
+          );
+        }
+      });
+    }
+
+    if (awayLineup) {
+      awayLineup.players.forEach((lp) => {
+        const key = `${gameId}-${lp.playerId}`;
+        if (!gameStats[key]) {
+          dispatch(
+            initializePlayerStats({
+              gameId,
+              playerId: lp.playerId,
+              teamId: awayTeamId,
+            })
+          );
+        }
+      });
+    }
+  }, [game, lineupSet, homeLineup, awayLineup, gameStats, dispatch]);
 
   const getOnCourtPlayers = (
     lineup: Lineup | null,
@@ -286,10 +229,11 @@ const Game: React.FC = () => {
 
   const homeOnCourt = lineupSet
     ? getOnCourtPlayers(homeLineup, homeTeamPlayersList)
-    : homePlayers.filter((p) => p.onCourt);
+    : [];
   const awayOnCourt = lineupSet
     ? getOnCourtPlayers(awayLineup, awayTeamPlayersList)
-    : awayPlayers.filter((p) => p.onCourt);
+    : [];
+
   const getBenchPlayers = (allPlayers: any[], onCourt: any[]): any[] => {
     return allPlayers
       .filter((p) => !onCourt.some((oc) => oc.id === p.id))
@@ -303,6 +247,108 @@ const Game: React.FC = () => {
 
   const homeBench = getBenchPlayers(homeTeamPlayersList, homeOnCourt);
   const awayBench = getBenchPlayers(awayTeamPlayersList, awayOnCourt);
+
+  // Build player lists with stats from Redux
+  const buildPlayersWithStats = (
+    allPlayers: any[],
+    lineup: Lineup | null,
+    teamId: number
+  ): PlayerWithStats[] => {
+    if (!game || !allPlayers.length) return [];
+    const gameId = (game as any).id;
+
+    return allPlayers.map((player) => {
+      const key = `${gameId}-${player.id}`;
+      const stats = gameStats[key] || {
+        points: 0,
+        rebounds: 0,
+        assists: 0,
+        fouls: 0,
+        fieldGoalsMade: 0,
+        fieldGoalsAttempted: 0,
+        threePointersMade: 0,
+        threePointersAttempted: 0,
+        freeThrowsMade: 0,
+        freeThrowsAttempted: 0,
+      };
+      const isOnCourt = lineup
+        ? lineup.players.some((lp) => lp.playerId === player.id)
+        : false;
+
+      return {
+        id: player.id,
+        number: player.playerNumber || player.id,
+        name:
+          player.displayName ||
+          player.name ||
+          player.nickname ||
+          `Player ${player.id}`,
+        position: isOnCourt
+          ? lineup!.players.find((lp) => lp.playerId === player.id)?.position ||
+            player.primaryPosition ||
+            "N/A"
+          : player.primaryPosition || "N/A",
+        onCourt: isOnCourt,
+        stats: {
+          points: stats.points || 0,
+          rebounds: stats.rebounds || 0,
+          assists: stats.assists || 0,
+          fouls: stats.fouls || 0,
+          fieldGoalsMade: stats.fieldGoalsMade || 0,
+          fieldGoalsAttempted: stats.fieldGoalsAttempted || 0,
+          threePointersMade: stats.threePointersMade || 0,
+          threePointersAttempted: stats.threePointersAttempted || 0,
+          freeThrowsMade: stats.freeThrowsMade || 0,
+          freeThrowsAttempted: stats.freeThrowsAttempted || 0,
+        },
+      };
+    });
+  };
+
+  const homePlayers = buildPlayersWithStats(
+    homeTeamPlayersList,
+    homeLineup,
+    (game as any)?.homeTeamId
+  ).sort((a, b) => {
+    // On-court players first
+    if (a.onCourt && !b.onCourt) return -1;
+    if (!a.onCourt && b.onCourt) return 1;
+    return 0;
+  });
+  const awayPlayers = buildPlayersWithStats(
+    awayTeamPlayersList,
+    awayLineup,
+    (game as any)?.awayTeamId
+  ).sort((a, b) => {
+    // On-court players first
+    if (a.onCourt && !b.onCourt) return -1;
+    if (!a.onCourt && b.onCourt) return 1;
+    return 0;
+  });
+
+  // Calculate scores from Redux stats
+  useEffect(() => {
+    if (!game) return;
+    const gameId = (game as any).id;
+    const homeTeamId = (game as any).homeTeamId;
+    const awayTeamId = (game as any).awayTeamId;
+
+    let homeTotal = 0;
+    let awayTotal = 0;
+
+    Object.values(gameStats).forEach((stat: any) => {
+      if (stat.gameId === gameId) {
+        if (stat.teamId === homeTeamId) {
+          homeTotal += stat.points || 0;
+        } else if (stat.teamId === awayTeamId) {
+          awayTotal += stat.points || 0;
+        }
+      }
+    });
+
+    setHomeScore(homeTotal);
+    setAwayScore(awayTotal);
+  }, [game, gameStats]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -320,7 +366,7 @@ const Game: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleSubstitution = async (
+  const handleSubstitution = (
     team: "home" | "away",
     substitutions: {
       position: string;
@@ -358,69 +404,297 @@ const Game: React.FC = () => {
       players: newPlayers,
     };
 
-    try {
-      await dispatch(
-        createLineup({
-          gameId: (game as any).id,
-          lineup: newLineup,
-          toastMessage: "Substitution completed successfully",
-        }) as any
-      );
+    // Event-driven: dispatch and let store/toasts reflect success/failure
+    dispatch(
+      createLineup({
+        gameId: (game as any).id,
+        lineup: newLineup,
+        toastMessage: "Substitution completed successfully",
+      }) as any
+    );
 
-      await dispatch(
-        getCurrentLineup({
-          gameId: (game as any).id,
-          teamId: teamId,
-        }) as any
-      );
-
-      setShowSubstitutionModal(false);
-      setSelectedTeam(null);
-    } catch (error) {
-      console.error("Error creating substitution:", error);
-    }
+    // Optimistically close modal; failures will show via toastListener
+    setShowSubstitutionModal(false);
+    setSelectedTeam(null);
   };
 
   const updatePlayerStat = (
     team: "home" | "away",
     playerId: number,
-    stat: "points" | "rebounds" | "assists" | "fouls",
+    stat: "points" | "rebounds" | "assists" | "fouls" | "steals" | "blocks",
     delta: number
   ) => {
-    if (team === "home") {
-      setHomePlayers((prev) =>
-        prev.map((p) =>
-          p.id === playerId
-            ? {
-                ...p,
-                stats: {
-                  ...p.stats,
-                  [stat]: Math.max(0, p.stats[stat] + delta),
-                },
-              }
-            : p
-        )
+    if (!game) return;
+    const gameId = (game as any).id;
+    const teamId =
+      team === "home" ? (game as any).homeTeamId : (game as any).awayTeamId;
+
+    // Initialize stats if they don't exist
+    const key = `${gameId}-${playerId}`;
+    if (!gameStats[key]) {
+      dispatch(
+        initializePlayerStats({
+          gameId,
+          playerId,
+          teamId,
+        })
       );
-      if (stat === "points") {
-        setHomeScore((prev) => prev + delta);
+    }
+
+    // Update stat in Redux (optimistic update)
+    dispatch(
+      updatePlayerStatAction({
+        gameId,
+        playerId,
+        stat,
+        delta,
+      })
+    );
+
+    // Map stat to API event format
+    const statEventMap: { [key: string]: string } = {
+      rebounds: "rebound",
+      assists: "assist",
+      fouls: "foul",
+      steals: "steal",
+      blocks: "block",
+    };
+
+    const apiStat = statEventMap[stat];
+    if (apiStat) {
+      const operation = delta >= 0 ? "increment" : "decrement";
+      const times = Math.abs(delta);
+      if (times === 0) return;
+
+      const labelMap: Record<string, string> = {
+        rebound: "Rebound",
+        assist: "Assist",
+        foul: "Foul",
+        steal: "Steal",
+        block: "Block",
+      };
+      const label = labelMap[apiStat] ?? "Stat";
+      const opLabel = operation === "increment" ? "+1" : "-1";
+
+      // Call API for non-point stats (semantic upsert)
+      for (let i = 0; i < times; i++) {
+        dispatch(
+          upsertPlayerGameStatValue({
+            gameId,
+            payload: {
+              playerId,
+              teamId,
+              stat: apiStat,
+              value: 1,
+              operation,
+            },
+            toastMessage: i === 0 ? `${label} ${opLabel}` : undefined,
+          }) as any
+        );
       }
-    } else {
-      setAwayPlayers((prev) =>
-        prev.map((p) =>
-          p.id === playerId
-            ? {
-                ...p,
-                stats: {
-                  ...p.stats,
-                  [stat]: Math.max(0, p.stats[stat] + delta),
-                },
-              }
-            : p
-        )
+    }
+  };
+
+  const updateShotStat = (
+    team: "home" | "away",
+    playerId: number,
+    shotType: "2PT" | "3PT" | "FT",
+    stat: "made" | "missed",
+    delta: number
+  ) => {
+    if (!game) return;
+    const gameId = (game as any).id;
+    const teamId =
+      team === "home" ? (game as any).homeTeamId : (game as any).awayTeamId;
+
+    // Initialize stats if they don't exist
+    const key = `${gameId}-${playerId}`;
+    if (!gameStats[key]) {
+      dispatch(
+        initializePlayerStats({
+          gameId,
+          playerId,
+          teamId,
+        })
       );
-      if (stat === "points") {
-        setAwayScore((prev) => prev + delta);
+    }
+
+    // Determine point value for the shot
+    const pointValue =
+      shotType === "2PT"
+        ? 2
+        : shotType === "3PT"
+        ? 3
+        : shotType === "FT"
+        ? 1
+        : 0;
+
+    const operation = delta >= 0 ? "increment" : "decrement";
+    const times = Math.abs(delta);
+    const semanticStat = stat === "made" ? "made_point" : "miss_point";
+    const opLabel = operation === "increment" ? "+1" : "-1";
+    const shotLabel = stat === "made" ? "Made" : "Miss";
+
+    if (shotType === "2PT") {
+      // 2-point field goal
+      if (stat === "made") {
+        // Made: increment made, attempted, and points
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "fieldGoalsMade",
+            delta,
+          })
+        );
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "fieldGoalsAttempted",
+            delta,
+          })
+        );
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "points",
+            delta: delta * 2,
+          })
+        );
+      } else {
+        // Missed: increment attempted only
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "fieldGoalsAttempted",
+            delta,
+          })
+        );
       }
+    } else if (shotType === "3PT") {
+      // 3-point field goal
+      if (stat === "made") {
+        // Made: increment made, attempted (both FG and 3PT), and points
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "fieldGoalsMade",
+            delta,
+          })
+        );
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "fieldGoalsAttempted",
+            delta,
+          })
+        );
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "threePointersMade",
+            delta,
+          })
+        );
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "threePointersAttempted",
+            delta,
+          })
+        );
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "points",
+            delta: delta * 3,
+          })
+        );
+      } else {
+        // Missed: increment attempted (both FG and 3PT) only
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "fieldGoalsAttempted",
+            delta,
+          })
+        );
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "threePointersAttempted",
+            delta,
+          })
+        );
+      }
+    } else if (shotType === "FT") {
+      // Free throw
+      if (stat === "made") {
+        // Made: increment made, attempted, and points
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "freeThrowsMade",
+            delta,
+          })
+        );
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "freeThrowsAttempted",
+            delta,
+          })
+        );
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "points",
+            delta,
+          })
+        );
+      } else {
+        // Missed: increment attempted only
+        dispatch(
+          updatePlayerStatAction({
+            gameId,
+            playerId,
+            stat: "freeThrowsAttempted",
+            delta,
+          })
+        );
+      }
+    }
+
+    // Call API for semantic shot event (repeat for abs(delta))
+    if (times === 0) return;
+    for (let i = 0; i < times; i++) {
+      dispatch(
+        upsertPlayerGameStatValue({
+          gameId,
+          payload: {
+            playerId,
+            teamId,
+            stat: semanticStat,
+            value: pointValue,
+            operation,
+          },
+          toastMessage:
+            i === 0 ? `${shotType} ${shotLabel} ${opLabel}` : undefined,
+        }) as any
+      );
     }
   };
 
@@ -467,7 +741,7 @@ const Game: React.FC = () => {
         style={{
           minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
           width: "100%",
-          padding: "2rem",
+          padding: "1rem",
           backgroundColor: COLORS.background.light,
         }}
       >
@@ -477,7 +751,7 @@ const Game: React.FC = () => {
             margin: "0 auto",
             display: "flex",
             flexDirection: "column",
-            gap: "2rem",
+            gap: "1.5rem",
           }}
         >
           <div
@@ -517,7 +791,7 @@ const Game: React.FC = () => {
             style={{
               backgroundColor: COLORS.background.default,
               borderRadius: "12px",
-              padding: "2rem",
+              padding: "1rem",
               border: `1px solid ${COLORS.border.default}`,
               boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
             }}
@@ -527,7 +801,6 @@ const Game: React.FC = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "flex-start",
-                marginBottom: "1.5rem",
                 flexWrap: "wrap",
                 gap: "1rem",
               }}
@@ -650,9 +923,8 @@ const Game: React.FC = () => {
                 alignItems: "center",
                 backgroundColor: COLORS.text.primary,
                 color: "white",
-                padding: "2rem",
+                padding: "1rem",
                 borderRadius: "12px",
-                marginBottom: "1.5rem",
               }}
             >
               <div style={{ textAlign: "center", flex: 1 }}>
@@ -704,8 +976,7 @@ const Game: React.FC = () => {
             <>
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  display: "flex",
                   gap: "1rem",
                 }}
               >
@@ -713,9 +984,14 @@ const Game: React.FC = () => {
                   style={{
                     backgroundColor: COLORS.background.default,
                     borderRadius: "12px",
-                    padding: "1.5rem",
+                    padding: "1rem",
                     border: `1px solid ${COLORS.border.default}`,
                     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    flex: "1",
+                    boxSizing: "border-box",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
                   }}
                 >
                   <div
@@ -723,7 +999,6 @@ const Game: React.FC = () => {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      marginBottom: "1rem",
                     }}
                   >
                     <h2
@@ -753,8 +1028,8 @@ const Game: React.FC = () => {
                   </div>
                   <div
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(5, 1fr)",
+                      display: "flex",
+                      flexWrap: "wrap",
                       gap: "0.5rem",
                     }}
                   >
@@ -767,6 +1042,9 @@ const Game: React.FC = () => {
                           borderRadius: "8px",
                           textAlign: "center",
                           border: `2px solid ${COLORS.primary}`,
+                          flex: "1 1 calc(20% - 0.4rem)",
+                          minWidth: "100px",
+                          boxSizing: "border-box",
                         }}
                       >
                         <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
@@ -795,9 +1073,14 @@ const Game: React.FC = () => {
                   style={{
                     backgroundColor: COLORS.background.default,
                     borderRadius: "12px",
-                    padding: "1.5rem",
+                    padding: "1rem",
                     border: `1px solid ${COLORS.border.default}`,
                     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    flex: "1",
+                    boxSizing: "border-box",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
                   }}
                 >
                   <div
@@ -805,7 +1088,6 @@ const Game: React.FC = () => {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      marginBottom: "1rem",
                     }}
                   >
                     <h2
@@ -835,8 +1117,8 @@ const Game: React.FC = () => {
                   </div>
                   <div
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(5, 1fr)",
+                      display: "flex",
+                      flexWrap: "wrap",
                       gap: "0.5rem",
                     }}
                   >
@@ -849,6 +1131,9 @@ const Game: React.FC = () => {
                           borderRadius: "8px",
                           textAlign: "center",
                           border: `2px solid ${COLORS.danger}`,
+                          flex: "1 1 calc(20% - 0.4rem)",
+                          minWidth: "100px",
+                          boxSizing: "border-box",
                         }}
                       >
                         <div
@@ -886,8 +1171,7 @@ const Game: React.FC = () => {
 
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  display: "flex",
                   gap: "1rem",
                 }}
               >
@@ -895,15 +1179,19 @@ const Game: React.FC = () => {
                   style={{
                     backgroundColor: COLORS.background.default,
                     borderRadius: "12px",
-                    padding: "1.5rem",
+                    padding: "1rem",
                     border: `1px solid ${COLORS.border.default}`,
                     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    flex: "1",
+                    boxSizing: "border-box",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
                   }}
                 >
                   <h2
                     style={{
                       margin: 0,
-                      marginBottom: "1rem",
                       fontSize: "1.25rem",
                       fontWeight: 600,
                       color: COLORS.text.primary,
@@ -955,6 +1243,15 @@ const Game: React.FC = () => {
                               fontSize: "0.875rem",
                             }}
                           >
+                            Shots
+                          </th>
+                          <th
+                            style={{
+                              padding: "0.5rem",
+                              textAlign: "center",
+                              fontSize: "0.875rem",
+                            }}
+                          >
                             REB
                           </th>
                           <th
@@ -973,7 +1270,7 @@ const Game: React.FC = () => {
                               fontSize: "0.875rem",
                             }}
                           >
-                            FL
+                            Fouls
                           </th>
                           <th
                             style={{
@@ -982,287 +1279,897 @@ const Game: React.FC = () => {
                               fontSize: "0.875rem",
                             }}
                           >
-                            Actions
+                            Shooting
                           </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {homePlayers.map((player) => (
-                          <tr
-                            key={player.id}
-                            style={{
-                              borderBottom: `1px solid ${COLORS.border.light}`,
-                              backgroundColor: player.onCourt
-                                ? "#f0f8ff"
-                                : "transparent",
-                            }}
-                          >
-                            <td style={{ padding: "0.5rem", fontWeight: 600 }}>
-                              {player.number}
-                            </td>
-                            <td style={{ padding: "0.5rem" }}>{player.name}</td>
-                            <td
-                              style={{ padding: "0.5rem", textAlign: "center" }}
+                        {homePlayers.map((player) => {
+                          const fgPct =
+                            player.stats.fieldGoalsAttempted > 0
+                              ? (
+                                  (player.stats.fieldGoalsMade /
+                                    player.stats.fieldGoalsAttempted) *
+                                  100
+                                ).toFixed(1)
+                              : "0.0";
+                          const threePtPct =
+                            player.stats.threePointersAttempted > 0
+                              ? (
+                                  (player.stats.threePointersMade /
+                                    player.stats.threePointersAttempted) *
+                                  100
+                                ).toFixed(1)
+                              : "0.0";
+                          const ftPct =
+                            player.stats.freeThrowsAttempted > 0
+                              ? (
+                                  (player.stats.freeThrowsMade /
+                                    player.stats.freeThrowsAttempted) *
+                                  100
+                                ).toFixed(1)
+                              : "0.0";
+
+                          return (
+                            <tr
+                              key={player.id}
+                              style={{
+                                borderBottom: `1px solid ${COLORS.border.light}`,
+                                backgroundColor: player.onCourt
+                                  ? "#f0f8ff"
+                                  : "transparent",
+                              }}
                             >
-                              <div
+                              <td
+                                style={{ padding: "0.5rem", fontWeight: 600 }}
+                              >
+                                {player.number}
+                              </td>
+                              <td style={{ padding: "0.5rem" }}>
+                                {player.name}
+                              </td>
+                              <td
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "0.25rem",
+                                  padding: "0.5rem",
+                                  textAlign: "center",
                                 }}
                               >
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "home",
-                                      player.id,
-                                      "points",
-                                      -1
-                                    )
-                                  }
-                                  style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.danger,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
-                                  }}
-                                >
-                                  -
-                                </button>
                                 <span
                                   style={{
-                                    minWidth: "30px",
-                                    display: "inline-block",
+                                    fontWeight: 600,
+                                    fontSize: "0.875rem",
                                   }}
                                 >
                                   {player.stats.points}
                                 </span>
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "home",
-                                      player.id,
-                                      "points",
-                                      1
-                                    )
-                                  }
-                                  style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.success,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
-                                  }}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </td>
-                            <td
-                              style={{ padding: "0.5rem", textAlign: "center" }}
-                            >
-                              <div
+                              </td>
+                              <td
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "0.25rem",
+                                  padding: "0.5rem",
+                                  textAlign: "center",
                                 }}
                               >
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "home",
-                                      player.id,
-                                      "rebounds",
-                                      -1
-                                    )
-                                  }
+                                <div
                                   style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.danger,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "0.5rem",
+                                    alignItems: "center",
                                   }}
                                 >
-                                  -
-                                </button>
-                                <span
-                                  style={{
-                                    minWidth: "30px",
-                                    display: "inline-block",
-                                  }}
-                                >
-                                  {player.stats.rebounds}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "home",
-                                      player.id,
-                                      "rebounds",
-                                      1
-                                    )
-                                  }
-                                  style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.success,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
-                                  }}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </td>
-                            <td
-                              style={{ padding: "0.5rem", textAlign: "center" }}
-                            >
-                              <div
+                                  {/* 2PT */}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "0.25rem",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        fontWeight: 600,
+                                        color: COLORS.text.secondary,
+                                      }}
+                                    >
+                                      2PT
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: "0.5rem",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Made
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "2PT",
+                                                "made",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats.fieldGoalsMade -
+                                              player.stats.threePointersMade}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "2PT",
+                                                "made",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.success,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Miss
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "2PT",
+                                                "missed",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats.fieldGoalsAttempted -
+                                              player.stats.fieldGoalsMade -
+                                              (player.stats
+                                                .threePointersAttempted -
+                                                player.stats.threePointersMade)}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "2PT",
+                                                "missed",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {/* 3PT */}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "0.25rem",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        fontWeight: 600,
+                                        color: COLORS.text.secondary,
+                                      }}
+                                    >
+                                      3PT
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: "0.5rem",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Made
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "3PT",
+                                                "made",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats.threePointersMade}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "3PT",
+                                                "made",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.success,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Miss
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "3PT",
+                                                "missed",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats
+                                              .threePointersAttempted -
+                                              player.stats.threePointersMade}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "3PT",
+                                                "missed",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {/* FT */}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "0.25rem",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        fontWeight: 600,
+                                        color: COLORS.text.secondary,
+                                      }}
+                                    >
+                                      FT
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: "0.5rem",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Made
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "FT",
+                                                "made",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats.freeThrowsMade}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "FT",
+                                                "made",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.success,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Miss
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "FT",
+                                                "missed",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats.freeThrowsAttempted -
+                                              player.stats.freeThrowsMade}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "home",
+                                                player.id,
+                                                "FT",
+                                                "missed",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "0.25rem",
+                                  padding: "0.5rem",
+                                  textAlign: "center",
+                                  whiteSpace: "nowrap",
                                 }}
                               >
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "home",
-                                      player.id,
-                                      "assists",
-                                      -1
-                                    )
-                                  }
+                                <div
                                   style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.danger,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "0.25rem",
                                   }}
                                 >
-                                  -
-                                </button>
-                                <span
-                                  style={{
-                                    minWidth: "30px",
-                                    display: "inline-block",
-                                  }}
-                                >
-                                  {player.stats.assists}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "home",
-                                      player.id,
-                                      "assists",
-                                      1
-                                    )
-                                  }
-                                  style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.success,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
-                                  }}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </td>
-                            <td
-                              style={{ padding: "0.5rem", textAlign: "center" }}
-                            >
-                              <div
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "home",
+                                        player.id,
+                                        "rebounds",
+                                        -1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.danger,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    -
+                                  </button>
+                                  <span
+                                    style={{
+                                      minWidth: "30px",
+                                      display: "inline-block",
+                                    }}
+                                  >
+                                    {player.stats.rebounds}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "home",
+                                        player.id,
+                                        "rebounds",
+                                        1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.success,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </td>
+                              <td
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "0.25rem",
+                                  padding: "0.5rem",
+                                  textAlign: "center",
                                 }}
                               >
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "home",
-                                      player.id,
-                                      "fouls",
-                                      -1
-                                    )
-                                  }
+                                <div
                                   style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.danger,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "0.25rem",
                                   }}
                                 >
-                                  -
-                                </button>
-                                <span
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "home",
+                                        player.id,
+                                        "assists",
+                                        -1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.danger,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    -
+                                  </button>
+                                  <span
+                                    style={{
+                                      minWidth: "30px",
+                                      display: "inline-block",
+                                    }}
+                                  >
+                                    {player.stats.assists}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "home",
+                                        player.id,
+                                        "assists",
+                                        1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.success,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.5rem",
+                                  textAlign: "center",
+                                }}
+                              >
+                                <div
                                   style={{
-                                    minWidth: "30px",
-                                    display: "inline-block",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "0.25rem",
                                   }}
                                 >
-                                  {player.stats.fouls}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "home",
-                                      player.id,
-                                      "fouls",
-                                      1
-                                    )
-                                  }
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "home",
+                                        player.id,
+                                        "fouls",
+                                        -1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.danger,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    -
+                                  </button>
+                                  <span
+                                    style={{
+                                      minWidth: "30px",
+                                      display: "inline-block",
+                                    }}
+                                  >
+                                    {player.stats.fouls}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "home",
+                                        player.id,
+                                        "fouls",
+                                        1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.danger,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </td>
+                              <td
+                                style={{ padding: "0.5rem", textAlign: "left" }}
+                              >
+                                <div
                                   style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.danger,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "0.25rem",
+                                    fontSize: "0.75rem",
                                   }}
                                 >
-                                  +
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                                  <div>
+                                    FG: {player.stats.fieldGoalsMade}/
+                                    {player.stats.fieldGoalsAttempted} ({fgPct}
+                                    %)
+                                  </div>
+                                  <div>
+                                    3PT: {player.stats.threePointersMade}/
+                                    {player.stats.threePointersAttempted} (
+                                    {threePtPct}%)
+                                  </div>
+                                  <div>
+                                    FT: {player.stats.freeThrowsMade}/
+                                    {player.stats.freeThrowsAttempted} ({ftPct}
+                                    %)
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1272,15 +2179,19 @@ const Game: React.FC = () => {
                   style={{
                     backgroundColor: COLORS.background.default,
                     borderRadius: "12px",
-                    padding: "1.5rem",
+                    padding: "1rem",
                     border: `1px solid ${COLORS.border.default}`,
                     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    flex: "1",
+                    boxSizing: "border-box",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
                   }}
                 >
                   <h2
                     style={{
                       margin: 0,
-                      marginBottom: "1rem",
                       fontSize: "1.25rem",
                       fontWeight: 600,
                       color: COLORS.text.primary,
@@ -1332,6 +2243,15 @@ const Game: React.FC = () => {
                               fontSize: "0.875rem",
                             }}
                           >
+                            Shots
+                          </th>
+                          <th
+                            style={{
+                              padding: "0.5rem",
+                              textAlign: "center",
+                              fontSize: "0.875rem",
+                            }}
+                          >
                             REB
                           </th>
                           <th
@@ -1350,287 +2270,905 @@ const Game: React.FC = () => {
                               fontSize: "0.875rem",
                             }}
                           >
-                            FL
+                            Fouls
+                          </th>
+                          <th
+                            style={{
+                              padding: "0.5rem",
+                              textAlign: "center",
+                              fontSize: "0.875rem",
+                            }}
+                          >
+                            Shooting
                           </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {awayPlayers.map((player) => (
-                          <tr
-                            key={player.id}
-                            style={{
-                              borderBottom: `1px solid ${COLORS.border.light}`,
-                              backgroundColor: player.onCourt
-                                ? "#fff0f0"
-                                : "transparent",
-                            }}
-                          >
-                            <td style={{ padding: "0.5rem", fontWeight: 600 }}>
-                              {player.number}
-                            </td>
-                            <td style={{ padding: "0.5rem" }}>{player.name}</td>
-                            <td
-                              style={{ padding: "0.5rem", textAlign: "center" }}
+                        {awayPlayers.map((player) => {
+                          const fgPct =
+                            player.stats.fieldGoalsAttempted > 0
+                              ? (
+                                  (player.stats.fieldGoalsMade /
+                                    player.stats.fieldGoalsAttempted) *
+                                  100
+                                ).toFixed(1)
+                              : "0.0";
+                          const threePtPct =
+                            player.stats.threePointersAttempted > 0
+                              ? (
+                                  (player.stats.threePointersMade /
+                                    player.stats.threePointersAttempted) *
+                                  100
+                                ).toFixed(1)
+                              : "0.0";
+                          const ftPct =
+                            player.stats.freeThrowsAttempted > 0
+                              ? (
+                                  (player.stats.freeThrowsMade /
+                                    player.stats.freeThrowsAttempted) *
+                                  100
+                                ).toFixed(1)
+                              : "0.0";
+
+                          return (
+                            <tr
+                              key={player.id}
+                              style={{
+                                borderBottom: `1px solid ${COLORS.border.light}`,
+                                backgroundColor: player.onCourt
+                                  ? "#fff0f0"
+                                  : "transparent",
+                              }}
                             >
-                              <div
+                              <td
+                                style={{ padding: "0.5rem", fontWeight: 600 }}
+                              >
+                                {player.number}
+                              </td>
+                              <td style={{ padding: "0.5rem" }}>
+                                {player.name}
+                              </td>
+                              <td
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "0.25rem",
+                                  padding: "0.5rem",
+                                  textAlign: "center",
                                 }}
                               >
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "away",
-                                      player.id,
-                                      "points",
-                                      -1
-                                    )
-                                  }
-                                  style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.danger,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
-                                  }}
-                                >
-                                  -
-                                </button>
                                 <span
                                   style={{
-                                    minWidth: "30px",
-                                    display: "inline-block",
+                                    fontWeight: 600,
+                                    fontSize: "0.875rem",
                                   }}
                                 >
                                   {player.stats.points}
                                 </span>
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "away",
-                                      player.id,
-                                      "points",
-                                      1
-                                    )
-                                  }
-                                  style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.success,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
-                                  }}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </td>
-                            <td
-                              style={{ padding: "0.5rem", textAlign: "center" }}
-                            >
-                              <div
+                              </td>
+                              <td
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "0.25rem",
+                                  padding: "0.5rem",
+                                  textAlign: "center",
                                 }}
                               >
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "away",
-                                      player.id,
-                                      "rebounds",
-                                      -1
-                                    )
-                                  }
+                                <div
                                   style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.danger,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "0.5rem",
+                                    alignItems: "center",
                                   }}
                                 >
-                                  -
-                                </button>
-                                <span
-                                  style={{
-                                    minWidth: "30px",
-                                    display: "inline-block",
-                                  }}
-                                >
-                                  {player.stats.rebounds}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "away",
-                                      player.id,
-                                      "rebounds",
-                                      1
-                                    )
-                                  }
-                                  style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.success,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
-                                  }}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </td>
-                            <td
-                              style={{ padding: "0.5rem", textAlign: "center" }}
-                            >
-                              <div
+                                  {/* 2PT */}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "0.25rem",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        fontWeight: 600,
+                                        color: COLORS.text.secondary,
+                                      }}
+                                    >
+                                      2PT
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: "0.5rem",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Made
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "2PT",
+                                                "made",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats.fieldGoalsMade -
+                                              player.stats.threePointersMade}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "2PT",
+                                                "made",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.success,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Miss
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "2PT",
+                                                "missed",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats.fieldGoalsAttempted -
+                                              player.stats.fieldGoalsMade -
+                                              (player.stats
+                                                .threePointersAttempted -
+                                                player.stats.threePointersMade)}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "2PT",
+                                                "missed",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {/* 3PT */}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "0.25rem",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        fontWeight: 600,
+                                        color: COLORS.text.secondary,
+                                      }}
+                                    >
+                                      3PT
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: "0.5rem",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Made
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "3PT",
+                                                "made",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats.threePointersMade}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "3PT",
+                                                "made",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.success,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Miss
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "3PT",
+                                                "missed",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats
+                                              .threePointersAttempted -
+                                              player.stats.threePointersMade}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "3PT",
+                                                "missed",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {/* FT */}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "0.25rem",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        fontWeight: 600,
+                                        color: COLORS.text.secondary,
+                                      }}
+                                    >
+                                      FT
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: "0.5rem",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Made
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "FT",
+                                                "made",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats.freeThrowsMade}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "FT",
+                                                "made",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.success,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "0.125rem",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: "0.65rem",
+                                            color: COLORS.text.secondary,
+                                          }}
+                                        >
+                                          Miss
+                                        </div>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.125rem",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "FT",
+                                                "missed",
+                                                -1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            -
+                                          </button>
+                                          <span
+                                            style={{
+                                              minWidth: "20px",
+                                              textAlign: "center",
+                                              fontSize: "0.75rem",
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            {player.stats.freeThrowsAttempted -
+                                              player.stats.freeThrowsMade}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              updateShotStat(
+                                                "away",
+                                                player.id,
+                                                "FT",
+                                                "missed",
+                                                1
+                                              )
+                                            }
+                                            style={{
+                                              padding: "0.125rem 0.25rem",
+                                              backgroundColor: COLORS.danger,
+                                              color: "white",
+                                              border: "none",
+                                              borderRadius: "2px",
+                                              cursor: "pointer",
+                                              fontSize: "0.65rem",
+                                              minWidth: "20px",
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "0.25rem",
+                                  padding: "0.5rem",
+                                  textAlign: "center",
                                 }}
                               >
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "away",
-                                      player.id,
-                                      "assists",
-                                      -1
-                                    )
-                                  }
+                                <div
                                   style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.danger,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "0.25rem",
                                   }}
                                 >
-                                  -
-                                </button>
-                                <span
-                                  style={{
-                                    minWidth: "30px",
-                                    display: "inline-block",
-                                  }}
-                                >
-                                  {player.stats.assists}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "away",
-                                      player.id,
-                                      "assists",
-                                      1
-                                    )
-                                  }
-                                  style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.success,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
-                                  }}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </td>
-                            <td
-                              style={{ padding: "0.5rem", textAlign: "center" }}
-                            >
-                              <div
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "away",
+                                        player.id,
+                                        "rebounds",
+                                        -1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.danger,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    -
+                                  </button>
+                                  <span
+                                    style={{
+                                      minWidth: "30px",
+                                      display: "inline-block",
+                                    }}
+                                  >
+                                    {player.stats.rebounds}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "away",
+                                        player.id,
+                                        "rebounds",
+                                        1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.success,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </td>
+                              <td
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "0.25rem",
+                                  padding: "0.5rem",
+                                  textAlign: "center",
                                 }}
                               >
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "away",
-                                      player.id,
-                                      "fouls",
-                                      -1
-                                    )
-                                  }
+                                <div
                                   style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.danger,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "0.25rem",
                                   }}
                                 >
-                                  -
-                                </button>
-                                <span
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "away",
+                                        player.id,
+                                        "assists",
+                                        -1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.danger,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    -
+                                  </button>
+                                  <span
+                                    style={{
+                                      minWidth: "30px",
+                                      display: "inline-block",
+                                    }}
+                                  >
+                                    {player.stats.assists}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "away",
+                                        player.id,
+                                        "assists",
+                                        1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.success,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.5rem",
+                                  textAlign: "center",
+                                }}
+                              >
+                                <div
                                   style={{
-                                    minWidth: "30px",
-                                    display: "inline-block",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "0.25rem",
                                   }}
                                 >
-                                  {player.stats.fouls}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    updatePlayerStat(
-                                      "away",
-                                      player.id,
-                                      "fouls",
-                                      1
-                                    )
-                                  }
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "away",
+                                        player.id,
+                                        "fouls",
+                                        -1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.danger,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    -
+                                  </button>
+                                  <span
+                                    style={{
+                                      minWidth: "30px",
+                                      display: "inline-block",
+                                    }}
+                                  >
+                                    {player.stats.fouls}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      updatePlayerStat(
+                                        "away",
+                                        player.id,
+                                        "fouls",
+                                        1
+                                      )
+                                    }
+                                    style={{
+                                      padding: "0.125rem 0.375rem",
+                                      backgroundColor: COLORS.danger,
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "2px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      minWidth: "24px",
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </td>
+                              <td
+                                style={{ padding: "0.5rem", textAlign: "left" }}
+                              >
+                                <div
                                   style={{
-                                    padding: "0.125rem 0.375rem",
-                                    backgroundColor: COLORS.danger,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                    fontSize: "0.7rem",
-                                    minWidth: "24px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "0.25rem",
+                                    fontSize: "0.75rem",
                                   }}
                                 >
-                                  +
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                                  <div>
+                                    FG: {player.stats.fieldGoalsMade}/
+                                    {player.stats.fieldGoalsAttempted} ({fgPct}
+                                    %)
+                                  </div>
+                                  <div>
+                                    3PT: {player.stats.threePointersMade}/
+                                    {player.stats.threePointersAttempted} (
+                                    {threePtPct}%)
+                                  </div>
+                                  <div>
+                                    FT: {player.stats.freeThrowsMade}/
+                                    {player.stats.freeThrowsAttempted} ({ftPct}
+                                    %)
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

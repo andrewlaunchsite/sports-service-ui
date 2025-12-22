@@ -20,6 +20,8 @@ interface LineupModalProps {
   onSuccess: () => void;
 }
 
+const POSITIONS = ["PG", "SG", "SF", "PF", "C"];
+
 const LineupModal: React.FC<LineupModalProps> = ({
   gameId,
   homeTeamId,
@@ -38,6 +40,35 @@ const LineupModal: React.FC<LineupModalProps> = ({
   const [awayLineup, setAwayLineup] = useState<{
     [position: string]: number | null;
   }>({ PG: null, SG: null, SF: null, PF: null, C: null });
+
+  const getAvailablePlayers = (
+    teamPlayers: any[],
+    lineup: { [position: string]: number | null },
+    currentPosition: string
+  ) => {
+    const selectedPlayerIds = Object.entries(lineup)
+      .filter(([pos]) => pos !== currentPosition)
+      .map(([, playerId]) => playerId)
+      .filter((id) => id !== null) as number[];
+
+    return teamPlayers.filter(
+      (player) => !selectedPlayerIds.includes(player.id)
+    );
+  };
+
+  const handleHomeLineupChange = (position: string, playerId: number | null) => {
+    setHomeLineup({
+      ...homeLineup,
+      [position]: playerId,
+    });
+  };
+
+  const handleAwayLineupChange = (position: string, playerId: number | null) => {
+    setAwayLineup({
+      ...awayLineup,
+      [position]: playerId,
+    });
+  };
 
   const handleSubmit = () => {
     const homeComplete = Object.values(homeLineup).every((v) => v !== null);
@@ -83,6 +114,9 @@ const LineupModal: React.FC<LineupModalProps> = ({
     }
   };
 
+  const homeComplete = Object.values(homeLineup).filter((v) => v !== null).length;
+  const awayComplete = Object.values(awayLineup).filter((v) => v !== null).length;
+  const totalComplete = homeComplete + awayComplete;
   const isComplete =
     Object.values(homeLineup).every((v) => v !== null) &&
     Object.values(awayLineup).every((v) => v !== null);
@@ -107,190 +141,335 @@ const LineupModal: React.FC<LineupModalProps> = ({
         style={{
           backgroundColor: COLORS.background.default,
           borderRadius: "12px",
-          padding: "2rem",
           maxWidth: "900px",
           width: "90%",
           maxHeight: "90vh",
-          overflow: "auto",
+          display: "flex",
+          flexDirection: "column",
           border: `1px solid ${COLORS.border.default}`,
           boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2
-          style={{
-            margin: 0,
-            marginBottom: "2rem",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            color: COLORS.text.primary,
-          }}
-        >
-          Set Starting Lineup
-        </h2>
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "2rem",
-            marginBottom: "2rem",
+            padding: "1.5rem",
+            borderBottom: `1px solid ${COLORS.border.default}`,
           }}
         >
-          <div>
-            <h3
-              style={{
-                margin: 0,
-                marginBottom: "1rem",
-                fontSize: "1.125rem",
-                fontWeight: 600,
-                color: COLORS.text.primary,
-              }}
-            >
-              {homeTeamName}
-            </h3>
-            {["PG", "SG", "SF", "PF", "C"].map((position) => (
-              <div
-                key={position}
-                style={{
-                  marginBottom: "1rem",
-                }}
-              >
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
-                    color: COLORS.text.secondary,
-                  }}
-                >
-                  {position}
-                </label>
-                <select
-                  value={homeLineup[position] || ""}
-                  onChange={(e) =>
-                    setHomeLineup({
-                      ...homeLineup,
-                      [position]: e.target.value
-                        ? parseInt(e.target.value, 10)
-                        : null,
-                    })
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "0.5rem",
-                    borderRadius: "6px",
-                    border: `1px solid ${COLORS.border.default}`,
-                    backgroundColor: COLORS.background.default,
-                    color: COLORS.text.primary,
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  <option value="">Select player...</option>
-                  {homeTeamPlayers.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      #{player.playerNumber || player.id} -{" "}
-                      {player.nickname ||
-                        player.displayName ||
-                        player.name ||
-                        `Player ${player.id}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
-          <div>
-            <h3
-              style={{
-                margin: 0,
-                marginBottom: "1rem",
-                fontSize: "1.125rem",
-                fontWeight: 600,
-                color: COLORS.text.primary,
-              }}
-            >
-              {awayTeamName}
-            </h3>
-            {["PG", "SG", "SF", "PF", "C"].map((position) => (
-              <div
-                key={position}
-                style={{
-                  marginBottom: "1rem",
-                }}
-              >
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
-                    color: COLORS.text.secondary,
-                  }}
-                >
-                  {position}
-                </label>
-                <select
-                  value={awayLineup[position] || ""}
-                  onChange={(e) =>
-                    setAwayLineup({
-                      ...awayLineup,
-                      [position]: e.target.value
-                        ? parseInt(e.target.value, 10)
-                        : null,
-                    })
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "0.5rem",
-                    borderRadius: "6px",
-                    border: `1px solid ${COLORS.border.default}`,
-                    backgroundColor: COLORS.background.default,
-                    color: COLORS.text.primary,
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  <option value="">Select player...</option>
-                  {awayTeamPlayers.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      #{player.playerNumber || player.id} -{" "}
-                      {player.nickname ||
-                        player.displayName ||
-                        player.name ||
-                        `Player ${player.id}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "1.5rem",
+              fontWeight: 600,
+              color: COLORS.text.primary,
+            }}
+          >
+            Set Starting Lineup
+          </h2>
+          <div
+            style={{
+              marginTop: "0.75rem",
+              fontSize: "0.875rem",
+              color: COLORS.text.secondary,
+            }}
+          >
+            Select a player for each position. Each player can only be assigned to one position.
           </div>
         </div>
+
         <div
           style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "1rem",
+            flex: 1,
+            overflow: "auto",
+            padding: "1.5rem",
           }}
         >
-          <button
-            onClick={onClose}
-            style={BUTTON_STYLES.secondary}
-            {...getButtonHoverStyle("secondary")}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!isComplete}
+          <div
             style={{
-              ...BUTTON_STYLES.primary,
-              opacity: !isComplete ? 0.5 : 1,
-              cursor: !isComplete ? "not-allowed" : "pointer",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "2rem",
             }}
-            {...(isComplete ? getButtonHoverStyle("primary") : {})}
           >
-            Set Lineup
-          </button>
+            {/* Home Team */}
+            <div>
+              <h3
+                style={{
+                  margin: 0,
+                  marginBottom: "1.5rem",
+                  fontSize: "1.125rem",
+                  fontWeight: 600,
+                  color: COLORS.text.primary,
+                }}
+              >
+                {homeTeamName}
+              </h3>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                }}
+              >
+                {POSITIONS.map((position) => {
+                  const selectedPlayerId = homeLineup[position];
+                  const isPositionFilled = selectedPlayerId !== null;
+                  const availablePlayers = getAvailablePlayers(
+                    homeTeamPlayers,
+                    homeLineup,
+                    position
+                  );
+                  const selectedPlayer = homeTeamPlayers.find(
+                    (p) => p.id === selectedPlayerId
+                  );
+
+                  return (
+                    <div
+                      key={position}
+                      style={{
+                        backgroundColor: isPositionFilled
+                          ? COLORS.primaryLight
+                          : COLORS.background.light,
+                        border: `2px solid ${
+                          isPositionFilled ? COLORS.primary : COLORS.border.default
+                        }`,
+                        borderRadius: "8px",
+                        padding: "1rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "1.125rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                          marginBottom: "0.75rem",
+                        }}
+                      >
+                        {position}
+                      </div>
+                      <select
+                        value={selectedPlayerId || ""}
+                        onChange={(e) =>
+                          handleHomeLineupChange(
+                            position,
+                            e.target.value ? parseInt(e.target.value, 10) : null
+                          )
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.75rem",
+                          borderRadius: "6px",
+                          border: `1px solid ${
+                            isPositionFilled
+                              ? COLORS.primary
+                              : COLORS.border.default
+                          }`,
+                          backgroundColor: COLORS.background.default,
+                          color: COLORS.text.primary,
+                          fontSize: "0.9375rem",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <option value="">Select player...</option>
+                        {availablePlayers.map((player) => (
+                          <option key={player.id} value={player.id}>
+                            #{player.playerNumber || player.id} -{" "}
+                            {player.nickname ||
+                              player.displayName ||
+                              player.name ||
+                              `Player ${player.id}`}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedPlayer && (
+                        <div
+                          style={{
+                            marginTop: "0.5rem",
+                            fontSize: "0.875rem",
+                            color: COLORS.text.secondary,
+                          }}
+                        >
+                          Selected: #{selectedPlayer.playerNumber || selectedPlayer.id}{" "}
+                          {selectedPlayer.nickname ||
+                            selectedPlayer.displayName ||
+                            selectedPlayer.name ||
+                            `Player ${selectedPlayer.id}`}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Away Team */}
+            <div>
+              <h3
+                style={{
+                  margin: 0,
+                  marginBottom: "1.5rem",
+                  fontSize: "1.125rem",
+                  fontWeight: 600,
+                  color: COLORS.text.primary,
+                }}
+              >
+                {awayTeamName}
+              </h3>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                }}
+              >
+                {POSITIONS.map((position) => {
+                  const selectedPlayerId = awayLineup[position];
+                  const isPositionFilled = selectedPlayerId !== null;
+                  const availablePlayers = getAvailablePlayers(
+                    awayTeamPlayers,
+                    awayLineup,
+                    position
+                  );
+                  const selectedPlayer = awayTeamPlayers.find(
+                    (p) => p.id === selectedPlayerId
+                  );
+
+                  return (
+                    <div
+                      key={position}
+                      style={{
+                        backgroundColor: isPositionFilled
+                          ? COLORS.primaryLight
+                          : COLORS.background.light,
+                        border: `2px solid ${
+                          isPositionFilled ? COLORS.primary : COLORS.border.default
+                        }`,
+                        borderRadius: "8px",
+                        padding: "1rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "1.125rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                          marginBottom: "0.75rem",
+                        }}
+                      >
+                        {position}
+                      </div>
+                      <select
+                        value={selectedPlayerId || ""}
+                        onChange={(e) =>
+                          handleAwayLineupChange(
+                            position,
+                            e.target.value ? parseInt(e.target.value, 10) : null
+                          )
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.75rem",
+                          borderRadius: "6px",
+                          border: `1px solid ${
+                            isPositionFilled
+                              ? COLORS.primary
+                              : COLORS.border.default
+                          }`,
+                          backgroundColor: COLORS.background.default,
+                          color: COLORS.text.primary,
+                          fontSize: "0.9375rem",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <option value="">Select player...</option>
+                        {availablePlayers.map((player) => (
+                          <option key={player.id} value={player.id}>
+                            #{player.playerNumber || player.id} -{" "}
+                            {player.nickname ||
+                              player.displayName ||
+                              player.name ||
+                              `Player ${player.id}`}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedPlayer && (
+                        <div
+                          style={{
+                            marginTop: "0.5rem",
+                            fontSize: "0.875rem",
+                            color: COLORS.text.secondary,
+                          }}
+                        >
+                          Selected: #{selectedPlayer.playerNumber || selectedPlayer.id}{" "}
+                          {selectedPlayer.nickname ||
+                            selectedPlayer.displayName ||
+                            selectedPlayer.name ||
+                            `Player ${selectedPlayer.id}`}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: "1.5rem",
+            borderTop: `1px solid ${COLORS.border.default}`,
+            backgroundColor: COLORS.background.lighter,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1rem",
+            }}
+          >
+            <div style={{ fontSize: "0.875rem", color: COLORS.text.secondary }}>
+              {isComplete ? (
+                <span>
+                  <strong>All positions filled</strong> - Ready to set lineup
+                </span>
+              ) : (
+                <span>
+                  <strong>{totalComplete}</strong> of 10 positions filled (
+                  {homeComplete} home, {awayComplete} away)
+                </span>
+              )}
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: "1rem",
+            }}
+          >
+            <button
+              onClick={onClose}
+              style={BUTTON_STYLES.secondaryFull}
+              {...getButtonHoverStyle("secondary")}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!isComplete}
+              style={{
+                ...BUTTON_STYLES.primaryFull,
+                opacity: !isComplete ? 0.5 : 1,
+                cursor: !isComplete ? "not-allowed" : "pointer",
+              }}
+              {...(isComplete ? getButtonHoverStyle("primary") : {})}
+            >
+              Set Lineup
+            </button>
+          </div>
         </div>
       </div>
     </div>

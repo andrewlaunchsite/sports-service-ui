@@ -18,9 +18,10 @@ import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreateTeam from "../components/CreateTeam";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const Home: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useAuth0();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const hasFetchedMyPlayer = useRef(false);
@@ -49,10 +50,9 @@ const Home: React.FC = () => {
   const existingLeague = leagues.length > 0 ? leagues[0] : null;
 
   const getUserDisplayName = () => {
+    console.log("user", user);
     if (!user) return "Welcome!";
-    const firstName = user.firstName;
-    const fullName = user.fullName;
-    return firstName || fullName || "Welcome!";
+    return user.given_name || user.name || "Welcome!";
   };
 
   const formatHeight = (inches: number) => {

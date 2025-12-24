@@ -1,5 +1,29 @@
-import React from "react";
-import { useAuth, RedirectToSignIn } from "@clerk/clerk-react";
+// import React from "react";
+// import { useAuth, RedirectToSignIn } from "@clerk/clerk-react";
+// import Loading from "./Loading";
+
+// interface ProtectedProps {
+//   children: React.ReactNode;
+// }
+
+// const Protected: React.FC<ProtectedProps> = ({ children }) => {
+//   const { isSignedIn, isLoaded } = useAuth();
+
+//   if (!isLoaded) {
+//     return <Loading />;
+//   }
+
+//   if (!isSignedIn) {
+//     return <RedirectToSignIn />;
+//   }
+
+//   return <>{children}</>;
+// };
+
+// export default Protected;
+
+import React, { useEffect } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 import Loading from "./Loading";
 
 interface ProtectedProps {
@@ -7,15 +31,20 @@ interface ProtectedProps {
 }
 
 const Protected: React.FC<ProtectedProps> = ({ children }) => {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
 
-  if (!isLoaded) {
-    return <Loading />;
-  }
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      loginWithRedirect({
+        appState: {
+          returnTo: window.location.pathname + window.location.search,
+        },
+      });
+    }
+  }, [isLoading, isAuthenticated, loginWithRedirect]);
 
-  if (!isSignedIn) {
-    return <RedirectToSignIn />;
-  }
+  if (isLoading) return <Loading />;
+  if (!isAuthenticated) return <Loading />;
 
   return <>{children}</>;
 };

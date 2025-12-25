@@ -13,6 +13,7 @@ import LeaguesList from "../components/LeaguesList";
 import AuthAware from "../components/AuthAware";
 import { getMyPlayer } from "../models/playerSlice";
 import { getLeagues } from "../models/leagueSlice";
+import { getTeams } from "../models/teamSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreateTeam from "../components/CreateTeam";
@@ -31,6 +32,7 @@ const Home: React.FC = () => {
   const { leagues, loadingState: leagueLoadingState } = useSelector(
     (state: RootState) => state.league
   );
+  const { teams } = useSelector((state: RootState) => state.team);
 
   useEffect(() => {
     if (!hasFetchedMyPlayer.current && !playerLoadingState.loadingMyPlayer) {
@@ -45,6 +47,16 @@ const Home: React.FC = () => {
       dispatch(getLeagues({ offset: 0, limit: 10 }) as any);
     }
   }, [leagueLoadingState.loadingLeagues, dispatch]);
+
+  useEffect(() => {
+    dispatch(getTeams({ offset: 0, limit: 100 }) as any);
+  }, [dispatch]);
+
+  const myTeam = myPlayer?.teamId
+    ? teams.find((t) => t.id === myPlayer.teamId)
+    : null;
+  const primaryColor = (myTeam as any)?.primaryColor || COLORS.primary;
+  const secondaryColor = (myTeam as any)?.secondaryColor || "white";
 
   const existingLeague = leagues.length > 0 ? leagues[0] : null;
 
@@ -106,58 +118,57 @@ const Home: React.FC = () => {
               marginBottom: "1rem",
             }}
           >
-            {!existingLeague && (
-              <AuthAware roles={["League Admin", "Admin"]}>
-                <div style={TILE_STYLE}>
+            <AuthAware roles={["League Admin", "Admin"]}>
+              <div style={TILE_STYLE}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    marginBottom: "1rem",
+                  }}
+                >
                   <div
                     style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
+                      backgroundColor: "#e3f2fd",
                       display: "flex",
                       alignItems: "center",
-                      gap: "0.75rem",
+                      justifyContent: "center",
+                      fontSize: "1.5rem",
                     }}
                   >
-                    <div
+                    🏀
+                  </div>
+                  <div>
+                    <h3
                       style={{
-                        width: "48px",
-                        height: "48px",
-                        borderRadius: "50%",
-                        backgroundColor: "#e3f2fd",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "1.5rem",
+                        margin: 0,
+                        fontSize: "1.25rem",
+                        fontWeight: 600,
+                        color: "#212529",
                       }}
                     >
-                      🏀
-                    </div>
-                    <div>
-                      <h3
-                        style={{
-                          margin: 0,
-                          fontSize: "1.25rem",
-                          fontWeight: 600,
-                          color: "#212529",
-                        }}
-                      >
-                        Create League
-                      </h3>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "0.875rem",
-                          color: "#6c757d",
-                        }}
-                      >
-                        Start a new league
-                      </p>
-                    </div>
-                  </div>
-                  <div style={{ marginTop: "auto" }}>
-                    <CreateLeague />
+                      Create League
+                    </h3>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "0.875rem",
+                        color: "#6c757d",
+                      }}
+                    >
+                      Start a new league
+                    </p>
                   </div>
                 </div>
-              </AuthAware>
-            )}
+                <div style={{ marginTop: "auto" }}>
+                  <CreateLeague />
+                </div>
+              </div>
+            </AuthAware>
 
             {existingLeague && (
               <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
@@ -369,7 +380,7 @@ const Home: React.FC = () => {
                               height: "70px",
                               borderRadius: "50%",
                               objectFit: "cover",
-                              border: "3px solid #007bff",
+                              border: `3px solid ${primaryColor}`,
                             }}
                           />
                           {(myPlayer as any).playerNumber && (
@@ -378,7 +389,7 @@ const Home: React.FC = () => {
                                 position: "absolute",
                                 bottom: "-2px",
                                 right: "-2px",
-                                backgroundColor: "#007bff",
+                                backgroundColor: primaryColor,
                                 color: "white",
                                 width: "24px",
                                 height: "24px",
@@ -402,14 +413,14 @@ const Home: React.FC = () => {
                             width: "70px",
                             height: "70px",
                             borderRadius: "50%",
-                            backgroundColor: "#007bff",
+                            backgroundColor: primaryColor,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             color: "white",
                             fontSize: "1.5rem",
                             fontWeight: 700,
-                            border: "2px solid #007bff",
+                            border: `2px solid ${primaryColor}`,
                           }}
                         >
                           #{(myPlayer as any).playerNumber || "?"}
@@ -444,7 +455,7 @@ const Home: React.FC = () => {
                         <div
                           style={{
                             fontSize: "0.875rem",
-                            color: "#007bff",
+                            color: primaryColor,
                             fontWeight: 500,
                           }}
                         >

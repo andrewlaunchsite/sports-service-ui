@@ -16,6 +16,10 @@ interface LineupModalProps {
   awayTeamName: string;
   homeTeamPlayers: any[];
   awayTeamPlayers: any[];
+  homePrimaryColor?: string;
+  homeSecondaryColor?: string;
+  awayPrimaryColor?: string;
+  awaySecondaryColor?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -30,6 +34,10 @@ const LineupModal: React.FC<LineupModalProps> = ({
   awayTeamName,
   homeTeamPlayers,
   awayTeamPlayers,
+  homePrimaryColor = COLORS.primary,
+  homeSecondaryColor = "white",
+  awayPrimaryColor = COLORS.danger,
+  awaySecondaryColor = "white",
   onClose,
   onSuccess,
 }) => {
@@ -240,11 +248,11 @@ const LineupModal: React.FC<LineupModalProps> = ({
                       key={position}
                       style={{
                         backgroundColor: isPositionFilled
-                          ? COLORS.primaryLight
+                          ? `${homePrimaryColor}20`
                           : COLORS.background.light,
                         border: `2px solid ${
                           isPositionFilled
-                            ? COLORS.primary
+                            ? homePrimaryColor
                             : COLORS.border.default
                         }`,
                         borderRadius: "8px",
@@ -275,7 +283,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
                           borderRadius: "6px",
                           border: `1px solid ${
                             isPositionFilled
-                              ? COLORS.primary
+                              ? homePrimaryColor
                               : COLORS.border.default
                           }`,
                           backgroundColor: COLORS.background.default,
@@ -305,7 +313,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
                             padding: "0.75rem",
                             backgroundColor: "white",
                             borderRadius: "12px",
-                            border: `1px solid ${COLORS.primary}`,
+                            border: `1px solid ${homePrimaryColor}`,
                           }}
                         >
                           <div style={{ position: "relative", flexShrink: 0 }}>
@@ -319,7 +327,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
                                     height: "48px",
                                     borderRadius: "50%",
                                     objectFit: "cover",
-                                    border: `2px solid ${COLORS.primary}`,
+                                    border: `2px solid ${homePrimaryColor}`,
                                   }}
                                 />
                                 <div
@@ -327,8 +335,8 @@ const LineupModal: React.FC<LineupModalProps> = ({
                                     position: "absolute",
                                     bottom: "-2px",
                                     right: "-2px",
-                                    backgroundColor: COLORS.primary,
-                                    color: "white",
+                                    backgroundColor: homePrimaryColor,
+                                    color: homeSecondaryColor,
                                     width: "20px",
                                     height: "20px",
                                     borderRadius: "50%",
@@ -351,14 +359,14 @@ const LineupModal: React.FC<LineupModalProps> = ({
                                   width: "48px",
                                   height: "48px",
                                   borderRadius: "50%",
-                                  backgroundColor: COLORS.primary,
+                                  backgroundColor: homePrimaryColor,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  color: "white",
+                                  color: homeSecondaryColor,
                                   fontSize: "1.1rem",
                                   fontWeight: 700,
-                                  border: `2px solid ${COLORS.primary}`,
+                                  border: `2px solid ${homePrimaryColor}`,
                                 }}
                               >
                                 #
@@ -432,11 +440,11 @@ const LineupModal: React.FC<LineupModalProps> = ({
                       key={position}
                       style={{
                         backgroundColor: isPositionFilled
-                          ? COLORS.primaryLight
+                          ? `${awayPrimaryColor}20`
                           : COLORS.background.light,
                         border: `2px solid ${
                           isPositionFilled
-                            ? COLORS.primary
+                            ? awayPrimaryColor
                             : COLORS.border.default
                         }`,
                         borderRadius: "8px",
@@ -467,7 +475,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
                           borderRadius: "6px",
                           border: `1px solid ${
                             isPositionFilled
-                              ? COLORS.primary
+                              ? awayPrimaryColor
                               : COLORS.border.default
                           }`,
                           backgroundColor: COLORS.background.default,
@@ -497,7 +505,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
                             padding: "0.75rem",
                             backgroundColor: "white",
                             borderRadius: "12px",
-                            border: `1px solid ${COLORS.primary}`,
+                            border: `1px solid ${awayPrimaryColor}`,
                           }}
                         >
                           <div style={{ position: "relative", flexShrink: 0 }}>
@@ -511,7 +519,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
                                     height: "48px",
                                     borderRadius: "50%",
                                     objectFit: "cover",
-                                    border: `2px solid ${COLORS.primary}`,
+                                    border: `2px solid ${awayPrimaryColor}`,
                                   }}
                                 />
                                 <div
@@ -519,8 +527,8 @@ const LineupModal: React.FC<LineupModalProps> = ({
                                     position: "absolute",
                                     bottom: "-2px",
                                     right: "-2px",
-                                    backgroundColor: COLORS.primary,
-                                    color: "white",
+                                    backgroundColor: awayPrimaryColor,
+                                    color: awaySecondaryColor,
                                     width: "20px",
                                     height: "20px",
                                     borderRadius: "50%",
@@ -543,14 +551,14 @@ const LineupModal: React.FC<LineupModalProps> = ({
                                   width: "48px",
                                   height: "48px",
                                   borderRadius: "50%",
-                                  backgroundColor: COLORS.primary,
+                                  backgroundColor: awayPrimaryColor,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  color: "white",
+                                  color: awaySecondaryColor,
                                   fontSize: "1.1rem",
                                   fontWeight: 700,
-                                  border: `2px solid ${COLORS.primary}`,
+                                  border: `2px solid ${awayPrimaryColor}`,
                                 }}
                               >
                                 #

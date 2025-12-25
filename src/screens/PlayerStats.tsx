@@ -201,7 +201,7 @@ const aggregatePlayerStats = (
           fieldGoalPercentage,
           threePointPercentage,
           freeThrowPercentage,
-        },
+    },
         gameStats: aggregated.gameStats,
       };
     });

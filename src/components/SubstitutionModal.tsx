@@ -12,6 +12,8 @@ interface Player {
 interface SubstitutionModalProps {
   team: "home" | "away";
   teamName: string;
+  primaryColor?: string;
+  secondaryColor?: string;
   onCourtPlayers: Player[];
   benchPlayers: Player[];
   onSubstitute: (
@@ -29,6 +31,8 @@ const POSITIONS = ["PG", "SG", "SF", "PF", "C"];
 const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
   team,
   teamName,
+  primaryColor = COLORS.primary,
+  secondaryColor = "white",
   onCourtPlayers,
   benchPlayers,
   onSubstitute,
@@ -163,10 +167,10 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                   key={position}
                   style={{
                     backgroundColor: isSubActive
-                      ? COLORS.primaryLight
+                      ? `${primaryColor}20`
                       : COLORS.background.light,
                     border: `2px solid ${
-                      isSubActive ? COLORS.primary : COLORS.border.default
+                      isSubActive ? primaryColor : COLORS.border.default
                     }`,
                     borderRadius: "8px",
                     padding: "1rem",
@@ -220,11 +224,11 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                             padding: "0.75rem",
                             backgroundColor:
                               sub.playerOut === currentPlayer.id
-                                ? COLORS.primary
+                                ? primaryColor
                                 : COLORS.background.default,
                             border: `1px solid ${
                               sub.playerOut === currentPlayer.id
-                                ? COLORS.primary
+                                ? primaryColor
                                 : COLORS.border.default
                             }`,
                             borderRadius: "12px",
@@ -253,7 +257,7 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                                     border: `2px solid ${
                                       sub.playerOut === currentPlayer.id
                                         ? "white"
-                                        : COLORS.primary
+                                        : primaryColor
                                     }`,
                                   }}
                                 />
@@ -265,11 +269,11 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                                     backgroundColor:
                                       sub.playerOut === currentPlayer.id
                                         ? "white"
-                                        : COLORS.primary,
+                                        : primaryColor,
                                     color:
                                       sub.playerOut === currentPlayer.id
-                                        ? COLORS.primary
-                                        : "white",
+                                        ? primaryColor
+                                        : secondaryColor,
                                     width: "20px",
                                     height: "20px",
                                     borderRadius: "50%",
@@ -280,7 +284,7 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                                     fontWeight: 700,
                                     border: `1.5px solid ${
                                       sub.playerOut === currentPlayer.id
-                                        ? COLORS.primary
+                                        ? primaryColor
                                         : "white"
                                     }`,
                                     boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
@@ -298,17 +302,17 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                                   backgroundColor:
                                     sub.playerOut === currentPlayer.id
                                       ? "rgba(255,255,255,0.2)"
-                                      : COLORS.primary,
+                                      : primaryColor,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  color: "white",
+                                  color: secondaryColor,
                                   fontSize: "1.1rem",
                                   fontWeight: 700,
                                   border: `2px solid ${
                                     sub.playerOut === currentPlayer.id
                                       ? "white"
-                                      : COLORS.primary
+                                      : primaryColor
                                   }`,
                                 }}
                               >
@@ -367,41 +371,157 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                       >
                         Replacement
                       </div>
-                      <select
-                        value={sub.playerIn || ""}
-                        onChange={(e) => {
-                          setSubstitutions({
-                            ...substitutions,
-                            [position]: {
-                              ...substitutions[position],
-                              playerIn: e.target.value
-                                ? parseInt(e.target.value, 10)
-                                : null,
-                            },
-                          });
-                        }}
-                        style={{
-                          width: "100%",
-                          padding: "0.75rem",
-                          borderRadius: "6px",
-                          border: `1px solid ${
-                            sub.playerIn !== null
-                              ? COLORS.primary
-                              : COLORS.border.default
-                          }`,
-                          backgroundColor: COLORS.background.default,
-                          color: COLORS.text.primary,
-                          fontSize: "0.9375rem",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <option value="">Select player...</option>
-                        {benchPlayers.map((player) => (
-                          <option key={player.id} value={player.id}>
-                            #{player.number} {player.name}
-                          </option>
-                        ))}
-                      </select>
+                      {sub.playerIn !== null ? (
+                        (() => {
+                          const replacementPlayer = benchPlayers.find(
+                            (p) => p.id === sub.playerIn
+                          );
+                          return replacementPlayer ? (
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "1rem",
+                                padding: "0.75rem",
+                                backgroundColor: COLORS.background.default,
+                                border: `1px solid ${primaryColor}`,
+                                borderRadius: "12px",
+                              }}
+                            >
+                              <div
+                                style={{ position: "relative", flexShrink: 0 }}
+                              >
+                                {replacementPlayer.pictureUrl ? (
+                                  <>
+                                    <img
+                                      src={replacementPlayer.pictureUrl}
+                                      alt={replacementPlayer.name}
+                                      style={{
+                                        width: "48px",
+                                        height: "48px",
+                                        borderRadius: "50%",
+                                        objectFit: "cover",
+                                        border: `2px solid ${primaryColor}`,
+                                      }}
+                                    />
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        bottom: "-2px",
+                                        right: "-2px",
+                                        backgroundColor: primaryColor,
+                                        color: secondaryColor,
+                                        width: "20px",
+                                        height: "20px",
+                                        borderRadius: "50%",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontSize: "0.65rem",
+                                        fontWeight: 700,
+                                        border: "1.5px solid white",
+                                        boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                                      }}
+                                    >
+                                      {replacementPlayer.number}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div
+                                    style={{
+                                      width: "48px",
+                                      height: "48px",
+                                      borderRadius: "50%",
+                                      backgroundColor: primaryColor,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: secondaryColor,
+                                      fontSize: "1.1rem",
+                                      fontWeight: 700,
+                                      border: `2px solid ${primaryColor}`,
+                                    }}
+                                  >
+                                    #{replacementPlayer.number}
+                                  </div>
+                                )}
+                              </div>
+                              <div style={{ textAlign: "left", flex: 1 }}>
+                                <div
+                                  style={{
+                                    fontWeight: 600,
+                                    fontSize: "0.9375rem",
+                                  }}
+                                >
+                                  {replacementPlayer.name}
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    opacity: 0.8,
+                                    marginTop: "0.125rem",
+                                  }}
+                                >
+                                  Replacement {position}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setSubstitutions({
+                                    ...substitutions,
+                                    [position]: {
+                                      ...substitutions[position],
+                                      playerIn: null,
+                                    },
+                                  });
+                                }}
+                                style={{
+                                  padding: "0.5rem",
+                                  backgroundColor: "transparent",
+                                  border: "none",
+                                  color: COLORS.text.secondary,
+                                  cursor: "pointer",
+                                  fontSize: "1.25rem",
+                                }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : null;
+                        })()
+                      ) : (
+                        <select
+                          value={sub.playerIn || ""}
+                          onChange={(e) => {
+                            setSubstitutions({
+                              ...substitutions,
+                              [position]: {
+                                ...substitutions[position],
+                                playerIn: e.target.value
+                                  ? parseInt(e.target.value, 10)
+                                  : null,
+                              },
+                            });
+                          }}
+                          style={{
+                            width: "100%",
+                            padding: "0.75rem",
+                            borderRadius: "6px",
+                            border: `1px solid ${COLORS.border.default}`,
+                            backgroundColor: COLORS.background.default,
+                            color: COLORS.text.primary,
+                            fontSize: "0.9375rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <option value="">Select player...</option>
+                          {benchPlayers.map((player) => (
+                            <option key={player.id} value={player.id}>
+                              #{player.number} {player.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </div>
                 </div>

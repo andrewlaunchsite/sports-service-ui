@@ -9,14 +9,15 @@ import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreatePlayer from "../components/CreatePlayer";
 import EditPlayer from "../components/EditPlayer";
+import EditTeam from "../components/EditTeam";
 import CreateGame from "../components/CreateGame";
 import CreateTeam from "../components/CreateTeam";
 import PlayersList from "../components/PlayersList";
-import AllTeamsList from "../components/AllTeamsList";
+import TeamsList from "../components/TeamsList";
 import InviteUser from "../components/InviteUser";
 import AuthAware from "../components/AuthAware";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
-import { COLORS } from "../config/styles";
+import { COLORS, TILE_STYLE } from "../config/styles";
 
 const Team: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -263,7 +264,7 @@ const Team: React.FC = () => {
           )}
         </div>
         <div style={{ width: "100%" }}>
-          <AllTeamsList
+          <TeamsList
             leagueId={leagueFilter ? parseInt(leagueFilter, 10) : undefined}
           />
         </div>
@@ -412,28 +413,95 @@ const Team: React.FC = () => {
 
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              display: "flex",
+              flexWrap: "wrap",
               gap: "1.5rem",
               width: "100%",
-              alignItems: "start",
+              alignItems: "flex-start",
             }}
           >
+            <div style={TILE_STYLE}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                {(() => {
+                  const teamAny = team as any;
+                  const logoUrl =
+                    teamAny.logoUrl || teamAny.logo || teamAny.logo_url;
+                  const primaryColor = teamAny.primaryColor || COLORS.primary;
+
+                  return logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt={team.name}
+                      style={{
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "8px",
+                        objectFit: "cover",
+                        border: `2px solid ${primaryColor}`,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "8px",
+                        backgroundColor: primaryColor,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "white",
+                        fontSize: "1.5rem",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {team.name.charAt(0).toUpperCase()}
+                    </div>
+                  );
+                })()}
+                <div style={{ flex: 1 }}>
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: "1.25rem",
+                      fontWeight: 600,
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    {team.name}
+                  </h3>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.875rem",
+                      color: COLORS.text.secondary,
+                    }}
+                  >
+                    Team Details
+                  </p>
+                </div>
+                <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
+                  <EditTeam team={team} />
+                </AuthAware>
+              </div>
+              <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
+                <EditTeam team={team} renderFormOnly />
+              </AuthAware>
+            </div>
             {myPlayer && myPlayer.teamId === team.id ? (
               <div
                 onClick={() =>
                   navigate(`${ROUTES.PLAYER_STATS}?id=${myPlayer.id}`)
                 }
                 style={{
-                  backgroundColor: COLORS.background.default,
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                  border: `1px solid ${COLORS.border.default}`,
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  minHeight: "200px",
+                  ...TILE_STYLE,
                   cursor: "pointer",
                   transition: "transform 0.2s, box-shadow 0.2s",
                 }}
@@ -511,7 +579,9 @@ const Team: React.FC = () => {
                             height: "70px",
                             borderRadius: "50%",
                             objectFit: "cover",
-                            border: `3px solid ${COLORS.primary}`,
+                            border: `3px solid ${
+                              (team as any)?.primaryColor || COLORS.primary
+                            }`,
                           }}
                         />
                         {(myPlayer as any).playerNumber && (
@@ -520,7 +590,8 @@ const Team: React.FC = () => {
                               position: "absolute",
                               bottom: "-2px",
                               right: "-2px",
-                              backgroundColor: COLORS.primary,
+                              backgroundColor:
+                                (team as any)?.primaryColor || COLORS.primary,
                               color: "white",
                               width: "24px",
                               height: "24px",
@@ -544,14 +615,17 @@ const Team: React.FC = () => {
                           width: "70px",
                           height: "70px",
                           borderRadius: "50%",
-                          backgroundColor: COLORS.primary,
+                          backgroundColor:
+                            (team as any)?.primaryColor || COLORS.primary,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           color: "white",
                           fontSize: "1.5rem",
                           fontWeight: 700,
-                          border: `2px solid ${COLORS.primary}`,
+                          border: `2px solid ${
+                            (team as any)?.primaryColor || COLORS.primary
+                          }`,
                         }}
                       >
                         #{(myPlayer as any).playerNumber || "?"}
@@ -586,7 +660,7 @@ const Team: React.FC = () => {
                       <div
                         style={{
                           fontSize: "0.875rem",
-                          color: COLORS.primary,
+                          color: (team as any)?.primaryColor || COLORS.primary,
                           fontWeight: 500,
                         }}
                       >
@@ -609,24 +683,13 @@ const Team: React.FC = () => {
                   "Admin",
                 ]}
               >
-                <div
-                  style={{
-                    backgroundColor: COLORS.background.default,
-                    borderRadius: "12px",
-                    padding: "1.5rem",
-                    border: `1px solid ${COLORS.border.default}`,
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem",
-                    minHeight: "200px",
-                  }}
-                >
+                <div style={TILE_STYLE}>
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
                       gap: "0.75rem",
+                      marginBottom: "1rem",
                     }}
                   >
                     <div
@@ -679,24 +742,13 @@ const Team: React.FC = () => {
             <AuthAware
               roles={["League Admin", "Team Admin", "Team Manager", "Admin"]}
             >
-              <div
-                style={{
-                  backgroundColor: COLORS.background.default,
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                  border: `1px solid ${COLORS.border.default}`,
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  minHeight: "200px",
-                }}
-              >
+              <div style={TILE_STYLE}>
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "0.75rem",
+                    marginBottom: "1rem",
                   }}
                 >
                   <div
@@ -742,24 +794,13 @@ const Team: React.FC = () => {
             </AuthAware>
 
             <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
-              <div
-                style={{
-                  backgroundColor: COLORS.background.default,
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                  border: `1px solid ${COLORS.border.default}`,
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  minHeight: "200px",
-                }}
-              >
+              <div style={TILE_STYLE}>
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "0.75rem",
+                    marginBottom: "1rem",
                   }}
                 >
                   <div

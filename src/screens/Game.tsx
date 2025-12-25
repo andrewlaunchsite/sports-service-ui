@@ -797,6 +797,10 @@ const Game: React.FC = () => {
 
     const homeTeam = teams.find((t) => t.id === (game as any).homeTeamId);
     const awayTeam = teams.find((t) => t.id === (game as any).awayTeamId);
+    const homePrimaryColor = (homeTeam as any)?.primaryColor || COLORS.primary;
+    const homeSecondaryColor = (homeTeam as any)?.secondaryColor || "white";
+    const awayPrimaryColor = (awayTeam as any)?.primaryColor || COLORS.danger;
+    const awaySecondaryColor = (awayTeam as any)?.secondaryColor || "white";
 
     const formatDateTime = (dateStr: string) => {
       if (!dateStr) return null;
@@ -1139,11 +1143,11 @@ const Game: React.FC = () => {
                       <div
                         key={player.id}
                         style={{
-                          backgroundColor: COLORS.primaryLight,
+                          backgroundColor: `${homePrimaryColor}20`,
                           padding: "0.75rem",
                           borderRadius: "8px",
                           textAlign: "center",
-                          border: `2px solid ${COLORS.primary}`,
+                          border: `2px solid ${homePrimaryColor}`,
                           flex: "1 1 calc(20% - 0.4rem)",
                           minWidth: "100px",
                           boxSizing: "border-box",
@@ -1164,7 +1168,7 @@ const Game: React.FC = () => {
                                   height: "50px",
                                   borderRadius: "50%",
                                   objectFit: "cover",
-                                  border: `2px solid ${COLORS.primary}`,
+                                  border: `2px solid ${homePrimaryColor}`,
                                 }}
                               />
                               <div
@@ -1172,7 +1176,7 @@ const Game: React.FC = () => {
                                   position: "absolute",
                                   bottom: "-2px",
                                   right: "-2px",
-                                  backgroundColor: COLORS.primary,
+                                  backgroundColor: homePrimaryColor,
                                   color: "white",
                                   width: "20px",
                                   height: "20px",
@@ -1195,14 +1199,14 @@ const Game: React.FC = () => {
                                 width: "50px",
                                 height: "50px",
                                 borderRadius: "50%",
-                                backgroundColor: COLORS.primary,
+                                backgroundColor: homePrimaryColor,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 color: "white",
                                 fontSize: "1.25rem",
                                 fontWeight: 700,
-                                border: `2px solid ${COLORS.primary}`,
+                                border: `2px solid ${homePrimaryColor}`,
                               }}
                             >
                               #{player.number}
@@ -1283,11 +1287,11 @@ const Game: React.FC = () => {
                       <div
                         key={player.id}
                         style={{
-                          backgroundColor: "#fef2f2",
+                          backgroundColor: `${awayPrimaryColor}20`,
                           padding: "0.75rem",
                           borderRadius: "8px",
                           textAlign: "center",
-                          border: `2px solid ${COLORS.danger}`,
+                          border: `2px solid ${awayPrimaryColor}`,
                           flex: "1 1 calc(20% - 0.4rem)",
                           minWidth: "100px",
                           boxSizing: "border-box",
@@ -1308,7 +1312,7 @@ const Game: React.FC = () => {
                                   height: "50px",
                                   borderRadius: "50%",
                                   objectFit: "cover",
-                                  border: `2px solid ${COLORS.danger}`,
+                                  border: `2px solid ${awayPrimaryColor}`,
                                 }}
                               />
                               <div
@@ -1316,7 +1320,7 @@ const Game: React.FC = () => {
                                   position: "absolute",
                                   bottom: "-2px",
                                   right: "-2px",
-                                  backgroundColor: COLORS.danger,
+                                  backgroundColor: awayPrimaryColor,
                                   color: "white",
                                   width: "20px",
                                   height: "20px",
@@ -1339,14 +1343,14 @@ const Game: React.FC = () => {
                                 width: "50px",
                                 height: "50px",
                                 borderRadius: "50%",
-                                backgroundColor: COLORS.danger,
+                                backgroundColor: awayPrimaryColor,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 color: "white",
                                 fontSize: "1.25rem",
                                 fontWeight: 700,
-                                border: `2px solid ${COLORS.danger}`,
+                                border: `2px solid ${awayPrimaryColor}`,
                               }}
                             >
                               #{player.number}
@@ -1392,9 +1396,9 @@ const Game: React.FC = () => {
                     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                     flex: "1",
                     boxSizing: "border-box",
+                    display: "flex",
                     flexDirection: "column",
                     gap: "1rem",
-                    width: "50%",
                   }}
                 >
                   <h2
@@ -1524,7 +1528,7 @@ const Game: React.FC = () => {
                               style={{
                                 borderBottom: `1px solid ${COLORS.border.light}`,
                                 backgroundColor: player.onCourt
-                                  ? "#f0f8ff"
+                                  ? `${homePrimaryColor}20`
                                   : "transparent",
                               }}
                             >
@@ -1550,7 +1554,7 @@ const Game: React.FC = () => {
                                         height: "32px",
                                         borderRadius: "50%",
                                         objectFit: "cover",
-                                        border: `1px solid ${COLORS.border.default}`,
+                                        border: `2px solid ${homePrimaryColor}`,
                                       }}
                                     />
                                   ) : (
@@ -1559,13 +1563,13 @@ const Game: React.FC = () => {
                                         width: "32px",
                                         height: "32px",
                                         borderRadius: "50%",
-                                        backgroundColor: "#f8f9fa",
+                                        backgroundColor: homePrimaryColor,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         fontSize: "0.8rem",
-                                        border: `1px solid ${COLORS.border.default}`,
-                                        color: COLORS.text.secondary,
+                                        border: `2px solid ${homePrimaryColor}`,
+                                        color: homeSecondaryColor,
                                       }}
                                     >
                                       👤
@@ -1663,7 +1667,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -1745,7 +1749,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -1782,7 +1786,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -1857,7 +1861,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -1938,7 +1942,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -1973,7 +1977,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -2048,7 +2052,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -2129,7 +2133,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -2163,7 +2167,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -2206,7 +2210,7 @@ const Game: React.FC = () => {
                                     }
                                     style={{
                                       padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.danger,
+                                      backgroundColor: awayPrimaryColor,
                                       color: "white",
                                       border: "none",
                                       borderRadius: "2px",
@@ -2274,7 +2278,7 @@ const Game: React.FC = () => {
                                     }
                                     style={{
                                       padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.danger,
+                                      backgroundColor: awayPrimaryColor,
                                       color: "white",
                                       border: "none",
                                       borderRadius: "2px",
@@ -2342,7 +2346,7 @@ const Game: React.FC = () => {
                                     }
                                     style={{
                                       padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.danger,
+                                      backgroundColor: awayPrimaryColor,
                                       color: "white",
                                       border: "none",
                                       borderRadius: "2px",
@@ -2372,7 +2376,7 @@ const Game: React.FC = () => {
                                     }
                                     style={{
                                       padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.danger,
+                                      backgroundColor: awayPrimaryColor,
                                       color: "white",
                                       border: "none",
                                       borderRadius: "2px",
@@ -2562,7 +2566,7 @@ const Game: React.FC = () => {
                               style={{
                                 borderBottom: `1px solid ${COLORS.border.light}`,
                                 backgroundColor: player.onCourt
-                                  ? "#fff0f0"
+                                  ? `${awayPrimaryColor}20`
                                   : "transparent",
                               }}
                             >
@@ -2588,7 +2592,7 @@ const Game: React.FC = () => {
                                         height: "32px",
                                         borderRadius: "50%",
                                         objectFit: "cover",
-                                        border: `1px solid ${COLORS.border.default}`,
+                                        border: `2px solid ${awayPrimaryColor}`,
                                       }}
                                     />
                                   ) : (
@@ -2597,13 +2601,13 @@ const Game: React.FC = () => {
                                         width: "32px",
                                         height: "32px",
                                         borderRadius: "50%",
-                                        backgroundColor: "#f8f9fa",
+                                        backgroundColor: awayPrimaryColor,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         fontSize: "0.8rem",
-                                        border: `1px solid ${COLORS.border.default}`,
-                                        color: COLORS.text.secondary,
+                                        border: `2px solid ${awayPrimaryColor}`,
+                                        color: awaySecondaryColor,
                                       }}
                                     >
                                       👤
@@ -2701,7 +2705,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -2783,7 +2787,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -2820,7 +2824,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -2895,7 +2899,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -2976,7 +2980,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -3011,7 +3015,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -3086,7 +3090,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -3167,7 +3171,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -3201,7 +3205,7 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: COLORS.danger,
+                                              backgroundColor: awayPrimaryColor,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
@@ -3243,7 +3247,7 @@ const Game: React.FC = () => {
                                     }
                                     style={{
                                       padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.danger,
+                                      backgroundColor: awayPrimaryColor,
                                       color: "white",
                                       border: "none",
                                       borderRadius: "2px",
@@ -3311,7 +3315,7 @@ const Game: React.FC = () => {
                                     }
                                     style={{
                                       padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.danger,
+                                      backgroundColor: awayPrimaryColor,
                                       color: "white",
                                       border: "none",
                                       borderRadius: "2px",
@@ -3379,7 +3383,7 @@ const Game: React.FC = () => {
                                     }
                                     style={{
                                       padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.danger,
+                                      backgroundColor: awayPrimaryColor,
                                       color: "white",
                                       border: "none",
                                       borderRadius: "2px",
@@ -3409,7 +3413,7 @@ const Game: React.FC = () => {
                                     }
                                     style={{
                                       padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.danger,
+                                      backgroundColor: awayPrimaryColor,
                                       color: "white",
                                       border: "none",
                                       borderRadius: "2px",
@@ -3493,6 +3497,10 @@ const Game: React.FC = () => {
               awayTeamName={awayTeam?.name || "Away Team"}
               homeTeamPlayers={homeTeamPlayersList}
               awayTeamPlayers={awayTeamPlayersList}
+              homePrimaryColor={homePrimaryColor}
+              homeSecondaryColor={homeSecondaryColor}
+              awayPrimaryColor={awayPrimaryColor}
+              awaySecondaryColor={awaySecondaryColor}
               onClose={() => setShowLineupModal(false)}
               onSuccess={() => {
                 dispatch(
@@ -3518,6 +3526,14 @@ const Game: React.FC = () => {
                 selectedTeam === "home"
                   ? homeTeam?.name || "Home"
                   : awayTeam?.name || "Away"
+              }
+              primaryColor={
+                selectedTeam === "home" ? homePrimaryColor : awayPrimaryColor
+              }
+              secondaryColor={
+                selectedTeam === "home"
+                  ? homeSecondaryColor
+                  : awaySecondaryColor
               }
               onCourtPlayers={
                 selectedTeam === "home" ? homeOnCourt : awayOnCourt

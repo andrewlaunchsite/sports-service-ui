@@ -7,7 +7,7 @@ import Loading from "./Loading";
 import { COLORS } from "../config/styles";
 
 interface TeamsListProps {
-  leagueId: number;
+  leagueId?: number;
 }
 
 const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
@@ -16,10 +16,8 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
   const { teams, loadingState } = useSelector((state: RootState) => state.team);
 
   useEffect(() => {
-    dispatch(getTeams({ offset: 0, limit: 100 }) as any);
-  }, [dispatch]);
-
-  const filteredTeams = teams.filter((team) => team.leagueId === leagueId);
+    dispatch(getTeams({ league_id: leagueId, offset: 0, limit: 100 }) as any);
+  }, [dispatch, leagueId]);
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return null;
@@ -39,11 +37,11 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
     );
   }
 
-  if (filteredTeams.length === 0) {
+  if (teams.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "2rem" }}>
         <div style={{ color: COLORS.text.secondary }}>
-          No teams found for this league.
+          {leagueId ? "No teams found for this league." : "No teams found."}
         </div>
       </div>
     );
@@ -74,9 +72,13 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
           gap: "1rem",
         }}
       >
-        {filteredTeams.map((team) => {
+        {teams.map((team) => {
           const createdDateTime = (team as any).createdDateTime;
           const lastModifiedDateTime = (team as any).lastModifiedDateTime;
+          const teamAny = team as any;
+          const logoUrl = teamAny.logoUrl || teamAny.logo || teamAny.logo_url || null;
+          const primaryColor = teamAny.primaryColor || COLORS.primary;
+          const secondaryColor = teamAny.secondaryColor || "white";
 
           return (
             <div
@@ -86,7 +88,7 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
                 backgroundColor: COLORS.background.default,
                 borderRadius: "12px",
                 padding: "1.5rem",
-                border: `1px solid ${COLORS.border.default}`,
+                border: `2px solid ${primaryColor}`,
                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                 transition: "transform 0.2s, box-shadow 0.2s",
                 cursor: "pointer",
@@ -109,13 +111,53 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
               >
                 <div
                   style={{
-                    fontWeight: 600,
-                    fontSize: "1.25rem",
-                    color: COLORS.text.primary,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
                     marginBottom: "0.5rem",
                   }}
                 >
-                  {team.name}
+                  {logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt={team.name}
+                      style={{
+                        width: "60px",
+                        height: "60px",
+                        borderRadius: "8px",
+                        objectFit: "cover",
+                        border: `2px solid ${primaryColor}`,
+                        backgroundColor: "#f8f9fa",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "60px",
+                        height: "60px",
+                        borderRadius: "8px",
+                        backgroundColor: primaryColor,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: secondaryColor,
+                        fontSize: "1.5rem",
+                        fontWeight: 700,
+                        border: `2px solid ${primaryColor}`,
+                      }}
+                    >
+                      {team.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "1.25rem",
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    {team.name}
+                  </div>
                 </div>
                 {createdDateTime && (
                   <div

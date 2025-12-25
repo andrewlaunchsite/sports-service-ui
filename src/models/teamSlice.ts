@@ -30,6 +30,9 @@ export interface TeamsState {
 export interface TeamCreate {
   name: string;
   league_id: number;
+  logo?: File | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
 }
 
 export const getTeam = createAsyncThunk("teams/get", async (teamId: number) => {
@@ -54,10 +57,35 @@ export const getTeams = createAsyncThunk(
   }
 );
 
+const camelToSnake = (str: string) =>
+  str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
+const buildFormData = (data: Record<string, any>): FormData => {
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    const snakeKey = camelToSnake(key);
+    if (value !== undefined && value !== null) {
+      if (value instanceof File) {
+        formData.append(snakeKey, value);
+      } else if (typeof value === "number" || typeof value === "boolean") {
+        formData.append(snakeKey, value.toString());
+      } else if (typeof value === "string") {
+        formData.append(snakeKey, value);
+      }
+    }
+  });
+  return formData;
+};
+
 export const createTeam = createAsyncThunk(
   "teams/create",
   async (teamData: TeamCreate, { fulfillWithValue }) => {
-    const { data } = await axiosInstance.post(`/api/v1/teams`, teamData);
+    const formData = buildFormData(teamData);
+    const { data } = await axiosInstance.post(`/api/v1/teams`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return (fulfillWithValue as any)(data, {
       meta: { toast: "Team created successfully" },
     });
@@ -66,13 +94,20 @@ export const createTeam = createAsyncThunk(
 
 export const updateTeam = createAsyncThunk(
   "teams/update",
-  async (teamData: { id: number; data: Partial<Team> }) => {
-    const { id, data } = teamData;
-    const { data: responseData } = await axiosInstance.put(
-      `/api/v1/teams/${id}`,
-      data
-    );
-    return responseData;
+  async (
+    teamData: { id: number; data: Partial<TeamCreate> },
+    { fulfillWithValue }
+  ) => {
+    const { id, data: teamUpdateData } = teamData;
+    const formData = buildFormData(teamUpdateData);
+    const { data } = await axiosInstance.put(`/api/v1/teams/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return (fulfillWithValue as any)(data, {
+      meta: { toast: "Team updated successfully" },
+    });
   }
 );
 

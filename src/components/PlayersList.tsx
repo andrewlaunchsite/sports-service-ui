@@ -17,6 +17,11 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
   const { players, loadingState, error } = useSelector(
     (state: RootState) => state.player
   );
+  const { teams } = useSelector((state: RootState) => state.team);
+
+  const team = teams.find((t) => t.id === teamId);
+  const primaryColor = (team as any)?.primaryColor || COLORS.primary;
+  const secondaryColor = (team as any)?.secondaryColor || "white";
 
   useEffect(() => {
     if (teamId) {
@@ -163,7 +168,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                           height: "100px",
                           borderRadius: "50%",
                           objectFit: "cover",
-                          border: `3px solid ${COLORS.primary}`,
+                          border: `3px solid ${primaryColor}`,
                           backgroundColor: "#f8f9fa",
                         }}
                       />
@@ -173,7 +178,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                             position: "absolute",
                             bottom: "-5px",
                             right: "-5px",
-                            backgroundColor: COLORS.primary,
+                            backgroundColor: primaryColor,
                             color: "white",
                             width: "32px",
                             height: "32px",
@@ -198,14 +203,14 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                         width: "100px",
                         height: "100px",
                         borderRadius: "50%",
-                        backgroundColor: COLORS.primary,
+                        backgroundColor: primaryColor,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         color: "white",
                         fontSize: "2.5rem",
                         fontWeight: 700,
-                        border: `3px solid ${COLORS.primary}`,
+                        border: `3px solid ${primaryColor}`,
                         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                       }}
                     >
@@ -237,7 +242,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                   <div
                     style={{
                       fontSize: "0.875rem",
-                      color: "#007bff",
+                      color: primaryColor,
                       fontWeight: 500,
                       marginBottom: "0.5rem",
                     }}

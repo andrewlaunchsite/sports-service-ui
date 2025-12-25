@@ -6,6 +6,7 @@ interface Player {
   number: number;
   name: string;
   position: string;
+  pictureUrl?: string;
 }
 
 interface SubstitutionModalProps {
@@ -226,9 +227,11 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                                 ? COLORS.primary
                                 : COLORS.border.default
                             }`,
-                            borderRadius: "6px",
+                            borderRadius: "12px",
                             cursor: "pointer",
-                            textAlign: "left",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "1rem",
                             color:
                               sub.playerOut === currentPlayer.id
                                 ? "white"
@@ -236,8 +239,98 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                             transition: "all 0.2s",
                           }}
                         >
-                          <div style={{ fontWeight: 600 }}>
-                            #{currentPlayer.number} {currentPlayer.name}
+                          <div style={{ position: "relative", flexShrink: 0 }}>
+                            {currentPlayer.pictureUrl ? (
+                              <>
+                                <img
+                                  src={currentPlayer.pictureUrl}
+                                  alt={currentPlayer.name}
+                                  style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    borderRadius: "50%",
+                                    objectFit: "cover",
+                                    border: `2px solid ${
+                                      sub.playerOut === currentPlayer.id
+                                        ? "white"
+                                        : COLORS.primary
+                                    }`,
+                                  }}
+                                />
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    bottom: "-2px",
+                                    right: "-2px",
+                                    backgroundColor:
+                                      sub.playerOut === currentPlayer.id
+                                        ? "white"
+                                        : COLORS.primary,
+                                    color:
+                                      sub.playerOut === currentPlayer.id
+                                        ? COLORS.primary
+                                        : "white",
+                                    width: "20px",
+                                    height: "20px",
+                                    borderRadius: "50%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "0.65rem",
+                                    fontWeight: 700,
+                                    border: `1.5px solid ${
+                                      sub.playerOut === currentPlayer.id
+                                        ? COLORS.primary
+                                        : "white"
+                                    }`,
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                                  }}
+                                >
+                                  {currentPlayer.number}
+                                </div>
+                              </>
+                            ) : (
+                              <div
+                                style={{
+                                  width: "48px",
+                                  height: "48px",
+                                  borderRadius: "50%",
+                                  backgroundColor:
+                                    sub.playerOut === currentPlayer.id
+                                      ? "rgba(255,255,255,0.2)"
+                                      : COLORS.primary,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: "white",
+                                  fontSize: "1.1rem",
+                                  fontWeight: 700,
+                                  border: `2px solid ${
+                                    sub.playerOut === currentPlayer.id
+                                      ? "white"
+                                      : COLORS.primary
+                                  }`,
+                                }}
+                              >
+                                #{currentPlayer.number}
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ textAlign: "left" }}>
+                            <div
+                              style={{ fontWeight: 600, fontSize: "0.9375rem" }}
+                            >
+                              {currentPlayer.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "0.75rem",
+                                opacity: 0.8,
+                                marginTop: "0.125rem",
+                              }}
+                            >
+                              Current {position}
+                            </div>
                           </div>
                         </button>
                       ) : (

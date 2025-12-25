@@ -6,14 +6,18 @@ import { AppDispatch, RootState } from "../models/store";
 import Loading from "./Loading";
 import { COLORS } from "../config/styles";
 
-const AllTeamsList: React.FC = () => {
+interface AllTeamsListProps {
+  leagueId?: number;
+}
+
+const AllTeamsList: React.FC<AllTeamsListProps> = ({ leagueId }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { teams, loadingState } = useSelector((state: RootState) => state.team);
 
   useEffect(() => {
-    dispatch(getTeams({ offset: 0, limit: 100 }) as any);
-  }, [dispatch]);
+    dispatch(getTeams({ league_id: leagueId, offset: 0, limit: 100 }) as any);
+  }, [dispatch, leagueId]);
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return null;

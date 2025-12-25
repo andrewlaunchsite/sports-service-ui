@@ -39,8 +39,10 @@ export const getTeam = createAsyncThunk("teams/get", async (teamId: number) => {
 
 export const getTeams = createAsyncThunk(
   "teams/getAll",
-  async (params?: { offset?: number; limit?: number }) => {
+  async (params?: { league_id?: number; offset?: number; limit?: number }) => {
     const queryParams = new URLSearchParams();
+    if (params?.league_id !== undefined)
+      queryParams.append("league_id", params.league_id.toString());
     if (params?.offset !== undefined)
       queryParams.append("offset", params.offset.toString());
     if (params?.limit !== undefined)

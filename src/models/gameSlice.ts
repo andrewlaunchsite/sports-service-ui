@@ -87,8 +87,17 @@ export const getGame = createAsyncThunk("games/get", async (gameId: number) => {
 
 export const getGames = createAsyncThunk(
   "games/getAll",
-  async (params?: { offset?: number; limit?: number }) => {
+  async (params?: {
+    league_id?: number;
+    mine?: boolean;
+    offset?: number;
+    limit?: number;
+  }) => {
     const queryParams = new URLSearchParams();
+    if (params?.league_id !== undefined)
+      queryParams.append("league_id", params.league_id.toString());
+    if (params?.mine !== undefined)
+      queryParams.append("mine", params.mine.toString());
     if (params?.offset !== undefined)
       queryParams.append("offset", params.offset.toString());
     if (params?.limit !== undefined)

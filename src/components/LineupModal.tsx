@@ -56,14 +56,20 @@ const LineupModal: React.FC<LineupModalProps> = ({
     );
   };
 
-  const handleHomeLineupChange = (position: string, playerId: number | null) => {
+  const handleHomeLineupChange = (
+    position: string,
+    playerId: number | null
+  ) => {
     setHomeLineup({
       ...homeLineup,
       [position]: playerId,
     });
   };
 
-  const handleAwayLineupChange = (position: string, playerId: number | null) => {
+  const handleAwayLineupChange = (
+    position: string,
+    playerId: number | null
+  ) => {
     setAwayLineup({
       ...awayLineup,
       [position]: playerId,
@@ -114,8 +120,12 @@ const LineupModal: React.FC<LineupModalProps> = ({
     }
   };
 
-  const homeComplete = Object.values(homeLineup).filter((v) => v !== null).length;
-  const awayComplete = Object.values(awayLineup).filter((v) => v !== null).length;
+  const homeComplete = Object.values(homeLineup).filter(
+    (v) => v !== null
+  ).length;
+  const awayComplete = Object.values(awayLineup).filter(
+    (v) => v !== null
+  ).length;
   const totalComplete = homeComplete + awayComplete;
   const isComplete =
     Object.values(homeLineup).every((v) => v !== null) &&
@@ -174,7 +184,8 @@ const LineupModal: React.FC<LineupModalProps> = ({
               color: COLORS.text.secondary,
             }}
           >
-            Select a player for each position. Each player can only be assigned to one position.
+            Select a player for each position. Each player can only be assigned
+            to one position.
           </div>
         </div>
 
@@ -232,7 +243,9 @@ const LineupModal: React.FC<LineupModalProps> = ({
                           ? COLORS.primaryLight
                           : COLORS.background.light,
                         border: `2px solid ${
-                          isPositionFilled ? COLORS.primary : COLORS.border.default
+                          isPositionFilled
+                            ? COLORS.primary
+                            : COLORS.border.default
                         }`,
                         borderRadius: "8px",
                         padding: "1rem",
@@ -269,6 +282,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
                           color: COLORS.text.primary,
                           fontSize: "0.9375rem",
                           cursor: "pointer",
+                          marginBottom: isPositionFilled ? "1rem" : 0,
                         }}
                       >
                         <option value="">Select player...</option>
@@ -285,16 +299,94 @@ const LineupModal: React.FC<LineupModalProps> = ({
                       {selectedPlayer && (
                         <div
                           style={{
-                            marginTop: "0.5rem",
-                            fontSize: "0.875rem",
-                            color: COLORS.text.secondary,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "1rem",
+                            padding: "0.75rem",
+                            backgroundColor: "white",
+                            borderRadius: "12px",
+                            border: `1px solid ${COLORS.primary}`,
                           }}
                         >
-                          Selected: #{selectedPlayer.playerNumber || selectedPlayer.id}{" "}
-                          {selectedPlayer.nickname ||
-                            selectedPlayer.displayName ||
-                            selectedPlayer.name ||
-                            `Player ${selectedPlayer.id}`}
+                          <div style={{ position: "relative", flexShrink: 0 }}>
+                            {selectedPlayer.pictureUrl ? (
+                              <>
+                                <img
+                                  src={selectedPlayer.pictureUrl}
+                                  alt={selectedPlayer.name}
+                                  style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    borderRadius: "50%",
+                                    objectFit: "cover",
+                                    border: `2px solid ${COLORS.primary}`,
+                                  }}
+                                />
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    bottom: "-2px",
+                                    right: "-2px",
+                                    backgroundColor: COLORS.primary,
+                                    color: "white",
+                                    width: "20px",
+                                    height: "20px",
+                                    borderRadius: "50%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "0.65rem",
+                                    fontWeight: 700,
+                                    border: "1.5px solid white",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                                  }}
+                                >
+                                  {selectedPlayer.playerNumber ||
+                                    selectedPlayer.id}
+                                </div>
+                              </>
+                            ) : (
+                              <div
+                                style={{
+                                  width: "48px",
+                                  height: "48px",
+                                  borderRadius: "50%",
+                                  backgroundColor: COLORS.primary,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: "white",
+                                  fontSize: "1.1rem",
+                                  fontWeight: 700,
+                                  border: `2px solid ${COLORS.primary}`,
+                                }}
+                              >
+                                #
+                                {selectedPlayer.playerNumber ||
+                                  selectedPlayer.id}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <div
+                              style={{
+                                fontWeight: 600,
+                                fontSize: "0.9375rem",
+                                color: COLORS.text.primary,
+                              }}
+                            >
+                              {selectedPlayer.displayName ||
+                                selectedPlayer.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "0.75rem",
+                                color: COLORS.text.secondary,
+                              }}
+                            >
+                              Selected for {position}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -343,7 +435,9 @@ const LineupModal: React.FC<LineupModalProps> = ({
                           ? COLORS.primaryLight
                           : COLORS.background.light,
                         border: `2px solid ${
-                          isPositionFilled ? COLORS.primary : COLORS.border.default
+                          isPositionFilled
+                            ? COLORS.primary
+                            : COLORS.border.default
                         }`,
                         borderRadius: "8px",
                         padding: "1rem",
@@ -380,6 +474,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
                           color: COLORS.text.primary,
                           fontSize: "0.9375rem",
                           cursor: "pointer",
+                          marginBottom: isPositionFilled ? "1rem" : 0,
                         }}
                       >
                         <option value="">Select player...</option>
@@ -396,16 +491,94 @@ const LineupModal: React.FC<LineupModalProps> = ({
                       {selectedPlayer && (
                         <div
                           style={{
-                            marginTop: "0.5rem",
-                            fontSize: "0.875rem",
-                            color: COLORS.text.secondary,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "1rem",
+                            padding: "0.75rem",
+                            backgroundColor: "white",
+                            borderRadius: "12px",
+                            border: `1px solid ${COLORS.primary}`,
                           }}
                         >
-                          Selected: #{selectedPlayer.playerNumber || selectedPlayer.id}{" "}
-                          {selectedPlayer.nickname ||
-                            selectedPlayer.displayName ||
-                            selectedPlayer.name ||
-                            `Player ${selectedPlayer.id}`}
+                          <div style={{ position: "relative", flexShrink: 0 }}>
+                            {selectedPlayer.pictureUrl ? (
+                              <>
+                                <img
+                                  src={selectedPlayer.pictureUrl}
+                                  alt={selectedPlayer.name}
+                                  style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    borderRadius: "50%",
+                                    objectFit: "cover",
+                                    border: `2px solid ${COLORS.primary}`,
+                                  }}
+                                />
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    bottom: "-2px",
+                                    right: "-2px",
+                                    backgroundColor: COLORS.primary,
+                                    color: "white",
+                                    width: "20px",
+                                    height: "20px",
+                                    borderRadius: "50%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "0.65rem",
+                                    fontWeight: 700,
+                                    border: "1.5px solid white",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                                  }}
+                                >
+                                  {selectedPlayer.playerNumber ||
+                                    selectedPlayer.id}
+                                </div>
+                              </>
+                            ) : (
+                              <div
+                                style={{
+                                  width: "48px",
+                                  height: "48px",
+                                  borderRadius: "50%",
+                                  backgroundColor: COLORS.primary,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: "white",
+                                  fontSize: "1.1rem",
+                                  fontWeight: 700,
+                                  border: `2px solid ${COLORS.primary}`,
+                                }}
+                              >
+                                #
+                                {selectedPlayer.playerNumber ||
+                                  selectedPlayer.id}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <div
+                              style={{
+                                fontWeight: 600,
+                                fontSize: "0.9375rem",
+                                color: COLORS.text.primary,
+                              }}
+                            >
+                              {selectedPlayer.displayName ||
+                                selectedPlayer.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "0.75rem",
+                                color: COLORS.text.secondary,
+                              }}
+                            >
+                              Selected for {position}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>

@@ -19,7 +19,7 @@ import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import { COLORS } from "../config/styles";
 
 const Team: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const hasFetchedMyPlayer = useRef(false);
@@ -41,6 +41,19 @@ const Team: React.FC = () => {
   const { teams } = useSelector((state: RootState) => state.team);
 
   const teamId = searchParams.get("id");
+  const leagueFilter = searchParams.get("leagueId");
+
+  const handleLeagueFilterChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const value = e.target.value;
+    if (value === "all") {
+      searchParams.delete("leagueId");
+    } else {
+      searchParams.set("leagueId", value);
+    }
+    setSearchParams(searchParams);
+  };
 
   useEffect(() => {
     if (teamId) {
@@ -69,7 +82,7 @@ const Team: React.FC = () => {
       !leagueLoadingState.loadingLeagues
     ) {
       hasFetchedLeagues.current = true;
-      dispatch(getLeagues({ offset: 0, limit: 10 }) as any);
+      dispatch(getLeagues({ offset: 0, limit: 100 }) as any);
     }
   }, [teamId, leagueLoadingState.loadingLeagues, dispatch]);
 
@@ -101,8 +114,6 @@ const Team: React.FC = () => {
         dispatch(getGamesByTeam({ teamId: id, offset: 0, limit: 100 }) as any);
         dispatch(getTeams({ offset: 0, limit: 100 }) as any);
       }
-    } else {
-      dispatch(getTeams({ offset: 0, limit: 100 }) as any);
     }
   }, [teamId, dispatch]);
 
@@ -129,16 +140,62 @@ const Team: React.FC = () => {
             gap: "1.5rem",
           }}
         >
-          <h1
+          <div
             style={{
-              fontSize: "2.5rem",
-              fontWeight: 600,
-              margin: 0,
-              color: COLORS.text.primary,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              width: "100%",
             }}
           >
-            Teams
-          </h1>
+            <h1
+              style={{
+                fontSize: "2.5rem",
+                fontWeight: 600,
+                margin: 0,
+                color: COLORS.text.primary,
+              }}
+            >
+              Teams
+            </h1>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "1rem",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "0.875rem",
+                  color: COLORS.text.secondary,
+                  fontWeight: 500,
+                }}
+              >
+                Filter by League:
+              </span>
+              <select
+                value={leagueFilter || "all"}
+                onChange={handleLeagueFilterChange}
+                style={{
+                  padding: "0.5rem 1rem",
+                  borderRadius: "8px",
+                  border: `1px solid ${COLORS.border.default}`,
+                  backgroundColor: "white",
+                  fontSize: "0.875rem",
+                  minWidth: "200px",
+                  cursor: "pointer",
+                }}
+              >
+                <option value="all">All Leagues</option>
+                {leagues.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           {leagueIdForCreateTeam && (
             <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
               <div
@@ -206,7 +263,9 @@ const Team: React.FC = () => {
           )}
         </div>
         <div style={{ width: "100%" }}>
-          <AllTeamsList />
+          <AllTeamsList
+            leagueId={leagueFilter ? parseInt(leagueFilter, 10) : undefined}
+          />
         </div>
       </div>
     );

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getTeams } from "../models/teamSlice";
+import { getLeagues } from "../models/leagueSlice";
 import {
   getGame,
   getGames,
@@ -68,12 +69,17 @@ const Game: React.FC = () => {
     currentLineups,
     loadingState: gameLoadingState,
   } = useSelector((state: RootState) => state.game);
+  const { leagues } = useSelector((state: RootState) => state.league);
 
   const [clockRunning, setClockRunning] = useState(false);
   const [gameTime, setGameTime] = useState(720); // Default to standard period length
   const [period, setPeriod] = useState(1);
   const [homeScore, setHomeScore] = useState(0);
   const [awayScore, setAwayScore] = useState(0);
+
+  // Filters
+  const [selectedLeague, setSelectedLeague] = useState<number | "all">("all");
+  const [showMineOnly, setShowMineOnly] = useState<boolean>(false);
 
   // Initialize clock and period from backend game data
   useEffect(() => {
@@ -125,10 +131,18 @@ const Game: React.FC = () => {
         dispatch(getTeams({ offset: 0, limit: 100 }) as any);
       }
     } else {
-      dispatch(getGames({ offset: 0, limit: 100 }) as any);
+      dispatch(
+        getGames({
+          league_id: selectedLeague === "all" ? undefined : selectedLeague,
+          mine: showMineOnly || undefined,
+          offset: 0,
+          limit: 100,
+        }) as any
+      );
       dispatch(getTeams({ offset: 0, limit: 100 }) as any);
+      dispatch(getLeagues({ offset: 0, limit: 100 }) as any);
     }
-  }, [id, dispatch]);
+  }, [id, dispatch, selectedLeague, showMineOnly]);
 
   useEffect(() => {
     if (game && teams.length > 0) {
@@ -252,6 +266,7 @@ const Game: React.FC = () => {
             `Player ${player.id}`,
           position: lp.position,
           onCourt: true,
+          pictureUrl: player.pictureUrl,
         };
       })
       .filter((p) => p !== null) as any[];
@@ -272,6 +287,7 @@ const Game: React.FC = () => {
         number: p.playerNumber || p.id,
         name: p.displayName || p.name || p.nickname || `Player ${p.id}`,
         position: p.primaryPosition || "N/A",
+        pictureUrl: p.pictureUrl,
       }));
   };
 
@@ -3533,9 +3549,13 @@ const Game: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "completed":
+      case "final":
         return COLORS.success;
       case "in_progress":
+      case "live":
         return COLORS.primary;
+      case "paused":
+        return COLORS.warning;
       case "cancelled":
         return COLORS.danger;
       default:
@@ -3546,9 +3566,17 @@ const Game: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status?.toLowerCase()) {
       case "completed":
+      case "final":
         return <CheckCircleIcon style={{ fontSize: "1.25rem" }} />;
       case "in_progress":
+      case "live":
         return <PlayCircleOutlineIcon style={{ fontSize: "1.25rem" }} />;
+      case "paused":
+        return (
+          <PlayCircleOutlineIcon
+            style={{ fontSize: "1.25rem", opacity: 0.7 }}
+          />
+        );
       case "cancelled":
         return <CancelIcon style={{ fontSize: "1.25rem" }} />;
       default:
@@ -3559,15 +3587,21 @@ const Game: React.FC = () => {
   const getStatusLabel = (status: string) => {
     switch (status?.toLowerCase()) {
       case "completed":
-        return "Completed";
+      case "final":
+        return "Final";
       case "in_progress":
-        return "In Progress";
+      case "live":
+        return "Live";
+      case "paused":
+        return "Paused";
       case "cancelled":
         return "Cancelled";
       case "scheduled":
         return "Scheduled";
       default:
-        return status || "Scheduled";
+        return status
+          ? status.charAt(0).toUpperCase() + status.slice(1)
+          : "Scheduled";
     }
   };
 
@@ -3580,7 +3614,15 @@ const Game: React.FC = () => {
     return acc;
   }, {} as Record<string, typeof games>);
 
-  const statusOrder = ["in_progress", "scheduled", "completed", "cancelled"];
+  const statusOrder = [
+    "live",
+    "in_progress",
+    "paused",
+    "scheduled",
+    "final",
+    "completed",
+    "cancelled",
+  ];
   const allStatuses = statusOrder.concat(
     Object.keys(groupedGames).filter((status) => !statusOrder.includes(status))
   );
@@ -3662,23 +3704,50 @@ const Game: React.FC = () => {
                     color: COLORS.text.secondary,
                   }}
                 />
-                <FormControl
-                  style={{
-                    minWidth: "200px",
-                  }}
-                >
+
+                {/* League Filter */}
+                <FormControl style={{ minWidth: "180px" }}>
+                  <InputLabel
+                    id="league-filter-label"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    Filter by League
+                  </InputLabel>
+                  <Select
+                    labelId="league-filter-label"
+                    value={selectedLeague}
+                    onChange={(e) =>
+                      setSelectedLeague(e.target.value as number | "all")
+                    }
+                    label="Filter by League"
+                    style={{
+                      backgroundColor: COLORS.background.default,
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    <MenuItem value="all">All Leagues</MenuItem>
+                    {leagues.map((l) => (
+                      <MenuItem key={l.id} value={l.id}>
+                        {l.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* Status Filter */}
+                <FormControl style={{ minWidth: "180px" }}>
                   <InputLabel
                     id="status-filter-label"
-                    style={{
-                      color: COLORS.text.secondary,
-                    }}
+                    style={{ color: COLORS.text.secondary }}
                   >
                     Filter by Status
                   </InputLabel>
                   <Select
                     labelId="status-filter-label"
                     value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    onChange={(e) =>
+                      setSelectedStatus(e.target.value as string)
+                    }
                     label="Filter by Status"
                     style={{
                       backgroundColor: COLORS.background.default,
@@ -3694,6 +3763,36 @@ const Game: React.FC = () => {
                     ))}
                   </Select>
                 </FormControl>
+
+                {/* Mine Toggle */}
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    cursor: "pointer",
+                    fontSize: "0.875rem",
+                    color: COLORS.text.primary,
+                    fontWeight: 500,
+                    padding: "0.5rem",
+                    borderRadius: "8px",
+                    border: `1px solid ${
+                      showMineOnly ? COLORS.primary : COLORS.border.default
+                    }`,
+                    backgroundColor: showMineOnly
+                      ? `${COLORS.primary}10`
+                      : "transparent",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={showMineOnly}
+                    onChange={(e) => setShowMineOnly(e.target.checked)}
+                    style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                  />
+                  My Games
+                </label>
               </div>
             )}
           </div>

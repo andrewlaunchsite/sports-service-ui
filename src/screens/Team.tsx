@@ -135,7 +135,7 @@ const Team: React.FC = () => {
             Teams
           </h1>
           {leagueIdForCreateTeam && (
-            <AuthAware roles={["org:league_admin", "org:team_admin"]}>
+            <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
               <div
                 style={{
                   backgroundColor: COLORS.background.default,
@@ -496,10 +496,11 @@ const Team: React.FC = () => {
             ) : !myPlayer ? (
               <AuthAware
                 roles={[
-                  "org:league_admin",
-                  "org:team_admin",
-                  "org:team_manager",
-                  "org:player",
+                  "League Admin",
+                  "Team Admin",
+                  "Team Manager",
+                  "Player",
+                  "Admin",
                 ]}
               >
                 <div
@@ -570,7 +571,7 @@ const Team: React.FC = () => {
             ) : null}
 
             <AuthAware
-              roles={["org:league_admin", "org:team_admin", "org:team_manager"]}
+              roles={["League Admin", "Team Admin", "Team Manager", "Admin"]}
             >
               <div
                 style={{
@@ -634,7 +635,7 @@ const Team: React.FC = () => {
               </div>
             </AuthAware>
 
-            <AuthAware roles={["org:league_admin", "org:team_admin"]}>
+            <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
               <div
                 style={{
                   backgroundColor: COLORS.background.default,
@@ -693,7 +694,7 @@ const Team: React.FC = () => {
                 </div>
                 <div style={{ marginTop: "auto" }}>
                   <InviteUser
-                    defaultRole="org:player"
+                    defaultRole="Player"
                     buttonText="Invite Player"
                   />
                 </div>

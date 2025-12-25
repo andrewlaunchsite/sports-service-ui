@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useUser } from "@clerk/clerk-react";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import {
   COLORS,
@@ -108,7 +107,7 @@ const Home: React.FC = () => {
             }}
           >
             {!existingLeague && (
-              <AuthAware roles={["org:league_admin"]}>
+              <AuthAware roles={["League Admin", "Admin"]}>
                 <div style={TILE_STYLE}>
                   <div
                     style={{
@@ -161,7 +160,7 @@ const Home: React.FC = () => {
             )}
 
             {existingLeague && (
-              <AuthAware roles={["org:league_admin", "org:team_admin"]}>
+              <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
                 <div style={TILE_STYLE}>
                   <div
                     style={{
@@ -213,7 +212,7 @@ const Home: React.FC = () => {
               </AuthAware>
             )}
 
-            <AuthAware roles={["org:league_admin"]}>
+            <AuthAware roles={["League Admin", "Admin"]}>
               <div
                 style={{
                   backgroundColor: "white",

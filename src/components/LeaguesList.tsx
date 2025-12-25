@@ -147,13 +147,13 @@ const LeaguesList: React.FC = () => {
                   >
                     {league.name}
                   </div>
-                  <AuthAware roles={["org:league_admin"]}>
+                  <AuthAware roles={["League Admin", "Admin"]}>
                     <div onClick={(e) => e.stopPropagation()}>
                       <EditLeague league={league} />
                     </div>
                   </AuthAware>
                 </div>
-                <AuthAware roles={["org:league_admin"]}>
+                <AuthAware roles={["League Admin", "Admin"]}>
                   <div onClick={(e) => e.stopPropagation()}>
                     <EditLeague league={league} renderFormOnly />
                   </div>

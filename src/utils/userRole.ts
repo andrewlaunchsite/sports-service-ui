@@ -1,51 +1,9 @@
-// import type { UserResource } from "@clerk/types";
-
-// export type UserRole =
-//   | "org:league_admin"
-//   | "org:team_admin"
-//   | "org:team_manager"
-//   | "org:player"
-//   | null;
-
-// export const getUserRole = (
-//   user: UserResource | null | undefined
-// ): UserRole => {
-//   if (
-//     !user?.organizationMemberships ||
-//     user.organizationMemberships.length === 0
-//   ) {
-//     return null;
-//   }
-
-//   const role = user.organizationMemberships[0]?.role;
-//   return (role as UserRole) || null;
-// };
-
-// export const isLeagueAdmin = (
-//   user: UserResource | null | undefined
-// ): boolean => {
-//   return getUserRole(user) === "org:league_admin";
-// };
-
-// export const isTeamAdmin = (user: UserResource | null | undefined): boolean => {
-//   return getUserRole(user) === "org:team_admin";
-// };
-
-// export const isTeamManager = (
-//   user: UserResource | null | undefined
-// ): boolean => {
-//   return getUserRole(user) === "org:team_manager";
-// };
-
-// export const isPlayer = (user: UserResource | null | undefined): boolean => {
-//   return getUserRole(user) === "org:player";
-// };
-
 export type UserRole =
-  | "org:league_admin"
-  | "org:team_admin"
-  | "org:team_manager"
-  | "org:player"
+  | "Admin"
+  | "League Admin"
+  | "Player"
+  | "Team Admin"
+  | "Team Manager"
   | null;
 
 // Auth0 user is an open object with claims
@@ -83,18 +41,30 @@ export const getUserRole = (user: Auth0User): UserRole => {
   return null;
 };
 
+export const isAdmin = (user: Auth0User): boolean => {
+  return getUserRole(user) === "Admin";
+};
+
 export const isLeagueAdmin = (user: Auth0User): boolean => {
-  return getUserRole(user) === "org:league_admin";
+  const role = getUserRole(user);
+  return role === "League Admin" || role === "Admin";
 };
 
 export const isTeamAdmin = (user: Auth0User): boolean => {
-  return getUserRole(user) === "org:team_admin";
+  const role = getUserRole(user);
+  return role === "Team Admin" || role === "Admin" || role === "League Admin";
 };
 
 export const isTeamManager = (user: Auth0User): boolean => {
-  return getUserRole(user) === "org:team_manager";
+  const role = getUserRole(user);
+  return (
+    role === "Team Manager" ||
+    role === "Team Admin" ||
+    role === "Admin" ||
+    role === "League Admin"
+  );
 };
 
 export const isPlayer = (user: Auth0User): boolean => {
-  return getUserRole(user) === "org:player";
+  return getUserRole(user) === "Player";
 };

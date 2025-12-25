@@ -15,7 +15,7 @@ interface InviteUserProps {
 }
 
 const InviteUser: React.FC<InviteUserProps> = ({
-  defaultRole = "org:player",
+  defaultRole = "Player",
   buttonText = "Invite User",
 }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -131,10 +131,11 @@ const InviteUser: React.FC<InviteUserProps> = ({
             e.currentTarget.style.boxShadow = "none";
           }}
         >
-          <option value="org:league_admin">League Admin</option>
-          <option value="org:team_admin">Team Admin</option>
-          <option value="org:team_manager">Team Manager</option>
-          <option value="org:player">Player</option>
+          <option value="Admin">Admin</option>
+          <option value="League Admin">League Admin</option>
+          <option value="Team Admin">Team Admin</option>
+          <option value="Team Manager">Team Manager</option>
+          <option value="Player">Player</option>
         </select>
       </div>
       <div style={{ display: "flex", gap: "0.5rem" }}>

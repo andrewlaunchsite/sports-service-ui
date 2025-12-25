@@ -27,9 +27,11 @@ const Team: React.FC = () => {
   const { team, loadingState: teamLoadingState } = useSelector(
     (state: RootState) => state.team
   );
-  const { league, leagues, loadingState: leagueLoadingState } = useSelector(
-    (state: RootState) => state.league
-  );
+  const {
+    league,
+    leagues,
+    loadingState: leagueLoadingState,
+  } = useSelector((state: RootState) => state.league);
   const { myPlayer, loadingState: playerLoadingState } = useSelector(
     (state: RootState) => state.player
   );
@@ -62,7 +64,11 @@ const Team: React.FC = () => {
   }, [teamId, playerLoadingState.loadingMyPlayer, dispatch]);
 
   useEffect(() => {
-    if (!teamId && !hasFetchedLeagues.current && !leagueLoadingState.loadingLeagues) {
+    if (
+      !teamId &&
+      !hasFetchedLeagues.current &&
+      !leagueLoadingState.loadingLeagues
+    ) {
       hasFetchedLeagues.current = true;
       dispatch(getLeagues({ offset: 0, limit: 10 }) as any);
     }
@@ -693,10 +699,7 @@ const Team: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ marginTop: "auto" }}>
-                  <InviteUser
-                    defaultRole="Player"
-                    buttonText="Invite Player"
-                  />
+                  <InviteUser defaultRole="Player" buttonText="Invite Player" />
                 </div>
               </div>
             </AuthAware>

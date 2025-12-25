@@ -15,12 +15,7 @@ type Auth0User =
   | undefined;
 
 // Preferred Auth0 claim keys (pick one and standardize)
-const ROLE_CLAIM_KEYS = [
-  "https://sports-service/role",
-  "https://sports-service/roles",
-  "role",
-  "roles",
-];
+const ROLE_CLAIM_KEYS = ["https://auth.launchsite.dev/roles", "roles", "role"];
 
 export const getUserRole = (user: Auth0User): UserRole => {
   if (!user) return null;
@@ -33,8 +28,9 @@ export const getUserRole = (user: Auth0User): UserRole => {
       return value as UserRole;
     }
 
-    if (Array.isArray(value) && typeof value[0] === "string") {
-      return value[0] as UserRole;
+    if (Array.isArray(value)) {
+      const found = value.find((v) => typeof v === "string") as UserRole;
+      if (found) return found;
     }
   }
 

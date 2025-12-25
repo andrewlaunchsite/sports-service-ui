@@ -17,6 +17,7 @@ import { getTeams } from "../models/teamSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreateTeam from "../components/CreateTeam";
+import PlayerAvatar from "../components/PlayerAvatar";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
@@ -369,64 +370,15 @@ const Home: React.FC = () => {
                       gap: "1.25rem",
                     }}
                   >
-                    <div style={{ position: "relative" }}>
-                      {(myPlayer as any).pictureUrl ? (
-                        <>
-                          <img
-                            src={(myPlayer as any).pictureUrl}
-                            alt={(myPlayer as any).displayName || myPlayer.name}
-                            style={{
-                              width: "70px",
-                              height: "70px",
-                              borderRadius: "50%",
-                              objectFit: "cover",
-                              border: `3px solid ${primaryColor}`,
-                            }}
-                          />
-                          {(myPlayer as any).playerNumber && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                bottom: "-2px",
-                                right: "-2px",
-                                backgroundColor: primaryColor,
-                                color: "white",
-                                width: "24px",
-                                height: "24px",
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "0.75rem",
-                                fontWeight: 700,
-                                border: "2px solid white",
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                              }}
-                            >
-                              {(myPlayer as any).playerNumber}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div
-                          style={{
-                            width: "70px",
-                            height: "70px",
-                            borderRadius: "50%",
-                            backgroundColor: primaryColor,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "white",
-                            fontSize: "1.5rem",
-                            fontWeight: 700,
-                            border: `2px solid ${primaryColor}`,
-                          }}
-                        >
-                          #{(myPlayer as any).playerNumber || "?"}
-                        </div>
-                      )}
-                    </div>
+                    <PlayerAvatar
+                      player={{
+                        name: (myPlayer as any).displayName || myPlayer.name,
+                        pictureUrl: (myPlayer as any).pictureUrl,
+                        number: (myPlayer as any).playerNumber,
+                      }}
+                      team={myTeam || null}
+                      size={70}
+                    />
                     <div style={{ flex: 1 }}>
                       <div
                         style={{

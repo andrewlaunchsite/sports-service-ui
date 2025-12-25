@@ -135,17 +135,17 @@ const LeaguesList: React.FC = () => {
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: "1rem",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "1.25rem",
+                    color: COLORS.text.primary,
+                      flex: 1,
                   }}
                 >
-                  <div
-                    style={{
-                      fontWeight: 600,
-                      fontSize: "1.25rem",
-                      color: COLORS.text.primary,
-                      flex: 1,
-                    }}
-                  >
-                    {league.name}
+                  {league.name}
                   </div>
                   <AuthAware roles={["League Admin", "Admin"]}>
                     <div onClick={(e) => e.stopPropagation()}>

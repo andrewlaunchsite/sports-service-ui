@@ -25,6 +25,7 @@ import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import LineupModal from "../components/LineupModal";
 import SubstitutionModal from "../components/SubstitutionModal";
+import GameCard from "../components/GameCard";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
@@ -3880,8 +3881,8 @@ const Game: React.FC = () => {
                       style={{
                         display: "grid",
                         gridTemplateColumns:
-                          "repeat(auto-fill, minmax(280px, 1fr))",
-                        gap: "1rem",
+                          "repeat(auto-fill, minmax(320px, 1fr))",
+                        gap: "1.5rem",
                       }}
                     >
                       {statusGames.map((game) => {
@@ -3891,80 +3892,14 @@ const Game: React.FC = () => {
                         const awayTeam = teams.find(
                           (t) => t.id === (game as any).awayTeamId
                         );
-                        const gameStatus = (game as any).status;
+
                         return (
-                          <div
+                          <GameCard
                             key={game.id}
-                            onClick={() =>
-                              navigate(`${ROUTES.GAMES}?id=${game.id}`)
-                            }
-                            style={{
-                              backgroundColor: COLORS.background.default,
-                              borderRadius: "12px",
-                              padding: "1.5rem",
-                              border: `1px solid ${COLORS.border.default}`,
-                              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                              transition: "transform 0.2s, box-shadow 0.2s",
-                              cursor: "pointer",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.transform =
-                                "translateY(-2px)";
-                              e.currentTarget.style.boxShadow =
-                                "0 4px 8px rgba(0,0,0,0.1)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = "translateY(0)";
-                              e.currentTarget.style.boxShadow =
-                                "0 2px 4px rgba(0,0,0,0.05)";
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "0.75rem",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "0.5rem",
-                                }}
-                              >
-                                <div style={{ color: statusColor }}>
-                                  {getStatusIcon(gameStatus)}
-                                </div>
-                                <div
-                                  style={{
-                                    fontWeight: 600,
-                                    fontSize: "1.1rem",
-                                    color: COLORS.text.primary,
-                                    flex: 1,
-                                  }}
-                                >
-                                  {homeTeam?.name ||
-                                    `Team ${(game as any).homeTeamId}`}{" "}
-                                  vs{" "}
-                                  {awayTeam?.name ||
-                                    `Team ${(game as any).awayTeamId}`}
-                                </div>
-                              </div>
-                              {(game as any).scheduledDateTime && (
-                                <div
-                                  style={{
-                                    fontSize: "0.875rem",
-                                    color: COLORS.text.secondary,
-                                  }}
-                                >
-                                  {formatDateTime(
-                                    (game as any).scheduledDateTime
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                            game={game as any}
+                            homeTeam={homeTeam || null}
+                            awayTeam={awayTeam || null}
+                          />
                         );
                       })}
                     </div>

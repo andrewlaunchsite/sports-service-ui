@@ -78,7 +78,7 @@ const CreateLeague: React.FC = () => {
         limit: pagination.limit,
       }) as any
     );
-  };
+    };
 
   if (!showForm) {
     return (

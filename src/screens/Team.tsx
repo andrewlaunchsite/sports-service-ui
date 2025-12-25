@@ -16,8 +16,12 @@ import PlayersList from "../components/PlayersList";
 import TeamsList from "../components/TeamsList";
 import InviteUser from "../components/InviteUser";
 import AuthAware from "../components/AuthAware";
+import GameCard from "../components/GameCard";
+import PlayerAvatar from "../components/PlayerAvatar";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import { COLORS, TILE_STYLE } from "../config/styles";
+import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import FilterListIcon from "@mui/icons-material/FilterList";
 
 const Team: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -43,18 +47,6 @@ const Team: React.FC = () => {
 
   const teamId = searchParams.get("id");
   const leagueFilter = searchParams.get("leagueId");
-
-  const handleLeagueFilterChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const value = e.target.value;
-    if (value === "all") {
-      searchParams.delete("leagueId");
-    } else {
-      searchParams.set("leagueId", value);
-    }
-    setSearchParams(searchParams);
-  };
 
   useEffect(() => {
     if (teamId) {
@@ -163,38 +155,49 @@ const Team: React.FC = () => {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "1rem",
+                gap: "0.75rem",
+                flexWrap: "wrap",
               }}
             >
-              <span
+              <FilterListIcon
                 style={{
-                  fontSize: "0.875rem",
+                  fontSize: "1.25rem",
                   color: COLORS.text.secondary,
-                  fontWeight: 500,
                 }}
-              >
-                Filter by League:
-              </span>
-              <select
+              />
+              <FormControl style={{ minWidth: "180px" }}>
+                <InputLabel
+                  id="league-filter-label"
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  Filter by League
+                </InputLabel>
+                <Select
+                  labelId="league-filter-label"
                 value={leagueFilter || "all"}
-                onChange={handleLeagueFilterChange}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "all") {
+                      searchParams.delete("leagueId");
+                    } else {
+                      searchParams.set("leagueId", value);
+                    }
+                    setSearchParams(searchParams);
+                  }}
+                  label="Filter by League"
                 style={{
-                  padding: "0.5rem 1rem",
-                  borderRadius: "8px",
-                  border: `1px solid ${COLORS.border.default}`,
-                  backgroundColor: "white",
-                  fontSize: "0.875rem",
-                  minWidth: "200px",
-                  cursor: "pointer",
-                }}
-              >
-                <option value="all">All Leagues</option>
+                    backgroundColor: COLORS.background.default,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  <MenuItem value="all">All Leagues</MenuItem>
                 {leagues.map((l) => (
-                  <option key={l.id} value={l.id}>
+                    <MenuItem key={l.id} value={l.id}>
                     {l.name}
-                  </option>
+                    </MenuItem>
                 ))}
-              </select>
+                </Select>
+              </FormControl>
             </div>
           </div>
           {leagueIdForCreateTeam && (
@@ -299,18 +302,6 @@ const Team: React.FC = () => {
   }
 
   const isLoadingLeague = leagueLoadingState.loadingLeague && !league;
-
-  const formatDateTime = (dateStr: string) => {
-    if (!dateStr) return null;
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
 
   return (
     <div
@@ -568,70 +559,15 @@ const Team: React.FC = () => {
                     marginTop: "auto",
                   }}
                 >
-                  <div style={{ position: "relative" }}>
-                    {(myPlayer as any).pictureUrl ? (
-                      <>
-                        <img
-                          src={(myPlayer as any).pictureUrl}
-                          alt={(myPlayer as any).displayName || myPlayer.name}
-                          style={{
-                            width: "70px",
-                            height: "70px",
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                            border: `3px solid ${
-                              (team as any)?.primaryColor || COLORS.primary
-                            }`,
-                          }}
-                        />
-                        {(myPlayer as any).playerNumber && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              bottom: "-2px",
-                              right: "-2px",
-                              backgroundColor:
-                                (team as any)?.primaryColor || COLORS.primary,
-                              color: "white",
-                              width: "24px",
-                              height: "24px",
-                              borderRadius: "50%",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "0.75rem",
-                              fontWeight: 700,
-                              border: "2px solid white",
-                              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                            }}
-                          >
-                            {(myPlayer as any).playerNumber}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div
-                        style={{
-                          width: "70px",
-                          height: "70px",
-                          borderRadius: "50%",
-                          backgroundColor:
-                            (team as any)?.primaryColor || COLORS.primary,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "white",
-                          fontSize: "1.5rem",
-                          fontWeight: 700,
-                          border: `2px solid ${
-                            (team as any)?.primaryColor || COLORS.primary
-                          }`,
-                        }}
-                      >
-                        #{(myPlayer as any).playerNumber || "?"}
-                      </div>
-                    )}
-                  </div>
+                  <PlayerAvatar
+                    player={{
+                      name: (myPlayer as any).displayName || myPlayer.name,
+                      pictureUrl: (myPlayer as any).pictureUrl,
+                      number: (myPlayer as any).playerNumber,
+                    }}
+                    team={team || null}
+                    size={70}
+                  />
                   <div style={{ flex: 1 }}>
                     <div
                       style={{
@@ -869,8 +805,8 @@ const Team: React.FC = () => {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                  gap: "1rem",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                  gap: "1.5rem",
                   marginBottom: "2rem",
                 }}
               >
@@ -881,88 +817,14 @@ const Team: React.FC = () => {
                   const awayTeam = teams.find(
                     (t) => t.id === (game as any).awayTeamId
                   );
-                  const status = (game as any).status;
-                  const getStatusColor = (status: string) => {
-                    switch (status?.toLowerCase()) {
-                      case "completed":
-                        return COLORS.success;
-                      case "in_progress":
-                        return COLORS.primary;
-                      case "cancelled":
-                        return COLORS.danger;
-                      default:
-                        return COLORS.text.secondary;
-                    }
-                  };
 
                   return (
-                    <div
+                    <GameCard
                       key={game.id}
-                      onClick={() => navigate(`${ROUTES.GAMES}?id=${game.id}`)}
-                      style={{
-                        backgroundColor: COLORS.background.default,
-                        borderRadius: "12px",
-                        padding: "1.5rem",
-                        border: `1px solid ${COLORS.border.default}`,
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                        transition: "transform 0.2s, box-shadow 0.2s",
-                        cursor: "pointer",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                        e.currentTarget.style.boxShadow =
-                          "0 4px 8px rgba(0,0,0,0.1)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow =
-                          "0 2px 4px rgba(0,0,0,0.05)";
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "0.75rem",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontWeight: 600,
-                            fontSize: "1.1rem",
-                            color: COLORS.text.primary,
-                            marginBottom: "0.25rem",
-                          }}
-                        >
-                          {homeTeam?.name || `Team ${(game as any).homeTeamId}`}{" "}
-                          vs{" "}
-                          {awayTeam?.name || `Team ${(game as any).awayTeamId}`}
-                        </div>
-                        {(game as any).scheduledDateTime && (
-                          <div
-                            style={{
-                              fontSize: "0.875rem",
-                              color: COLORS.text.secondary,
-                            }}
-                          >
-                            {formatDateTime((game as any).scheduledDateTime)}
-                          </div>
-                        )}
-                        {status && (
-                          <div
-                            style={{
-                              fontSize: "0.875rem",
-                              color: getStatusColor(status),
-                              fontWeight: 500,
-                              paddingTop: "0.5rem",
-                              borderTop: `1px solid ${COLORS.border.light}`,
-                            }}
-                          >
-                            Status: {status}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                      game={game as any}
+                      homeTeam={homeTeam || null}
+                      awayTeam={awayTeam || null}
+                    />
                   );
                 })}
               </div>

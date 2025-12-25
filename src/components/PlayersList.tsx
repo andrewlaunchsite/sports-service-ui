@@ -6,6 +6,7 @@ import { AppDispatch, RootState } from "../models/store";
 import { COLORS } from "../config/styles";
 import { ROUTES } from "../config/constants";
 import Loading from "./Loading";
+import PlayerAvatar from "./PlayerAvatar";
 
 interface PlayersListProps {
   teamId: number;
@@ -152,71 +153,16 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                   textAlign: "center",
                 }}
               >
-                <div
-                  style={{
-                    position: "relative",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  {(player as any).pictureUrl ? (
-                    <>
-                      <img
-                        src={(player as any).pictureUrl}
-                        alt={displayName || player.name}
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                          border: `3px solid ${primaryColor}`,
-                          backgroundColor: "#f8f9fa",
-                        }}
-                      />
-                      {playerNumber && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            bottom: "-5px",
-                            right: "-5px",
-                            backgroundColor: primaryColor,
-                            color: "white",
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "0.9rem",
-                            fontWeight: 700,
-                            border: "2px solid white",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                            zIndex: 1,
-                          }}
-                        >
-                          {playerNumber}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        borderRadius: "50%",
-                        backgroundColor: primaryColor,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                        fontSize: "2.5rem",
-                        fontWeight: 700,
-                        border: `3px solid ${primaryColor}`,
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      #{playerNumber || "?"}
-                    </div>
-                  )}
+                <div style={{ marginBottom: "1rem" }}>
+                  <PlayerAvatar
+                    player={{
+                      name: displayName || player.name,
+                      pictureUrl: (player as any).pictureUrl,
+                      number: playerNumber,
+                    }}
+                    team={team || null}
+                    size="large"
+                  />
                 </div>
                 <div
                   style={{

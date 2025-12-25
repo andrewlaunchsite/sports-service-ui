@@ -90,12 +90,14 @@ const LeaguesList: React.FC = () => {
           return (
             <div
               key={league.id}
+              onClick={() => navigate(`/leagues?id=${league.id}`)}
               style={{
                 ...TILE_STYLE,
                 backgroundColor: COLORS.background.default,
                 border: `1px solid ${COLORS.border.default}`,
                 transition: "transform 0.2s, box-shadow 0.2s",
                 overflow: "hidden",
+                cursor: "pointer",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-2px)";
@@ -136,24 +138,22 @@ const LeaguesList: React.FC = () => {
                   }}
                 >
                   <div
-                    onClick={() => navigate(`/leagues?id=${league.id}`)}
                     style={{
                       fontWeight: 600,
                       fontSize: "1.25rem",
                       color: COLORS.text.primary,
-                      cursor: "pointer",
                       flex: 1,
                     }}
                   >
                     {league.name}
                   </div>
-                  <AuthAware roles={["org:league_admin"]}>
+                  <AuthAware roles={["League Admin", "Admin"]}>
                     <div onClick={(e) => e.stopPropagation()}>
                       <EditLeague league={league} />
                     </div>
                   </AuthAware>
                 </div>
-                <AuthAware roles={["org:league_admin"]}>
+                <AuthAware roles={["League Admin", "Admin"]}>
                   <div onClick={(e) => e.stopPropagation()}>
                     <EditLeague league={league} renderFormOnly />
                   </div>

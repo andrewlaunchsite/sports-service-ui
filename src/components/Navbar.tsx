@@ -1,11 +1,13 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth, SignInButton, UserButton } from "@clerk/clerk-react";
+import { useAuth0 } from "@auth0/auth0-react";
 import { ROUTES } from "../config/constants";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
-  const { isSignedIn } = useAuth();
+  const { isAuthenticated, isLoading, loginWithRedirect, logout } = useAuth0();
+
+  if (isLoading) return null;
 
   const getLinkStyle = (path: string) => ({
     textDecoration: "none" as const,
@@ -28,7 +30,7 @@ const Navbar: React.FC = () => {
       }}
     >
       <div style={{ display: "flex", alignItems: "center" }}>
-        {isSignedIn ? (
+        {isAuthenticated ? (
           <>
             <Link to={ROUTES.HOME} style={getLinkStyle(ROUTES.HOME)}>
               Home
@@ -55,7 +57,30 @@ const Navbar: React.FC = () => {
           </Link>
         )}
       </div>
-      <div>{!isSignedIn ? <SignInButton mode="modal" /> : <UserButton />}</div>
+
+      <div>
+        {!isAuthenticated ? (
+          <button
+            onClick={() =>
+              loginWithRedirect({
+                appState: { returnTo: ROUTES.HOME },
+              })
+            }
+          >
+            Sign in
+          </button>
+        ) : (
+          <button
+            onClick={() =>
+              logout({
+                logoutParams: { returnTo: window.location.origin },
+              })
+            }
+          >
+            Sign out
+          </button>
+        )}
+      </div>
     </nav>
   );
 };

@@ -27,9 +27,11 @@ const Team: React.FC = () => {
   const { team, loadingState: teamLoadingState } = useSelector(
     (state: RootState) => state.team
   );
-  const { league, leagues, loadingState: leagueLoadingState } = useSelector(
-    (state: RootState) => state.league
-  );
+  const {
+    league,
+    leagues,
+    loadingState: leagueLoadingState,
+  } = useSelector((state: RootState) => state.league);
   const { myPlayer, loadingState: playerLoadingState } = useSelector(
     (state: RootState) => state.player
   );
@@ -62,7 +64,11 @@ const Team: React.FC = () => {
   }, [teamId, playerLoadingState.loadingMyPlayer, dispatch]);
 
   useEffect(() => {
-    if (!teamId && !hasFetchedLeagues.current && !leagueLoadingState.loadingLeagues) {
+    if (
+      !teamId &&
+      !hasFetchedLeagues.current &&
+      !leagueLoadingState.loadingLeagues
+    ) {
       hasFetchedLeagues.current = true;
       dispatch(getLeagues({ offset: 0, limit: 10 }) as any);
     }
@@ -135,7 +141,7 @@ const Team: React.FC = () => {
             Teams
           </h1>
           {leagueIdForCreateTeam && (
-            <AuthAware roles={["org:league_admin", "org:team_admin"]}>
+            <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
               <div
                 style={{
                   backgroundColor: COLORS.background.default,
@@ -496,10 +502,11 @@ const Team: React.FC = () => {
             ) : !myPlayer ? (
               <AuthAware
                 roles={[
-                  "org:league_admin",
-                  "org:team_admin",
-                  "org:team_manager",
-                  "org:player",
+                  "League Admin",
+                  "Team Admin",
+                  "Team Manager",
+                  "Player",
+                  "Admin",
                 ]}
               >
                 <div
@@ -570,7 +577,7 @@ const Team: React.FC = () => {
             ) : null}
 
             <AuthAware
-              roles={["org:league_admin", "org:team_admin", "org:team_manager"]}
+              roles={["League Admin", "Team Admin", "Team Manager", "Admin"]}
             >
               <div
                 style={{
@@ -634,7 +641,7 @@ const Team: React.FC = () => {
               </div>
             </AuthAware>
 
-            <AuthAware roles={["org:league_admin", "org:team_admin"]}>
+            <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
               <div
                 style={{
                   backgroundColor: COLORS.background.default,
@@ -692,10 +699,7 @@ const Team: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ marginTop: "auto" }}>
-                  <InviteUser
-                    defaultRole="org:player"
-                    buttonText="Invite Player"
-                  />
+                  <InviteUser defaultRole="Player" buttonText="Invite Player" />
                 </div>
               </div>
             </AuthAware>

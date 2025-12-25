@@ -1,30 +1,44 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
-import { ClerkProvider } from "@clerk/clerk-react";
 import { store } from "./models/store";
 import App from "./App";
 import { ApiAuthProvider } from "./auth/ApiAuthProvider";
 
-const PUBLISHABLE_KEY = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
+import { BrowserRouter } from "react-router-dom";
+import Auth0ProviderWithNavigate from "./auth/Auth0ProviderWithNavigate";
+import { AUTH0_CONFIG } from "./config/constants";
 
-if (!PUBLISHABLE_KEY) {
+if (!AUTH0_CONFIG.domain) {
   throw new Error(
-    "Missing Publishable Key. Add REACT_APP_CLERK_PUBLISHABLE_KEY to your .env file"
+    "Missing Auth0 issuer. Add REACT_APP_AUTH0_JWT_ISSUER to your .env file"
+  );
+}
+if (!AUTH0_CONFIG.clientId) {
+  throw new Error(
+    "Missing Auth0 client id. Add REACT_APP_AUTH0_CLIENT_ID to your .env file"
+  );
+}
+if (!AUTH0_CONFIG.audience) {
+  console.warn(
+    "Missing Auth0 audience. Add REACT_APP_AUTH0_JWT_AUDIENCE to your .env file"
   );
 }
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
+
 root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
-      <ApiAuthProvider>
-        <Provider store={store}>
-          <App />
-        </Provider>
-      </ApiAuthProvider>
-    </ClerkProvider>
+    <BrowserRouter>
+      <Auth0ProviderWithNavigate>
+        <ApiAuthProvider>
+          <Provider store={store}>
+            <App />
+          </Provider>
+        </ApiAuthProvider>
+      </Auth0ProviderWithNavigate>
+    </BrowserRouter>
   </React.StrictMode>
 );

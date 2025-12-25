@@ -79,7 +79,7 @@ const League: React.FC = () => {
             Leagues
           </h1>
           {!existingLeague && (
-            <AuthAware roles={["org:league_admin"]}>
+            <AuthAware roles={["League Admin", "Admin"]}>
               <div
                 style={{
                   backgroundColor: COLORS.background.default,
@@ -261,11 +261,11 @@ const League: React.FC = () => {
                     Manage your league information
                   </p>
                 </div>
-                <AuthAware roles={["org:league_admin"]}>
+                <AuthAware roles={["League Admin", "Admin"]}>
                   <EditLeague league={league} />
                 </AuthAware>
               </div>
-              <AuthAware roles={["org:league_admin"]}>
+              <AuthAware roles={["League Admin", "Admin"]}>
                 <EditLeague league={league} renderFormOnly />
               </AuthAware>
               {league.logoUrl && (
@@ -290,7 +290,7 @@ const League: React.FC = () => {
             </div>
           </div>
 
-          <AuthAware roles={["org:league_admin", "org:team_admin"]}>
+          <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
             <div
               style={{
                 backgroundColor: COLORS.background.default,

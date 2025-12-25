@@ -821,7 +821,7 @@ const Game: React.FC = () => {
       >
         <div
           style={{
-            maxWidth: "1400px",
+            maxWidth: "1600px",
             margin: "0 auto",
             display: "flex",
             flexDirection: "column",
@@ -868,6 +868,9 @@ const Game: React.FC = () => {
               padding: "1rem",
               border: `1px solid ${COLORS.border.default}`,
               boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
             }}
           >
             <div
@@ -1075,6 +1078,7 @@ const Game: React.FC = () => {
                 style={{
                   display: "flex",
                   gap: "1rem",
+                  width: "100%",
                 }}
               >
                 <div
@@ -1089,6 +1093,7 @@ const Game: React.FC = () => {
                     display: "flex",
                     flexDirection: "column",
                     gap: "1rem",
+                    width: "50%",
                   }}
                 >
                   <div
@@ -1232,6 +1237,7 @@ const Game: React.FC = () => {
                     display: "flex",
                     flexDirection: "column",
                     gap: "1rem",
+                    width: "50%",
                   }}
                 >
                   <div
@@ -1373,6 +1379,7 @@ const Game: React.FC = () => {
               <div
                 style={{
                   display: "flex",
+                  width: "100%",
                   gap: "1rem",
                 }}
               >
@@ -1385,9 +1392,9 @@ const Game: React.FC = () => {
                     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                     flex: "1",
                     boxSizing: "border-box",
-                    display: "flex",
                     flexDirection: "column",
                     gap: "1rem",
+                    width: "50%",
                   }}
                 >
                   <h2
@@ -2421,11 +2428,11 @@ const Game: React.FC = () => {
                     padding: "1rem",
                     border: `1px solid ${COLORS.border.default}`,
                     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                    flex: "1",
                     boxSizing: "border-box",
                     display: "flex",
                     flexDirection: "column",
                     gap: "1rem",
+                    width: "50%",
                   }}
                 >
                   <h2
@@ -3655,7 +3662,7 @@ const Game: React.FC = () => {
     >
       <div
         style={{
-          maxWidth: "1400px",
+          maxWidth: "1600px",
           margin: "0 auto",
           display: "flex",
           flexDirection: "column",

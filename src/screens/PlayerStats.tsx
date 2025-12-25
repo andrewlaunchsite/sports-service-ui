@@ -189,7 +189,8 @@ const aggregatePlayerStats = (
         number: player.playerNumber || player.id,
         team: team?.name || "Unknown",
         position: player.primaryPosition || "N/A",
-        stats: {
+        pictureUrl: player.pictureUrl,
+    stats: {
           gamesPlayed,
           points: avgPoints,
           rebounds: avgRebounds,
@@ -352,6 +353,43 @@ const PlayerStats: React.FC = () => {
                 borderBottom: `1px solid ${COLORS.border.light}`,
               }}
             >
+              <div style={{ position: "relative" }}>
+                {(selectedPlayer as any).pictureUrl ? (
+                  <>
+                    <img
+                      src={(selectedPlayer as any).pictureUrl}
+                      alt={selectedPlayer.name}
+                      style={{
+                        width: "120px",
+                        height: "120px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        border: `4px solid ${COLORS.primary}`,
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "0",
+                        right: "0",
+                        backgroundColor: COLORS.primary,
+                        color: "white",
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "1.1rem",
+                        fontWeight: 700,
+                        border: "3.5px solid white",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                      }}
+                    >
+                      {selectedPlayer.number}
+                    </div>
+                  </>
+                ) : (
               <div
                 style={{
                   width: "120px",
@@ -364,9 +402,12 @@ const PlayerStats: React.FC = () => {
                   color: "white",
                   fontSize: "3rem",
                   fontWeight: 700,
+                      border: `4px solid ${COLORS.primary}`,
                 }}
               >
                 #{selectedPlayer.number}
+                  </div>
+                )}
               </div>
               <div>
                 <h1
@@ -882,6 +923,43 @@ const PlayerStats: React.FC = () => {
           marginBottom: "1.25rem",
         }}
       >
+        <div style={{ position: "relative" }}>
+          {(player as any).pictureUrl ? (
+            <>
+              <img
+                src={(player as any).pictureUrl}
+                alt={player.name}
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: `2px solid ${COLORS.primary}`,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "-2px",
+                  right: "-2px",
+                  backgroundColor: COLORS.primary,
+                  color: "white",
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  border: "1.5px solid white",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                }}
+              >
+                {player.number}
+              </div>
+            </>
+          ) : (
         <div
           style={{
             width: "60px",
@@ -897,6 +975,8 @@ const PlayerStats: React.FC = () => {
           }}
         >
           #{player.number}
+            </div>
+          )}
         </div>
         <div>
           <div
@@ -1383,6 +1463,43 @@ const PlayerStats: React.FC = () => {
                                   gap: "0.75rem",
                                 }}
                               >
+                                <div style={{ position: "relative" }}>
+                                  {(player as any).pictureUrl ? (
+                                    <>
+                                      <img
+                                        src={(player as any).pictureUrl}
+                                        alt={player.name}
+                                        style={{
+                                          width: "40px",
+                                          height: "40px",
+                                          borderRadius: "50%",
+                                          objectFit: "cover",
+                                          border: `2px solid ${COLORS.primary}`,
+                                        }}
+                                      />
+                                      <div
+                                        style={{
+                                          position: "absolute",
+                                          bottom: "-2px",
+                                          right: "-2px",
+                                          backgroundColor: COLORS.primary,
+                                          color: "white",
+                                          width: "16px",
+                                          height: "16px",
+                                          borderRadius: "50%",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          fontSize: "0.5rem",
+                                          fontWeight: 700,
+                                          border: "1px solid white",
+                                          boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
+                                        }}
+                                      >
+                                        {player.number}
+                                      </div>
+                                    </>
+                                  ) : (
                                 <div
                                   style={{
                                     width: "40px",
@@ -1399,6 +1516,8 @@ const PlayerStats: React.FC = () => {
                                   }}
                                 >
                                   #{player.number}
+                                    </div>
+                                  )}
                                 </div>
                                 <div>
                                   <div

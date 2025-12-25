@@ -52,6 +52,7 @@ interface PlayerWithStats {
     freeThrowsMade: number;
     freeThrowsAttempted: number;
   };
+  pictureUrl?: string;
 }
 
 const Game: React.FC = () => {
@@ -318,6 +319,7 @@ const Game: React.FC = () => {
             "N/A"
           : player.primaryPosition || "N/A",
         onCourt: isOnCourt,
+        pictureUrl: player.pictureUrl,
         stats: {
           points: stats.points || 0,
           rebounds: stats.rebounds || 0,
@@ -1124,21 +1126,75 @@ const Game: React.FC = () => {
                           flex: "1 1 calc(20% - 0.4rem)",
                           minWidth: "100px",
                           boxSizing: "border-box",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: "0.5rem",
                         }}
                       >
-                        <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
-                          #{player.number}
+                        <div style={{ position: "relative" }}>
+                          {player.pictureUrl ? (
+                            <>
+                              <img
+                                src={player.pictureUrl}
+                                alt={player.name}
+                                style={{
+                                  width: "50px",
+                                  height: "50px",
+                                  borderRadius: "50%",
+                                  objectFit: "cover",
+                                  border: `2px solid ${COLORS.primary}`,
+                                }}
+                              />
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  bottom: "-2px",
+                                  right: "-2px",
+                                  backgroundColor: COLORS.primary,
+                                  color: "white",
+                                  width: "20px",
+                                  height: "20px",
+                                  borderRadius: "50%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: "0.65rem",
+                                  fontWeight: 700,
+                                  border: "1.5px solid white",
+                                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                                }}
+                              >
+                                {player.number}
+                              </div>
+                            </>
+                          ) : (
+                            <div
+                              style={{
+                                width: "50px",
+                                height: "50px",
+                                borderRadius: "50%",
+                                backgroundColor: COLORS.primary,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "white",
+                                fontSize: "1.25rem",
+                                fontWeight: 700,
+                                border: `2px solid ${COLORS.primary}`,
+                              }}
+                            >
+                              #{player.number}
+                            </div>
+                          )}
                         </div>
-                        <div
-                          style={{ fontSize: "0.75rem", marginTop: "0.25rem" }}
-                        >
+                        <div style={{ fontSize: "0.75rem", fontWeight: 600 }}>
                           {player.name.split(" ")[0]}
                         </div>
                         <div
                           style={{
                             fontSize: "0.7rem",
                             color: "#6c757d",
-                            marginTop: "0.25rem",
                           }}
                         >
                           {player.position}
@@ -1213,21 +1269,72 @@ const Game: React.FC = () => {
                           flex: "1 1 calc(20% - 0.4rem)",
                           minWidth: "100px",
                           boxSizing: "border-box",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: "0.5rem",
                         }}
                       >
-                        <div
-                          style={{
-                            fontWeight: 600,
-                            fontSize: "1.1rem",
-                            color: COLORS.text.primary,
-                          }}
-                        >
-                          #{player.number}
+                        <div style={{ position: "relative" }}>
+                          {player.pictureUrl ? (
+                            <>
+                              <img
+                                src={player.pictureUrl}
+                                alt={player.name}
+                                style={{
+                                  width: "50px",
+                                  height: "50px",
+                                  borderRadius: "50%",
+                                  objectFit: "cover",
+                                  border: `2px solid ${COLORS.danger}`,
+                                }}
+                              />
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  bottom: "-2px",
+                                  right: "-2px",
+                                  backgroundColor: COLORS.danger,
+                                  color: "white",
+                                  width: "20px",
+                                  height: "20px",
+                                  borderRadius: "50%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: "0.65rem",
+                                  fontWeight: 700,
+                                  border: "1.5px solid white",
+                                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                                }}
+                              >
+                                {player.number}
+                              </div>
+                            </>
+                          ) : (
+                            <div
+                              style={{
+                                width: "50px",
+                                height: "50px",
+                                borderRadius: "50%",
+                                backgroundColor: COLORS.danger,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "white",
+                                fontSize: "1.25rem",
+                                fontWeight: 700,
+                                border: `2px solid ${COLORS.danger}`,
+                              }}
+                            >
+                              #{player.number}
+                            </div>
+                          )}
                         </div>
                         <div
                           style={{
                             fontSize: "0.75rem",
-                            marginTop: "0.25rem",
+                            fontWeight: 600,
                             color: COLORS.text.primary,
                           }}
                         >
@@ -1237,7 +1344,6 @@ const Game: React.FC = () => {
                           style={{
                             fontSize: "0.7rem",
                             color: COLORS.text.secondary,
-                            marginTop: "0.25rem",
                           }}
                         >
                           {player.position}
@@ -1405,7 +1511,45 @@ const Game: React.FC = () => {
                                 {player.number}
                               </td>
                               <td style={{ padding: "0.5rem" }}>
-                                {player.name}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.75rem",
+                                  }}
+                                >
+                                  {player.pictureUrl ? (
+                                    <img
+                                      src={player.pictureUrl}
+                                      alt={player.name}
+                                      style={{
+                                        width: "32px",
+                                        height: "32px",
+                                        borderRadius: "50%",
+                                        objectFit: "cover",
+                                        border: `1px solid ${COLORS.border.default}`,
+                                      }}
+                                    />
+                                  ) : (
+                                    <div
+                                      style={{
+                                        width: "32px",
+                                        height: "32px",
+                                        borderRadius: "50%",
+                                        backgroundColor: "#f8f9fa",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontSize: "0.8rem",
+                                        border: `1px solid ${COLORS.border.default}`,
+                                        color: COLORS.text.secondary,
+                                      }}
+                                    >
+                                      👤
+                                    </div>
+                                  )}
+                                  <span>{player.name}</span>
+                                </div>
                               </td>
                               <td
                                 style={{
@@ -2405,7 +2549,45 @@ const Game: React.FC = () => {
                                 {player.number}
                               </td>
                               <td style={{ padding: "0.5rem" }}>
-                                {player.name}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.75rem",
+                                  }}
+                                >
+                                  {player.pictureUrl ? (
+                                    <img
+                                      src={player.pictureUrl}
+                                      alt={player.name}
+                                      style={{
+                                        width: "32px",
+                                        height: "32px",
+                                        borderRadius: "50%",
+                                        objectFit: "cover",
+                                        border: `1px solid ${COLORS.border.default}`,
+                                      }}
+                                    />
+                                  ) : (
+                                    <div
+                                      style={{
+                                        width: "32px",
+                                        height: "32px",
+                                        borderRadius: "50%",
+                                        backgroundColor: "#f8f9fa",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontSize: "0.8rem",
+                                        border: `1px solid ${COLORS.border.default}`,
+                                        color: COLORS.text.secondary,
+                                      }}
+                                    >
+                                      👤
+                                    </div>
+                                  )}
+                                  <span>{player.name}</span>
+                                </div>
                               </td>
                               <td
                                 style={{

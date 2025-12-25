@@ -295,9 +295,7 @@ const Home: React.FC = () => {
                     "0 2px 4px rgba(0,0,0,0.05)";
                 }}
                 onClick={() => {
-                  if (myPlayer.teamId) {
-                    navigate(`${ROUTES.TEAMS}?id=${myPlayer.teamId}`);
-                  }
+                  navigate(`${ROUTES.PLAYER_STATS}?id=${myPlayer.id}`);
                 }}
               >
                 <div
@@ -357,39 +355,67 @@ const Home: React.FC = () => {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "1rem",
+                      gap: "1.25rem",
                     }}
                   >
-                    {(myPlayer as any).pictureUrl ? (
-                      <img
-                        src={(myPlayer as any).pictureUrl}
-                        alt={(myPlayer as any).displayName || myPlayer.name}
-                        style={{
-                          width: "60px",
-                          height: "60px",
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                          border: "2px solid #007bff",
-                        }}
-                      />
-                    ) : (myPlayer as any).playerNumber ? (
-                      <div
-                        style={{
-                          width: "50px",
-                          height: "50px",
-                          borderRadius: "50%",
-                          backgroundColor: "#007bff",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "white",
-                          fontSize: "1.25rem",
-                          fontWeight: 700,
-                        }}
-                      >
-                        #{(myPlayer as any).playerNumber}
-                      </div>
-                    ) : null}
+                    <div style={{ position: "relative" }}>
+                      {(myPlayer as any).pictureUrl ? (
+                        <>
+                          <img
+                            src={(myPlayer as any).pictureUrl}
+                            alt={(myPlayer as any).displayName || myPlayer.name}
+                            style={{
+                              width: "70px",
+                              height: "70px",
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                              border: "3px solid #007bff",
+                            }}
+                          />
+                          {(myPlayer as any).playerNumber && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                bottom: "-2px",
+                                right: "-2px",
+                                backgroundColor: "#007bff",
+                                color: "white",
+                                width: "24px",
+                                height: "24px",
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "0.75rem",
+                                fontWeight: 700,
+                                border: "2px solid white",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                              }}
+                            >
+                              {(myPlayer as any).playerNumber}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div
+                          style={{
+                            width: "70px",
+                            height: "70px",
+                            borderRadius: "50%",
+                            backgroundColor: "#007bff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "white",
+                            fontSize: "1.5rem",
+                            fontWeight: 700,
+                            border: "2px solid #007bff",
+                          }}
+                        >
+                          #{(myPlayer as any).playerNumber || "?"}
+                        </div>
+                      )}
+                    </div>
                     <div style={{ flex: 1 }}>
                       <div
                         style={{

@@ -1,7 +1,10 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { getPlayersByTeam } from "../models/playerSlice";
 import { AppDispatch, RootState } from "../models/store";
+import { COLORS } from "../config/styles";
+import { ROUTES } from "../config/constants";
 import Loading from "./Loading";
 
 interface PlayersListProps {
@@ -10,7 +13,8 @@ interface PlayersListProps {
 
 const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { players, loadingState } = useSelector(
+  const navigate = useNavigate();
+  const { players, loadingState, error } = useSelector(
     (state: RootState) => state.player
   );
 
@@ -20,7 +24,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
     }
   }, [teamId, dispatch]);
 
-  if (loadingState.loadingByTeam && players.length === 0) {
+  if (loadingState.loadingByTeam) {
     return (
       <div style={{ textAlign: "center", padding: "2rem" }}>
         <Loading />
@@ -28,10 +32,22 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
     );
   }
 
+  if (error) {
+    return (
+      <div
+        style={{ textAlign: "center", padding: "2rem", color: COLORS.danger }}
+      >
+        <div>Error loading players: {error}</div>
+      </div>
+    );
+  }
+
   if (players.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "2rem" }}>
-        <div>No players found for this team.</div>
+        <div style={{ color: COLORS.text.secondary }}>
+          No players found for this team.
+        </div>
       </div>
     );
   }
@@ -104,6 +120,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
           return (
             <div
               key={player.id}
+              onClick={() => navigate(`${ROUTES.PLAYER_STATS}?id=${player.id}`)}
               style={{
                 backgroundColor: "white",
                 borderRadius: "8px",
@@ -130,38 +147,72 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                   textAlign: "center",
                 }}
               >
-                {(player as any).pictureUrl ? (
-                  <img
-                    src={(player as any).pictureUrl}
-                    alt={displayName || player.name}
-                    style={{
-                      width: "80px",
-                      height: "80px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      marginBottom: "0.75rem",
-                      border: "2px solid #007bff",
-                    }}
-                  />
-                ) : playerNumber ? (
-                  <div
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "50%",
-                      backgroundColor: "#007bff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "white",
-                      fontSize: "1.5rem",
-                      fontWeight: 700,
-                      marginBottom: "0.75rem",
-                    }}
-                  >
-                    #{playerNumber}
-                  </div>
-                ) : null}
+                <div
+                  style={{
+                    position: "relative",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  {(player as any).pictureUrl ? (
+                    <>
+                      <img
+                        src={(player as any).pictureUrl}
+                        alt={displayName || player.name}
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: `3px solid ${COLORS.primary}`,
+                          backgroundColor: "#f8f9fa",
+                        }}
+                      />
+                      {playerNumber && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: "-5px",
+                            right: "-5px",
+                            backgroundColor: COLORS.primary,
+                            color: "white",
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.9rem",
+                            fontWeight: 700,
+                            border: "2px solid white",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                            zIndex: 1,
+                          }}
+                        >
+                          {playerNumber}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div
+                      style={{
+                        width: "100px",
+                        height: "100px",
+                        borderRadius: "50%",
+                        backgroundColor: COLORS.primary,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "white",
+                        fontSize: "2.5rem",
+                        fontWeight: 700,
+                        border: `3px solid ${COLORS.primary}`,
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      #{playerNumber || "?"}
+                    </div>
+                  )}
+                </div>
                 <div
                   style={{
                     fontWeight: 600,

@@ -39,7 +39,6 @@ const Team: React.FC = () => {
     (state: RootState) => state.game
   );
   const { teams } = useSelector((state: RootState) => state.team);
-  const { players } = useSelector((state: RootState) => state.player);
 
   const teamId = searchParams.get("id");
 
@@ -363,6 +362,9 @@ const Team: React.FC = () => {
           >
             {myPlayer && myPlayer.teamId === team.id ? (
               <div
+                onClick={() =>
+                  navigate(`${ROUTES.PLAYER_STATS}?id=${myPlayer.id}`)
+                }
                 style={{
                   backgroundColor: COLORS.background.default,
                   borderRadius: "12px",
@@ -373,6 +375,17 @@ const Team: React.FC = () => {
                   flexDirection: "column",
                   gap: "1rem",
                   minHeight: "200px",
+                  cursor: "pointer",
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 2px 4px rgba(0,0,0,0.05)";
                 }}
               >
                 <div
@@ -422,42 +435,70 @@ const Team: React.FC = () => {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "1rem",
+                    gap: "1.25rem",
                     paddingTop: "1rem",
                     borderTop: `1px solid ${COLORS.border.light}`,
                     marginTop: "auto",
                   }}
                 >
-                  {(myPlayer as any).pictureUrl ? (
-                    <img
-                      src={(myPlayer as any).pictureUrl}
-                      alt={(myPlayer as any).displayName || myPlayer.name}
-                      style={{
-                        width: "60px",
-                        height: "60px",
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        border: `2px solid ${COLORS.primary}`,
-                      }}
-                    />
-                  ) : (myPlayer as any).playerNumber ? (
-                    <div
-                      style={{
-                        width: "50px",
-                        height: "50px",
-                        borderRadius: "50%",
-                        backgroundColor: COLORS.primary,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                        fontSize: "1.25rem",
-                        fontWeight: 700,
-                      }}
-                    >
-                      #{(myPlayer as any).playerNumber}
-                    </div>
-                  ) : null}
+                  <div style={{ position: "relative" }}>
+                    {(myPlayer as any).pictureUrl ? (
+                      <>
+                        <img
+                          src={(myPlayer as any).pictureUrl}
+                          alt={(myPlayer as any).displayName || myPlayer.name}
+                          style={{
+                            width: "70px",
+                            height: "70px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            border: `3px solid ${COLORS.primary}`,
+                          }}
+                        />
+                        {(myPlayer as any).playerNumber && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              bottom: "-2px",
+                              right: "-2px",
+                              backgroundColor: COLORS.primary,
+                              color: "white",
+                              width: "24px",
+                              height: "24px",
+                              borderRadius: "50%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "0.75rem",
+                              fontWeight: 700,
+                              border: "2px solid white",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                            }}
+                          >
+                            {(myPlayer as any).playerNumber}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div
+                        style={{
+                          width: "70px",
+                          height: "70px",
+                          borderRadius: "50%",
+                          backgroundColor: COLORS.primary,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "white",
+                          fontSize: "1.5rem",
+                          fontWeight: 700,
+                          border: `2px solid ${COLORS.primary}`,
+                        }}
+                      >
+                        #{(myPlayer as any).playerNumber || "?"}
+                      </div>
+                    )}
+                  </div>
                   <div style={{ flex: 1 }}>
                     <div
                       style={{
@@ -830,7 +871,7 @@ const Team: React.FC = () => {
         </div>
 
         <div style={{ width: "100%" }}>
-          {players.length > 0 && <PlayersList teamId={team.id} />}
+          <PlayersList teamId={team.id} />
         </div>
       </div>
     </div>

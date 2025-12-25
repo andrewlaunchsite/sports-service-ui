@@ -85,16 +85,20 @@ export const getPlayersByTeam = createAsyncThunk(
   }
 );
 
+const camelToSnake = (str: string) =>
+  str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
 const buildFormData = (data: Record<string, any>): FormData => {
   const formData = new FormData();
   Object.entries(data).forEach(([key, value]) => {
+    const snakeKey = camelToSnake(key);
     if (value !== undefined && value !== null) {
       if (value instanceof File) {
-        formData.append(key, value);
+        formData.append(snakeKey, value);
       } else if (typeof value === "number" || typeof value === "boolean") {
-        formData.append(key, value.toString());
+        formData.append(snakeKey, value.toString());
       } else if (typeof value === "string") {
-        formData.append(key, value);
+        formData.append(snakeKey, value);
       }
     }
   });

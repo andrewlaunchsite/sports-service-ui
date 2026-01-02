@@ -8,10 +8,13 @@ interface Team {
 }
 
 interface Player {
-  name: string;
+  name?: string;
+  displayName?: string;
+  nickname?: string;
   pictureUrl?: string;
   number?: number;
   playerNumber?: number;
+  [key: string]: any;
 }
 
 interface PlayerAvatarProps {
@@ -61,6 +64,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   const badgeFontSize = config.fontSize;
   const borderSize = borderWidth || config.border;
   const playerNumber = player.number || player.playerNumber;
+  const playerName = player.displayName || player.nickname || player.name || "Player";
 
   return (
     <div style={{ position: "relative", display: "inline-block" }}>
@@ -68,7 +72,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
         <>
           <img
             src={player.pictureUrl}
-            alt={player.name}
+            alt={playerName}
             style={{
               width: `${avatarSize}px`,
               height: `${avatarSize}px`,
@@ -118,7 +122,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
             border: `${borderSize}px solid ${primaryColor}`,
           }}
         >
-          {playerNumber ? `#${playerNumber}` : player.name.charAt(0).toUpperCase()}
+          {playerNumber ? `#${playerNumber}` : playerName.charAt(0).toUpperCase()}
         </div>
       )}
     </div>

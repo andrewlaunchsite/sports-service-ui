@@ -14,6 +14,7 @@ import {
   LineupCreate,
   LineupPlayer,
 } from "../models/gameSlice";
+import { getHighlightsByGame, deleteHighlight } from "../models/highlightSlice";
 import { getPlayersByTeam } from "../models/playerSlice";
 import {
   initializePlayerStats,
@@ -26,6 +27,8 @@ import Loading from "../components/Loading";
 import LineupModal from "../components/LineupModal";
 import SubstitutionModal from "../components/SubstitutionModal";
 import GameCard from "../components/GameCard";
+import CreateHighlight from "../components/CreateHighlight";
+import HighlightsGallery from "../components/HighlightsGallery";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
@@ -119,6 +122,9 @@ const Game: React.FC = () => {
   const { stats: gameStats } = useSelector(
     (state: RootState) => state.gameStats
   );
+  const { gameHighlights, loadingState: highlightLoadingState } = useSelector(
+    (state: RootState) => state.highlight
+  );
   const [homeTeamPlayersList, setHomeTeamPlayersList] = useState<any[]>([]);
   const [awayTeamPlayersList, setAwayTeamPlayersList] = useState<any[]>([]);
 
@@ -196,6 +202,14 @@ const Game: React.FC = () => {
       if ((game as any).id) {
         dispatch(
           getGameStats({
+            gameId: (game as any).id,
+            offset: 0,
+            limit: 100,
+          }) as any
+        );
+        // Fetch highlights
+        dispatch(
+          getHighlightsByGame({
             gameId: (game as any).id,
             offset: 0,
             limit: 100,
@@ -3486,6 +3500,111 @@ const Game: React.FC = () => {
               >
                 Lineup not set. Click "Get Started" to set the starting lineup.
               </div>
+            </div>
+          )}
+
+          {/* Highlights Section */}
+          {game && (
+            <div
+              style={{
+                backgroundColor: COLORS.background.default,
+                borderRadius: "12px",
+                padding: "2rem",
+                border: `1px solid ${COLORS.border.default}`,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: "1.5rem",
+                    fontWeight: 600,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  Highlights
+                </h2>
+              </div>
+
+              <div style={{ marginBottom: "2rem" }}>
+                <CreateHighlight
+                  gameId={(game as any).id}
+                  homeTeam={homeTeam || null}
+                  awayTeam={awayTeam || null}
+                  homeTeamPlayers={homeTeamPlayersList}
+                  awayTeamPlayers={awayTeamPlayersList}
+                  currentPeriod={period}
+                  currentClockTimeS={gameTime}
+                  onSuccess={() => {
+                    dispatch(
+                      getHighlightsByGame({
+                        gameId: (game as any).id,
+                        offset: 0,
+                        limit: 100,
+                      }) as any
+                    );
+                  }}
+                />
+              </div>
+
+              {highlightLoadingState.loadingByGame ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "2rem",
+                    color: COLORS.text.secondary,
+                  }}
+                >
+                  Loading highlights...
+                </div>
+              ) : (
+                <HighlightsGallery
+                  highlights={gameHighlights[(game as any).id] || []}
+                  onDelete={(highlightId) => {
+                    dispatch(deleteHighlight(highlightId) as any).then(() => {
+                      dispatch(
+                        getHighlightsByGame({
+                          gameId: (game as any).id,
+                          offset: 0,
+                          limit: 100,
+                        }) as any
+                      );
+                    });
+                  }}
+                  showPlayerNames={true}
+                  players={[
+                    ...homeTeamPlayersList.map((p) => ({
+                      id: p.id,
+                      name:
+                        p.name || (p as any).displayName || `Player ${p.id}`,
+                    })),
+                    ...awayTeamPlayersList.map((p) => ({
+                      id: p.id,
+                      name:
+                        p.name || (p as any).displayName || `Player ${p.id}`,
+                    })),
+                  ]}
+                  playersWithTeams={[
+                    ...homeTeamPlayersList.map((p) => ({
+                      ...p,
+                      teamId: (game as any).homeTeamId,
+                    })),
+                    ...awayTeamPlayersList.map((p) => ({
+                      ...p,
+                      teamId: (game as any).awayTeamId,
+                    })),
+                  ]}
+                  teams={teams}
+                />
+              )}
             </div>
           )}
 

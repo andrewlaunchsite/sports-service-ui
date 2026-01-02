@@ -21,8 +21,10 @@ import { getGames } from "../models/gameSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import PlayerAvatar from "../components/PlayerAvatar";
+import HighlightsGallery from "../components/HighlightsGallery";
 import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import { getHighlightsByPlayer } from "../models/highlightSlice";
 
 interface Player {
   id: number;
@@ -127,9 +129,7 @@ const aggregatePlayerStats = (
     const game = games.find((g) => g.id === stat.gameId);
     if (game) {
       const opponentTeamId =
-        game.homeTeamId === stat.teamId
-          ? game.awayTeamId
-          : game.homeTeamId;
+        game.homeTeamId === stat.teamId ? game.awayTeamId : game.homeTeamId;
       const opponentTeam = teams.find((t) => t.id === opponentTeamId);
       playerStat.gameStats.push({
         gameId: stat.gameId,
@@ -148,7 +148,8 @@ const aggregatePlayerStats = (
     .map((player) => {
       const aggregated = playerStatsMap[player.id];
       const gamesPlayed = aggregated.gamesPlayed.size;
-      const avgPoints = gamesPlayed > 0 ? aggregated.totalPoints / gamesPlayed : 0;
+      const avgPoints =
+        gamesPlayed > 0 ? aggregated.totalPoints / gamesPlayed : 0;
       const avgRebounds =
         gamesPlayed > 0 ? aggregated.totalRebounds / gamesPlayed : 0;
       const avgAssists =
@@ -191,7 +192,7 @@ const aggregatePlayerStats = (
         team: team?.name || "Unknown",
         position: player.primaryPosition || "N/A",
         pictureUrl: player.pictureUrl,
-    stats: {
+        stats: {
           gamesPlayed,
           points: avgPoints,
           rebounds: avgRebounds,
@@ -202,7 +203,7 @@ const aggregatePlayerStats = (
           fieldGoalPercentage,
           threePointPercentage,
           freeThrowPercentage,
-    },
+        },
         gameStats: aggregated.gameStats,
       };
     });
@@ -212,9 +213,11 @@ const PlayerStats: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const hasFetchedMyPlayer = useRef(false);
-  const { myPlayer, players, loadingState: playerLoadingState } = useSelector(
-    (state: RootState) => state.player
-  );
+  const {
+    myPlayer,
+    players,
+    loadingState: playerLoadingState,
+  } = useSelector((state: RootState) => state.player);
   const { teams, loadingState: teamLoadingState } = useSelector(
     (state: RootState) => state.team
   );
@@ -222,11 +225,17 @@ const PlayerStats: React.FC = () => {
   const { stats: gameStats } = useSelector(
     (state: RootState) => state.gameStats
   );
+  const { playerHighlights, loadingState: highlightLoadingState } = useSelector(
+    (state: RootState) => state.highlight
+  );
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<
     "points" | "rebounds" | "assists" | "fieldGoalPercentage"
   >("points");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [selectedGameFilter, setSelectedGameFilter] = useState<number | "all">(
+    "all"
+  );
 
   const playerId = searchParams.get("id");
 
@@ -269,6 +278,11 @@ const PlayerStats: React.FC = () => {
     ? playersWithStats.find((p) => p.id === parseInt(playerId, 10))
     : null;
 
+  // Reset game filter when player changes
+  useEffect(() => {
+    setSelectedGameFilter("all");
+  }, [selectedPlayer?.id]);
+
   // Helper to get team for a player
   const getPlayerTeam = (player: any) => {
     const playerFromRedux = players.find((p) => p.id === player.id);
@@ -282,6 +296,20 @@ const PlayerStats: React.FC = () => {
   };
 
   const myPlayerStats = getMyPlayerStats();
+
+  // Fetch highlights when a player is selected or game filter changes
+  useEffect(() => {
+    if (selectedPlayer) {
+      dispatch(
+        getHighlightsByPlayer({
+          playerId: selectedPlayer.id,
+          offset: 0,
+          limit: 100,
+          gameId: selectedGameFilter === "all" ? undefined : selectedGameFilter,
+        }) as any
+      );
+    }
+  }, [selectedPlayer?.id, selectedGameFilter, dispatch]);
 
   if (selectedPlayer) {
     const chartData = selectedPlayer.gameStats.map((game) => ({
@@ -782,6 +810,135 @@ const PlayerStats: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* Highlights Section */}
+            <div
+              style={{
+                backgroundColor: COLORS.background.light,
+                padding: "1.5rem",
+                borderRadius: "12px",
+                border: `1px solid ${COLORS.border.default}`,
+                marginTop: "2rem",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "1.5rem",
+                  flexWrap: "wrap",
+                  gap: "1rem",
+                }}
+              >
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: "1.5rem",
+                    fontWeight: 600,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  Highlights
+                </h2>
+                {(playerHighlights[selectedPlayer.id] || []).length > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    <FilterListIcon
+                      style={{
+                        fontSize: "1.25rem",
+                        color: COLORS.text.secondary,
+                      }}
+                    />
+                    <FormControl style={{ minWidth: "200px" }}>
+                      <InputLabel
+                        id="game-filter-label"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        Filter by Game
+                      </InputLabel>
+                      <Select
+                        labelId="game-filter-label"
+                        value={selectedGameFilter}
+                        onChange={(e) =>
+                          setSelectedGameFilter(
+                            e.target.value === "all"
+                              ? "all"
+                              : (e.target.value as number)
+                          )
+                        }
+                        label="Filter by Game"
+                        style={{
+                          backgroundColor: COLORS.background.default,
+                          color: COLORS.text.primary,
+                        }}
+                      >
+                        <MenuItem value="all">All Games</MenuItem>
+                        {games
+                          .filter((game) => {
+                            // Only show games that have highlights for this player
+                            const highlights =
+                              playerHighlights[selectedPlayer.id] || [];
+                            return highlights.some((h) => h.gameId === game.id);
+                          })
+                          .sort((a, b) => {
+                            // Sort by date, most recent first
+                            const dateA = new Date(
+                              (a as any).startTime || 0
+                            ).getTime();
+                            const dateB = new Date(
+                              (b as any).startTime || 0
+                            ).getTime();
+                            return dateB - dateA;
+                          })
+                          .map((game) => {
+                            const homeTeam = teams.find(
+                              (t) => t.id === (game as any).homeTeamId
+                            );
+                            const awayTeam = teams.find(
+                              (t) => t.id === (game as any).awayTeamId
+                            );
+                            const homeTeamName = homeTeam?.name || "Home";
+                            const awayTeamName = awayTeam?.name || "Away";
+                            const gameDate = (game as any).startTime
+                              ? new Date(
+                                  (game as any).startTime
+                                ).toLocaleDateString()
+                              : "";
+                            return (
+                              <MenuItem key={game.id} value={game.id}>
+                                {homeTeamName} vs {awayTeamName}{" "}
+                                {gameDate && `(${gameDate})`}
+                              </MenuItem>
+                            );
+                          })}
+                      </Select>
+                    </FormControl>
+                  </div>
+                )}
+              </div>
+              {highlightLoadingState.loadingByPlayer ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "2rem",
+                    color: COLORS.text.secondary,
+                  }}
+                >
+                  Loading highlights...
+                </div>
+              ) : (
+                <HighlightsGallery
+                  highlights={playerHighlights[selectedPlayer.id] || []}
+                  showPlayerNames={false}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -1330,7 +1487,9 @@ const PlayerStats: React.FC = () => {
                   </thead>
                   <tbody>
                     {sortedPlayers
-                      .filter((p) => !myPlayerStats || p.id !== myPlayerStats.id)
+                      .filter(
+                        (p) => !myPlayerStats || p.id !== myPlayerStats.id
+                      )
                       .map((player, index) => {
                         const rank = index + 1;
                         const isMyPlayer =

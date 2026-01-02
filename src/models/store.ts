@@ -5,6 +5,7 @@ import invitationReducer from "./invitationSlice";
 import leagueReducer from "./leagueSlice";
 import gameReducer from "./gameSlice";
 import gameStatsReducer from "./gameStatsSlice";
+import highlightReducer from "./highlightSlice";
 import { toastListener } from "./toastListener";
 
 export const store = configureStore({
@@ -15,6 +16,7 @@ export const store = configureStore({
     league: leagueReducer,
     game: gameReducer,
     gameStats: gameStatsReducer,
+    highlight: highlightReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().prepend(toastListener.middleware),

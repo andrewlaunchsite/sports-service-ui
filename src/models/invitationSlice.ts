@@ -11,6 +11,7 @@ export interface Invitation {
 export interface InvitationCreate {
   email: string;
   role: string;
+  teamId?: number | null;
 }
 
 export interface InvitationsState {

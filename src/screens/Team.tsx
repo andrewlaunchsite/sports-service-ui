@@ -8,7 +8,6 @@ import { getGamesByTeam } from "../models/gameSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreatePlayer from "../components/CreatePlayer";
-import EditPlayer from "../components/EditPlayer";
 import EditTeam from "../components/EditTeam";
 import CreateGame from "../components/CreateGame";
 import CreateTeam from "../components/CreateTeam";
@@ -17,7 +16,7 @@ import TeamsList from "../components/TeamsList";
 import InviteUser from "../components/InviteUser";
 import AuthAware from "../components/AuthAware";
 import GameCard from "../components/GameCard";
-import PlayerAvatar from "../components/PlayerAvatar";
+import PlayerProfileTile from "../components/PlayerProfileTile";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import { COLORS, TILE_STYLE } from "../config/styles";
 import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
@@ -487,128 +486,7 @@ const Team: React.FC = () => {
               </AuthAware>
             </div>
             {myPlayer && myPlayer.teamId === team.id ? (
-              <div
-                onClick={() =>
-                  navigate(`${ROUTES.PLAYER_STATS}?id=${myPlayer.id}`)
-                }
-                style={{
-                  ...TILE_STYLE,
-                  cursor: "pointer",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow =
-                    "0 2px 4px rgba(0,0,0,0.05)";
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      backgroundColor: "#f3e5f5",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.5rem",
-                    }}
-                  >
-                    👤
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      Your Player Profile
-                    </h3>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.875rem",
-                        color: COLORS.text.secondary,
-                      }}
-                    >
-                      View your player details
-                    </p>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "1.25rem",
-                    paddingTop: "1rem",
-                    borderTop: `1px solid ${COLORS.border.light}`,
-                    marginTop: "auto",
-                  }}
-                >
-                  <PlayerAvatar
-                    player={{
-                      name: (myPlayer as any).displayName || myPlayer.name,
-                      pictureUrl: (myPlayer as any).pictureUrl,
-                      number: (myPlayer as any).playerNumber,
-                    }}
-                    team={team || null}
-                    size={70}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        fontSize: "1.1rem",
-                        color: COLORS.text.primary,
-                        marginBottom: "0.25rem",
-                      }}
-                    >
-                      {(myPlayer as any).displayName || myPlayer.name}
-                    </div>
-                    {(myPlayer as any).nickname &&
-                      (myPlayer as any).nickname !==
-                        ((myPlayer as any).displayName || myPlayer.name) && (
-                        <div
-                          style={{
-                            fontSize: "0.875rem",
-                            color: COLORS.text.secondary,
-                            marginBottom: "0.25rem",
-                          }}
-                        >
-                          "{(myPlayer as any).nickname}"
-                        </div>
-                      )}
-                    {(myPlayer as any).primaryPosition && (
-                      <div
-                        style={{
-                          fontSize: "0.875rem",
-                          color: (team as any)?.primaryColor || COLORS.primary,
-                          fontWeight: 500,
-                        }}
-                      >
-                        {(myPlayer as any).primaryPosition}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <EditPlayer player={myPlayer} />
-                  </div>
-                </div>
-              </div>
+              <PlayerProfileTile player={myPlayer} team={team || null} />
             ) : !myPlayer ? (
               <AuthAware
                 roles={[
@@ -776,7 +654,13 @@ const Team: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ marginTop: "auto" }}>
-                  <InviteUser defaultRole="Player" buttonText="Invite Player" />
+                  <InviteUser
+                    defaultRole="Player"
+                    buttonText="Invite Player"
+                    teamId={team?.id || null}
+                    teams={teams}
+                    requireTeam={true}
+                  />
                 </div>
               </div>
             </AuthAware>

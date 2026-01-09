@@ -17,7 +17,7 @@ import { getTeams } from "../models/teamSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreateTeam from "../components/CreateTeam";
-import PlayerAvatar from "../components/PlayerAvatar";
+import PlayerProfileTile from "../components/PlayerProfileTile";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
@@ -56,8 +56,6 @@ const Home: React.FC = () => {
   const myTeam = myPlayer?.teamId
     ? teams.find((t) => t.id === myPlayer.teamId)
     : null;
-  const primaryColor = (myTeam as any)?.primaryColor || COLORS.primary;
-  const secondaryColor = (myTeam as any)?.secondaryColor || "white";
 
   const existingLeague = leagues.length > 0 ? leagues[0] : null;
 
@@ -65,13 +63,6 @@ const Home: React.FC = () => {
     console.log("user", user);
     if (!user) return "Welcome!";
     return user.given_name || user.name || "Welcome!";
-  };
-
-  const formatHeight = (inches: number) => {
-    if (!inches) return null;
-    const feet = Math.floor(inches / 12);
-    const remainingInches = inches % 12;
-    return `${feet}'${remainingInches}"`;
   };
 
   return (
@@ -285,160 +276,13 @@ const Home: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ marginTop: "auto" }}>
-                  <InviteUser />
+                  <InviteUser teams={teams} requireTeam={false} />
                 </div>
               </div>
             </AuthAware>
 
             {playerLoadingState.loadingMyPlayer ? null : myPlayer ? (
-              <div
-                style={{
-                  ...TILE_STYLE,
-                  cursor: "pointer",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow =
-                    "0 2px 4px rgba(0,0,0,0.05)";
-                }}
-                onClick={() => {
-                  navigate(`${ROUTES.PLAYER_STATS}?id=${myPlayer.id}`);
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      backgroundColor: "#f3e5f5",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.5rem",
-                    }}
-                  >
-                    👤
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        color: "#212529",
-                      }}
-                    >
-                      Your Player Profile
-                    </h3>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.875rem",
-                        color: "#6c757d",
-                      }}
-                    >
-                      View your player details
-                    </p>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.75rem",
-                    paddingTop: "1rem",
-                    borderTop: "1px solid #e9ecef",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "1.25rem",
-                    }}
-                  >
-                    <PlayerAvatar
-                      player={{
-                        name: (myPlayer as any).displayName || myPlayer.name,
-                        pictureUrl: (myPlayer as any).pictureUrl,
-                        number: (myPlayer as any).playerNumber,
-                      }}
-                      team={myTeam || null}
-                      size={70}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          fontWeight: 600,
-                          fontSize: "1.1rem",
-                          color: "#212529",
-                          marginBottom: "0.25rem",
-                        }}
-                      >
-                        {(myPlayer as any).displayName || myPlayer.name}
-                      </div>
-                      {(myPlayer as any).nickname &&
-                        (myPlayer as any).nickname !==
-                          ((myPlayer as any).displayName || myPlayer.name) && (
-                          <div
-                            style={{
-                              fontSize: "0.875rem",
-                              color: "#6c757d",
-                              marginBottom: "0.25rem",
-                            }}
-                          >
-                            "{(myPlayer as any).nickname}"
-                          </div>
-                        )}
-                      {(myPlayer as any).primaryPosition && (
-                        <div
-                          style={{
-                            fontSize: "0.875rem",
-                            color: primaryColor,
-                            fontWeight: 500,
-                          }}
-                        >
-                          {(myPlayer as any).primaryPosition}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "1rem",
-                      fontSize: "0.875rem",
-                      color: "#6c757d",
-                    }}
-                  >
-                    {(myPlayer as any).heightInches && (
-                      <div>
-                        <span style={{ fontWeight: 500 }}>Height: </span>
-                        {formatHeight((myPlayer as any).heightInches)}
-                      </div>
-                    )}
-                    {(myPlayer as any).weightLbs && (
-                      <div>
-                        <span style={{ fontWeight: 500 }}>Weight: </span>
-                        {(myPlayer as any).weightLbs} lbs
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <PlayerProfileTile player={myPlayer} team={myTeam || null} />
             ) : (
               <div
                 style={{

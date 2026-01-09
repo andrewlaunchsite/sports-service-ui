@@ -1,22 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createInvitation } from "../models/invitationSlice";
 import { AppDispatch, RootState } from "../models/store";
 import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
+import {
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
+} from "@mui/material";
+
+interface Team {
+  id: number;
+  name: string;
+  [key: string]: any;
+}
 
 interface FormState {
   email: string;
   role: string;
+  teamId: number | "";
 }
 
 interface InviteUserProps {
   defaultRole?: string;
   buttonText?: string;
+  teamId?: number | null; // Pre-selected team (e.g., from Team page)
+  teams?: Team[]; // Teams list for dropdown
+  requireTeam?: boolean; // Require team selection for Player role
 }
 
 const InviteUser: React.FC<InviteUserProps> = ({
   defaultRole = "Player",
   buttonText = "Invite User",
+  teamId,
+  teams = [],
+  requireTeam = false,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const loadingState = useSelector(
@@ -25,21 +46,54 @@ const InviteUser: React.FC<InviteUserProps> = ({
   const [formState, setFormState] = useState<FormState>({
     email: "",
     role: defaultRole,
+    teamId: teamId || "",
   });
   const [showForm, setShowForm] = useState(false);
 
+  // Update teamId when prop changes
+  useEffect(() => {
+    if (teamId) {
+      setFormState((prev) => ({ ...prev, teamId }));
+    }
+  }, [teamId]);
+
+  // Check if team is required for current role
+  const isTeamRequired = formState.role === "Player" || requireTeam;
+  const hasTeams = teams.length > 0;
+  const canSubmit = !isTeamRequired || (isTeamRequired && formState.teamId !== "");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(createInvitation(formState) as any);
-    setFormState({ email: "", role: defaultRole });
+    if (!canSubmit) return;
+
+    const invitationData: any = {
+      email: formState.email,
+      role: formState.role,
+    };
+
+    // Only include teamId if it's selected
+    if (formState.teamId !== "") {
+      invitationData.teamId = formState.teamId;
+    }
+
+    dispatch(createInvitation(invitationData) as any);
+    setFormState({ email: "", role: defaultRole, teamId: teamId || "" });
     setShowForm(false);
   };
 
-  const handleChange =
-    (field: keyof FormState) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      setFormState((prev) => ({ ...prev, [field]: e.target.value }));
-    };
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormState((prev) => ({ ...prev, email: e.target.value }));
+  };
+
+  const handleSelectChange = (field: "role" | "teamId") => (
+    e: SelectChangeEvent<string | number>
+  ) => {
+    const value = e.target.value;
+    setFormState((prev) => ({
+      ...prev,
+      [field]: field === "teamId" ? (value === "" ? "" : Number(value)) : value,
+    }));
+  };
 
   if (!showForm) {
     return (
@@ -58,96 +112,85 @@ const InviteUser: React.FC<InviteUserProps> = ({
       onSubmit={handleSubmit}
       style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
     >
-      <div>
-        <label
-          htmlFor="email"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          value={formState.email}
-          onChange={handleChange("email")}
-          required
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="role"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Role
-        </label>
-        <select
-          id="role"
+      <TextField
+        label="Email"
+        type="email"
+        value={formState.email}
+        onChange={handleTextChange}
+        required
+        fullWidth
+        variant="outlined"
+      />
+
+      <FormControl fullWidth>
+        <InputLabel id="role-label">Role</InputLabel>
+        <Select
+          labelId="role-label"
           value={formState.role}
-          onChange={handleChange("role")}
+          onChange={handleSelectChange("role")}
+          label="Role"
           required
           style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            backgroundColor: "white",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
+            backgroundColor: COLORS.background.default,
+            color: COLORS.text.primary,
           }}
         >
-          <option value="Admin">Admin</option>
-          <option value="League Admin">League Admin</option>
-          <option value="Team Admin">Team Admin</option>
-          <option value="Team Manager">Team Manager</option>
-          <option value="Player">Player</option>
-        </select>
-      </div>
+          <MenuItem value="Admin">Admin</MenuItem>
+          <MenuItem value="League Admin">League Admin</MenuItem>
+          <MenuItem value="Team Admin">Team Admin</MenuItem>
+          <MenuItem value="Team Manager">Team Manager</MenuItem>
+          <MenuItem value="Player">Player</MenuItem>
+        </Select>
+      </FormControl>
+
+      {isTeamRequired && (
+        <FormControl fullWidth required={isTeamRequired}>
+          <InputLabel id="team-label">Team</InputLabel>
+          <Select
+            labelId="team-label"
+            value={formState.teamId}
+            onChange={handleSelectChange("teamId")}
+            label="Team"
+            required={isTeamRequired}
+            disabled={!hasTeams}
+            style={{
+              backgroundColor: COLORS.background.default,
+              color: COLORS.text.primary,
+            }}
+          >
+            {teams.map((team) => (
+              <MenuItem key={team.id} value={team.id}>
+                {team.name}
+              </MenuItem>
+            ))}
+          </Select>
+          {!hasTeams && (
+            <div
+              style={{
+                marginTop: "0.5rem",
+                fontSize: "0.875rem",
+                color: COLORS.danger,
+              }}
+            >
+              No teams available. Please create a team first.
+            </div>
+          )}
+        </FormControl>
+      )}
+
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <button
           type="submit"
-          disabled={loadingState.loadingCreate}
+          disabled={loadingState.loadingCreate || !canSubmit}
           style={{
             ...BUTTON_STYLES.primaryFull,
-            cursor: loadingState.loadingCreate ? "not-allowed" : "pointer",
-            opacity: loadingState.loadingCreate ? 0.6 : 1,
+            cursor:
+              loadingState.loadingCreate || !canSubmit
+                ? "not-allowed"
+                : "pointer",
+            opacity: loadingState.loadingCreate || !canSubmit ? 0.6 : 1,
           }}
-          {...(loadingState.loadingCreate
+          {...(loadingState.loadingCreate || !canSubmit
             ? {}
             : getButtonHoverStyle("primary"))}
         >
@@ -157,7 +200,7 @@ const InviteUser: React.FC<InviteUserProps> = ({
           type="button"
           onClick={() => {
             setShowForm(false);
-            setFormState({ email: "", role: defaultRole });
+            setFormState({ email: "", role: defaultRole, teamId: teamId || "" });
           }}
           style={BUTTON_STYLES.secondaryFull}
           {...getButtonHoverStyle("secondary")}

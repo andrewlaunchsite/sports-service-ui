@@ -3,9 +3,19 @@ import { useDispatch, useSelector } from "react-redux";
 import { updatePlayer, getMyPlayer } from "../models/playerSlice";
 import { AppDispatch, RootState } from "../models/store";
 import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
+import {
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
+} from "@mui/material";
 
 interface EditPlayerProps {
   player: any;
+  onCancel?: () => void;
+  onSuccess?: () => void;
 }
 
 interface FormState {
@@ -18,21 +28,25 @@ interface FormState {
   picture: File | null;
 }
 
-const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
+const EditPlayer: React.FC<EditPlayerProps> = ({ player, onCancel, onSuccess }) => {
   const dispatch = useDispatch<AppDispatch>();
   const loadingState = useSelector(
     (state: RootState) => state.player.loadingState
   );
-  const [formState, setFormState] = useState<FormState>({
-    nickname: (player as any).nickname || "",
-    playerNumber: (player as any).playerNumber?.toString() || "",
-    heightInches: (player as any).heightInches?.toString() || "",
-    weightLbs: (player as any).weightLbs?.toString() || "",
-    dateOfBirth: (player as any).dateOfBirth || "",
-    primaryPosition: (player as any).primaryPosition || "",
+
+  const initializeFormState = (playerData: any): FormState => ({
+    nickname: playerData?.nickname || "",
+    playerNumber: playerData?.playerNumber?.toString() || "",
+    heightInches: playerData?.heightInches?.toString() || "",
+    weightLbs: playerData?.weightLbs?.toString() || "",
+    dateOfBirth: playerData?.dateOfBirth || "",
+    primaryPosition: playerData?.primaryPosition || "",
     picture: null,
   });
-  const [showForm, setShowForm] = useState(false);
+
+  const [formState, setFormState] = useState<FormState>(() =>
+    initializeFormState(player)
+  );
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
   const picturePreviewRef = useRef<string | null>(null);
 
@@ -55,21 +69,15 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
     };
   }, [formState.picture, player]);
 
+  // Re-initialize form when player changes or component mounts
   useEffect(() => {
     if (player) {
-      setFormState({
-        nickname: (player as any).nickname || "",
-        playerNumber: (player as any).playerNumber?.toString() || "",
-        heightInches: (player as any).heightInches?.toString() || "",
-        weightLbs: (player as any).weightLbs?.toString() || "",
-        dateOfBirth: (player as any).dateOfBirth || "",
-        primaryPosition: (player as any).primaryPosition || "",
-        picture: null,
-      });
+      setFormState(initializeFormState(player));
     }
-  }, [player]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player?.id]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload: any = {};
     if (formState.nickname) payload.nickname = formState.nickname;
@@ -83,13 +91,19 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
     if (formState.primaryPosition)
       payload.primaryPosition = formState.primaryPosition;
     if (formState.picture) payload.picture = formState.picture;
-    dispatch(updatePlayer({ id: player.id, data: payload }) as any);
-    if (picturePreviewRef.current) {
-      URL.revokeObjectURL(picturePreviewRef.current);
-      picturePreviewRef.current = null;
+
+    try {
+      await dispatch(updatePlayer({ id: player.id, data: payload }) as any).unwrap();
+      if (picturePreviewRef.current) {
+        URL.revokeObjectURL(picturePreviewRef.current);
+        picturePreviewRef.current = null;
+      }
+      await dispatch(getMyPlayer() as any).unwrap();
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      // Error handling is done by the thunk and toast listener
+      console.error("Failed to update player:", error);
     }
-    setShowForm(false);
-    dispatch(getMyPlayer() as any);
   };
 
   const isValidImageFile = (file: File): boolean => {
@@ -97,276 +111,125 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
     return validTypes.includes(file.type);
   };
 
-  const handleTextChange =
-    (field: keyof FormState) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      setFormState((prev) => ({ ...prev, [field]: e.target.value }));
-    };
+  const handleTextChange = (field: keyof FormState) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormState((prev) => ({ ...prev, [field]: e.target.value }));
+  };
 
-  const handleFileChange =
-    (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
+    setFormState((prev) => ({ ...prev, primaryPosition: e.target.value }));
+  };
 
-      if (!isValidImageFile(file)) {
-        alert("Please select a valid image file (JPEG, JPG, or PNG)");
-        return;
-      }
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-      setFormState((prev) => ({ ...prev, [field]: file }));
-    };
+    if (!isValidImageFile(file)) {
+      alert("Please select a valid image file (JPEG, JPG, or PNG)");
+      return;
+    }
 
-  if (!showForm) {
-    return (
-      <button
-        onClick={() => setShowForm(true)}
-        style={{
-          ...BUTTON_STYLES.secondary,
-          padding: "0.5rem 0.75rem",
-          fontSize: "0.875rem",
-        }}
-        {...getButtonHoverStyle("secondary")}
-      >
-        ✏️ Edit
-      </button>
-    );
-  }
+    setFormState((prev) => ({ ...prev, picture: file }));
+  };
+
+  const handleCancel = () => {
+    if (picturePreviewRef.current) {
+      URL.revokeObjectURL(picturePreviewRef.current);
+      picturePreviewRef.current = null;
+    }
+    setFormState({
+      nickname: (player as any).nickname || "",
+      playerNumber: (player as any).playerNumber?.toString() || "",
+      heightInches: (player as any).heightInches?.toString() || "",
+      weightLbs: (player as any).weightLbs?.toString() || "",
+      dateOfBirth: (player as any).dateOfBirth || "",
+      primaryPosition: (player as any).primaryPosition || "",
+      picture: null,
+    });
+    setPicturePreview((player as any)?.pictureUrl || null);
+    if (onCancel) onCancel();
+  };
 
   return (
     <form
       onSubmit={handleSubmit}
       style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
     >
-      <div>
-        <label
-          htmlFor="edit-nickname"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Nickname
-        </label>
-        <input
-          id="edit-nickname"
-          type="text"
-          value={formState.nickname}
-          onChange={handleTextChange("nickname")}
-          maxLength={50}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="edit-playerNumber"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Jersey Number (0-99)
-        </label>
-        <input
-          id="edit-playerNumber"
-          type="number"
-          value={formState.playerNumber}
-          onChange={handleTextChange("playerNumber")}
-          min={0}
-          max={99}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="edit-heightInches"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Height (inches, 48-108)
-        </label>
-        <input
-          id="edit-heightInches"
-          type="number"
-          value={formState.heightInches}
-          onChange={handleTextChange("heightInches")}
-          min={48}
-          max={108}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="edit-weightLbs"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Weight (lbs, 100-500)
-        </label>
-        <input
-          id="edit-weightLbs"
-          type="number"
-          value={formState.weightLbs}
-          onChange={handleTextChange("weightLbs")}
-          min={100}
-          max={500}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="edit-dateOfBirth"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Date of Birth
-        </label>
-        <input
-          id="edit-dateOfBirth"
-          type="date"
-          value={formState.dateOfBirth}
-          onChange={handleTextChange("dateOfBirth")}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="edit-primaryPosition"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Primary Position
-        </label>
-        <select
-          id="edit-primaryPosition"
+      <TextField
+        label="Nickname"
+        value={formState.nickname}
+        onChange={handleTextChange("nickname")}
+        inputProps={{ maxLength: 50 }}
+        fullWidth
+        variant="outlined"
+      />
+
+      <TextField
+        label="Jersey Number"
+        type="number"
+        value={formState.playerNumber}
+        onChange={handleTextChange("playerNumber")}
+        inputProps={{ min: 0, max: 99 }}
+        fullWidth
+        variant="outlined"
+        helperText="0-99"
+      />
+
+      <TextField
+        label="Height (inches)"
+        type="number"
+        value={formState.heightInches}
+        onChange={handleTextChange("heightInches")}
+        inputProps={{ min: 48, max: 108 }}
+        fullWidth
+        variant="outlined"
+        helperText="48-108 inches"
+      />
+
+      <TextField
+        label="Weight (lbs)"
+        type="number"
+        value={formState.weightLbs}
+        onChange={handleTextChange("weightLbs")}
+        inputProps={{ min: 100, max: 500 }}
+        fullWidth
+        variant="outlined"
+        helperText="100-500 lbs"
+      />
+
+      <TextField
+        label="Date of Birth"
+        type="date"
+        value={formState.dateOfBirth}
+        onChange={handleTextChange("dateOfBirth")}
+        fullWidth
+        variant="outlined"
+        InputLabelProps={{
+          shrink: true,
+        }}
+      />
+
+      <FormControl fullWidth>
+        <InputLabel id="position-label">Primary Position</InputLabel>
+        <Select
+          labelId="position-label"
           value={formState.primaryPosition}
-          onChange={handleTextChange("primaryPosition")}
+          onChange={handleSelectChange}
+          label="Primary Position"
           style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            backgroundColor: "white",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
+            backgroundColor: COLORS.background.default,
+            color: COLORS.text.primary,
           }}
         >
-          <option value="">Select position</option>
-          <option value="PG">PG - Point Guard</option>
-          <option value="SG">SG - Shooting Guard</option>
-          <option value="SF">SF - Small Forward</option>
-          <option value="PF">PF - Power Forward</option>
-          <option value="C">C - Center</option>
-        </select>
-      </div>
+          <MenuItem value="">Select position</MenuItem>
+          <MenuItem value="PG">PG - Point Guard</MenuItem>
+          <MenuItem value="SG">SG - Shooting Guard</MenuItem>
+          <MenuItem value="SF">SF - Small Forward</MenuItem>
+          <MenuItem value="PF">PF - Power Forward</MenuItem>
+          <MenuItem value="C">C - Center</MenuItem>
+        </Select>
+      </FormControl>
       <div>
         <label
           htmlFor="edit-picture"
@@ -384,7 +247,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
           id="edit-picture"
           type="file"
           accept="image/jpeg,image/jpg,image/png"
-          onChange={handleFileChange("picture")}
+          onChange={handleFileChange}
           style={{
             width: "100%",
             padding: "0.625rem 0.75rem",
@@ -435,23 +298,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player }) => {
         </button>
         <button
           type="button"
-          onClick={() => {
-            if (picturePreviewRef.current) {
-              URL.revokeObjectURL(picturePreviewRef.current);
-              picturePreviewRef.current = null;
-            }
-            setShowForm(false);
-            setFormState({
-              nickname: (player as any).nickname || "",
-              playerNumber: (player as any).playerNumber?.toString() || "",
-              heightInches: (player as any).heightInches?.toString() || "",
-              weightLbs: (player as any).weightLbs?.toString() || "",
-              dateOfBirth: (player as any).dateOfBirth || "",
-              primaryPosition: (player as any).primaryPosition || "",
-              picture: null,
-            });
-            setPicturePreview((player as any)?.pictureUrl || null);
-          }}
+          onClick={handleCancel}
           style={BUTTON_STYLES.secondaryFull}
           {...getButtonHoverStyle("secondary")}
         >

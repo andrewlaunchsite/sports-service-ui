@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
-import { getMyPlayer, getPlayers } from "../models/playerSlice";
+import { getMyPlayer, getPlayers, getPlayer } from "../models/playerSlice";
 import { getTeams } from "../models/teamSlice";
 import { getGames } from "../models/gameSlice";
 import { AppDispatch, RootState } from "../models/store";
@@ -32,6 +32,7 @@ interface Player {
   number: number;
   team: string;
   position: string;
+  pictureUrl?: string;
   stats: {
     gamesPlayed: number;
     points: number;
@@ -216,6 +217,7 @@ const PlayerStats: React.FC = () => {
   const {
     myPlayer,
     players,
+    player,
     loadingState: playerLoadingState,
   } = useSelector((state: RootState) => state.player);
   const { teams, loadingState: teamLoadingState } = useSelector(
@@ -252,6 +254,17 @@ const PlayerStats: React.FC = () => {
     dispatch(getPlayers({ offset: 0, limit: 100 }) as any);
   }, [dispatch]);
 
+  // Fetch individual player if playerId is provided and player not in list
+  useEffect(() => {
+    if (playerId) {
+      const parsedId = parseInt(playerId, 10);
+      const playerExists = players.find((p) => p.id === parsedId);
+      if (!playerExists && !playerLoadingState.loadingPlayer) {
+        dispatch(getPlayer(parsedId) as any);
+      }
+    }
+  }, [playerId, players, playerLoadingState.loadingPlayer, dispatch]);
+
   useEffect(() => {
     if (
       myPlayer &&
@@ -274,8 +287,57 @@ const PlayerStats: React.FC = () => {
     teams
   );
 
+  // Helper to create a player object with zero stats
+  const createPlayerWithZeroStats = (player: any): Player => {
+    const team = teams.find((t) => t.id === player.teamId);
+    return {
+      id: player.id,
+      name:
+        player.displayName ||
+        player.name ||
+        player.nickname ||
+        `Player ${player.id}`,
+      number: player.playerNumber || player.id,
+      team: team?.name || "Unknown",
+      position: player.primaryPosition || "N/A",
+      pictureUrl: player.pictureUrl,
+      stats: {
+        gamesPlayed: 0,
+        points: 0,
+        rebounds: 0,
+        assists: 0,
+        steals: 0,
+        blocks: 0,
+        fouls: 0,
+        fieldGoalPercentage: 0,
+        threePointPercentage: 0,
+        freeThrowPercentage: 0,
+      },
+      gameStats: [],
+    };
+  };
+
+  // Determine selected player - check playersWithStats first, then players array, then single player
   const selectedPlayer = playerId
-    ? playersWithStats.find((p) => p.id === parseInt(playerId, 10))
+    ? (() => {
+        const parsedId = parseInt(playerId, 10);
+        // First check if player has stats
+        const playerWithStats = playersWithStats.find((p) => p.id === parsedId);
+        if (playerWithStats) return playerWithStats;
+
+        // If not found in stats, check if player exists in players array
+        const playerFromRedux = players.find((p) => p.id === parsedId);
+        if (playerFromRedux) {
+          return createPlayerWithZeroStats(playerFromRedux);
+        }
+
+        // If not in players array, check if we just fetched the single player
+        if (player && player.id === parsedId) {
+          return createPlayerWithZeroStats(player);
+        }
+
+        return null;
+      })()
     : null;
 
   // Reset game filter when player changes

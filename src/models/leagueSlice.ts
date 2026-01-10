@@ -13,9 +13,48 @@ export interface LeagueCreate {
   logo?: File | null;
 }
 
+export interface LeaderboardEntry {
+  playerId: number;
+  teamId: number;
+  gamesPlayed: number;
+  points: number;
+  rebounds: number;
+  assists: number;
+  steals: number;
+  blocks: number;
+  fouls: number;
+  fieldGoalsMade: number;
+  fieldGoalsAttempted: number;
+  threePointersMade: number;
+  threePointersAttempted: number;
+  freeThrowsMade: number;
+  freeThrowsAttempted: number;
+  pointsPerGame: number;
+  reboundsPerGame: number;
+  assistsPerGame: number;
+  stealsPerGame: number;
+  blocksPerGame: number;
+  foulsPerGame: number;
+  fieldGoalPercentage: number;
+  threePointPercentage: number;
+  freeThrowPercentage: number;
+  displayName: string;
+  nickname?: string | null;
+  playerNumber?: number | null;
+  pictureUrl?: string | null;
+  [key: string]: any;
+}
+
 export interface LeaguesState {
   leagues: League[];
   league: League | null;
+  leaderboard: LeaderboardEntry[];
+  leaderboardPagination: {
+    totalCount: number;
+    count: number;
+    offset: number;
+    limit: number;
+  };
   pagination: {
     totalCount: number;
     count: number;
@@ -28,6 +67,7 @@ export interface LeaguesState {
     loadingCreate: boolean;
     loadingUpdate: boolean;
     loadingDelete: boolean;
+    loadingLeaderboard: boolean;
   };
   error: string | null;
 }
@@ -121,11 +161,57 @@ export const deleteLeague = createAsyncThunk(
   }
 );
 
+export const getLeagueLeaderboard = createAsyncThunk(
+  "leagues/getLeaderboard",
+  async (
+    params: {
+      leagueId: number;
+      teamId?: number | null;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+      offset?: number;
+      limit?: number;
+    },
+    { rejectWithValue }
+  ) => {
+    const { leagueId, teamId, sortBy, sortOrder, offset, limit } = params;
+    const queryParams = new URLSearchParams();
+    if (teamId !== undefined && teamId !== null)
+      queryParams.append("team_id", teamId.toString());
+    if (sortBy !== undefined) queryParams.append("sort_by", sortBy);
+    if (sortOrder !== undefined) queryParams.append("sort_order", sortOrder);
+    if (offset !== undefined) queryParams.append("offset", offset.toString());
+    if (limit !== undefined) queryParams.append("limit", limit.toString());
+    const queryString = queryParams.toString();
+
+    try {
+      const { data } = await axiosInstance.get(
+        `/api/v1/leagues/${leagueId}/leaderboard${
+          queryString ? `?${queryString}` : ""
+        }`
+      );
+      return data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return rejectWithValue({ ...error, silentError: true });
+      }
+      return rejectWithValue(error);
+    }
+  }
+);
+
 const leagueSlice = createSlice({
   name: "league",
   initialState: {
     leagues: [],
     league: null,
+    leaderboard: [],
+    leaderboardPagination: {
+      totalCount: 0,
+      count: 0,
+      offset: 0,
+      limit: 50,
+    },
     pagination: {
       totalCount: 0,
       count: 0,
@@ -138,6 +224,7 @@ const leagueSlice = createSlice({
       loadingCreate: false,
       loadingUpdate: false,
       loadingDelete: false,
+      loadingLeaderboard: false,
     },
     error: null,
   } as LeaguesState,
@@ -145,12 +232,20 @@ const leagueSlice = createSlice({
     clearLeague: (state) => {
       state.league = null;
     },
+    setLeaderboardPagination: (
+      state,
+      action: { payload: { offset: number; limit: number } }
+    ) => {
+      state.leaderboardPagination.offset = action.payload.offset;
+      state.leaderboardPagination.limit = action.payload.limit;
+    },
   },
   extraReducers: (builder) => {
     const getLoadingKey = (
       actionType: string
     ): keyof LeaguesState["loadingState"] | null => {
       if (actionType.includes("/getByTeam")) return null;
+      if (actionType.includes("/getLeaderboard")) return "loadingLeaderboard";
       if (actionType.includes("/getAll")) return "loadingLeagues";
       if (actionType.includes("/get")) return "loadingLeague";
       if (actionType.includes("/create")) return "loadingCreate";
@@ -196,6 +291,28 @@ const leagueSlice = createSlice({
         );
         state.loadingState.loadingDelete = false;
       })
+      .addCase(getLeagueLeaderboard.fulfilled, (state, { payload }) => {
+        if (payload.content && Array.isArray(payload.content)) {
+          state.leaderboard = payload.content;
+          state.leaderboardPagination = {
+            totalCount: payload.totalCount ?? 0,
+            count: payload.count ?? 0,
+            offset: payload.offset ?? 0,
+            limit: payload.limit ?? 100,
+          };
+        } else {
+          state.leaderboard = Array.isArray(payload) ? payload : [];
+        }
+        state.loadingState.loadingLeaderboard = false;
+      })
+      .addCase(getLeagueLeaderboard.rejected, (state, action) => {
+        state.loadingState.loadingLeaderboard = false;
+        const actionAny = action as any;
+        if (!actionAny.payload?.silentError) {
+          const errorMessage = actionAny.error?.message;
+          state.error = errorMessage || "An error occurred";
+        }
+      })
       .addMatcher(
         (action) =>
           action.type.startsWith("leagues/") &&
@@ -229,5 +346,5 @@ const leagueSlice = createSlice({
   },
 });
 
-export const { clearLeague } = leagueSlice.actions;
+export const { clearLeague, setLeaderboardPagination } = leagueSlice.actions;
 export default leagueSlice.reducer;

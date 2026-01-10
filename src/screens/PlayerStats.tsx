@@ -15,9 +15,21 @@ import {
 } from "recharts";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
-import { getMyPlayer, getPlayers, getPlayer } from "../models/playerSlice";
+import {
+  getMyPlayer,
+  getPlayers,
+  getPlayer,
+  getPlayerStats,
+  getPlayerGameStats,
+  clearPlayerStats,
+} from "../models/playerSlice";
 import { getTeams } from "../models/teamSlice";
 import { getGames } from "../models/gameSlice";
+import {
+  getLeagues,
+  getLeagueLeaderboard,
+  setLeaderboardPagination,
+} from "../models/leagueSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import PlayerAvatar from "../components/PlayerAvatar";
@@ -31,6 +43,7 @@ interface Player {
   name: string;
   number: number;
   team: string;
+  teamId?: number; // Preserve teamId for getPlayerTeam to work with PlayerAvatar
   position: string;
   pictureUrl?: string;
   stats: {
@@ -55,192 +68,44 @@ interface Player {
   }>;
 }
 
-// Helper function to aggregate stats from Redux
-const aggregatePlayerStats = (
-  gameStats: { [key: string]: any },
-  games: any[],
-  players: any[],
-  teams: any[]
-): Player[] => {
-  // Group stats by playerId
-  const playerStatsMap: {
-    [playerId: number]: {
-      gamesPlayed: Set<number>;
-      totalPoints: number;
-      totalRebounds: number;
-      totalAssists: number;
-      totalSteals: number;
-      totalBlocks: number;
-      totalFouls: number;
-      totalFieldGoalsMade: number;
-      totalFieldGoalsAttempted: number;
-      totalThreePointersMade: number;
-      totalThreePointersAttempted: number;
-      totalFreeThrowsMade: number;
-      totalFreeThrowsAttempted: number;
-      gameStats: Array<{
-        gameId: number;
-        opponent: string;
-        date: string;
-        points: number;
-        rebounds: number;
-        assists: number;
-      }>;
-    };
-  } = {};
-
-  // Aggregate stats from Redux
-  Object.values(gameStats).forEach((stat: any) => {
-    const playerId = stat.playerId;
-    if (!playerStatsMap[playerId]) {
-      playerStatsMap[playerId] = {
-        gamesPlayed: new Set(),
-        totalPoints: 0,
-        totalRebounds: 0,
-        totalAssists: 0,
-        totalSteals: 0,
-        totalBlocks: 0,
-        totalFouls: 0,
-        totalFieldGoalsMade: 0,
-        totalFieldGoalsAttempted: 0,
-        totalThreePointersMade: 0,
-        totalThreePointersAttempted: 0,
-        totalFreeThrowsMade: 0,
-        totalFreeThrowsAttempted: 0,
-        gameStats: [],
-      };
-    }
-
-    const playerStat = playerStatsMap[playerId];
-    playerStat.gamesPlayed.add(stat.gameId);
-    playerStat.totalPoints += stat.points || 0;
-    playerStat.totalRebounds += stat.rebounds || 0;
-    playerStat.totalAssists += stat.assists || 0;
-    playerStat.totalSteals += stat.steals || 0;
-    playerStat.totalBlocks += stat.blocks || 0;
-    playerStat.totalFouls += stat.fouls || 0;
-    playerStat.totalFieldGoalsMade += stat.fieldGoalsMade || 0;
-    playerStat.totalFieldGoalsAttempted += stat.fieldGoalsAttempted || 0;
-    playerStat.totalThreePointersMade += stat.threePointersMade || 0;
-    playerStat.totalThreePointersAttempted += stat.threePointersAttempted || 0;
-    playerStat.totalFreeThrowsMade += stat.freeThrowsMade || 0;
-    playerStat.totalFreeThrowsAttempted += stat.freeThrowsAttempted || 0;
-
-    // Add game-specific stats
-    const game = games.find((g) => g.id === stat.gameId);
-    if (game) {
-      const opponentTeamId =
-        game.homeTeamId === stat.teamId ? game.awayTeamId : game.homeTeamId;
-      const opponentTeam = teams.find((t) => t.id === opponentTeamId);
-      playerStat.gameStats.push({
-        gameId: stat.gameId,
-        opponent: opponentTeam?.name || "Unknown",
-        date: game.scheduledDateTime || new Date().toISOString(),
-        points: stat.points || 0,
-        rebounds: stat.rebounds || 0,
-        assists: stat.assists || 0,
-      });
-    }
-  });
-
-  // Convert to Player array
-  return players
-    .filter((player) => playerStatsMap[player.id])
-    .map((player) => {
-      const aggregated = playerStatsMap[player.id];
-      const gamesPlayed = aggregated.gamesPlayed.size;
-      const avgPoints =
-        gamesPlayed > 0 ? aggregated.totalPoints / gamesPlayed : 0;
-      const avgRebounds =
-        gamesPlayed > 0 ? aggregated.totalRebounds / gamesPlayed : 0;
-      const avgAssists =
-        gamesPlayed > 0 ? aggregated.totalAssists / gamesPlayed : 0;
-      const avgSteals =
-        gamesPlayed > 0 ? aggregated.totalSteals / gamesPlayed : 0;
-      const avgBlocks =
-        gamesPlayed > 0 ? aggregated.totalBlocks / gamesPlayed : 0;
-      const avgFouls =
-        gamesPlayed > 0 ? aggregated.totalFouls / gamesPlayed : 0;
-      const fieldGoalPercentage =
-        aggregated.totalFieldGoalsAttempted > 0
-          ? (aggregated.totalFieldGoalsMade /
-              aggregated.totalFieldGoalsAttempted) *
-            100
-          : 0;
-      const threePointPercentage =
-        aggregated.totalThreePointersAttempted > 0
-          ? (aggregated.totalThreePointersMade /
-              aggregated.totalThreePointersAttempted) *
-            100
-          : 0;
-      const freeThrowPercentage =
-        aggregated.totalFreeThrowsAttempted > 0
-          ? (aggregated.totalFreeThrowsMade /
-              aggregated.totalFreeThrowsAttempted) *
-            100
-          : 0;
-
-      const team = teams.find((t) => t.id === player.teamId);
-
-      return {
-        id: player.id,
-        name:
-          player.displayName ||
-          player.name ||
-          player.nickname ||
-          `Player ${player.id}`,
-        number: player.playerNumber || player.id,
-        team: team?.name || "Unknown",
-        position: player.primaryPosition || "N/A",
-        pictureUrl: player.pictureUrl,
-        stats: {
-          gamesPlayed,
-          points: avgPoints,
-          rebounds: avgRebounds,
-          assists: avgAssists,
-          steals: avgSteals,
-          blocks: avgBlocks,
-          fouls: avgFouls,
-          fieldGoalPercentage,
-          threePointPercentage,
-          freeThrowPercentage,
-        },
-        gameStats: aggregated.gameStats,
-      };
-    });
-};
-
 const PlayerStats: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const hasFetchedMyPlayer = useRef(false);
+  const fetchedPlayerIds = useRef<Set<number>>(new Set());
   const {
     myPlayer,
     players,
     player,
+    playerStats,
+    playerGameStats,
     loadingState: playerLoadingState,
   } = useSelector((state: RootState) => state.player);
   const { teams, loadingState: teamLoadingState } = useSelector(
     (state: RootState) => state.team
   );
   const { games } = useSelector((state: RootState) => state.game);
-  const { stats: gameStats } = useSelector(
-    (state: RootState) => state.gameStats
-  );
+  const {
+    leagues,
+    leaderboard,
+    leaderboardPagination,
+    loadingState: leagueLoadingState,
+  } = useSelector((state: RootState) => state.league);
   const { playerHighlights, loadingState: highlightLoadingState } = useSelector(
     (state: RootState) => state.highlight
   );
+  const [selectedLeagueId, setSelectedLeagueId] = useState<number | null>(null);
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<
-    "points" | "rebounds" | "assists" | "fieldGoalPercentage"
-  >("points");
+  const [sortBy, setSortBy] = useState<string>("pointsPerGame");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedGameFilter, setSelectedGameFilter] = useState<number | "all">(
     "all"
   );
+  const [hasSetDefaultTeam, setHasSetDefaultTeam] = useState(false);
 
   const playerId = searchParams.get("id");
 
+  // Fetch myPlayer (optional - don't block leaderboard if it fails)
   useEffect(() => {
     if (!hasFetchedMyPlayer.current && !playerLoadingState.loadingMyPlayer) {
       hasFetchedMyPlayer.current = true;
@@ -250,42 +115,126 @@ const PlayerStats: React.FC = () => {
 
   useEffect(() => {
     dispatch(getTeams({ offset: 0, limit: 100 }) as any);
-    dispatch(getGames({ offset: 0, limit: 100 }) as any);
-    dispatch(getPlayers({ offset: 0, limit: 100 }) as any);
+    dispatch(getLeagues({ offset: 0, limit: 100 }) as any);
   }, [dispatch]);
+
+  // Set default league when leagues are loaded
+  useEffect(() => {
+    if (leagues.length > 0 && !selectedLeagueId) {
+      setSelectedLeagueId(leagues[0].id);
+    }
+  }, [leagues, selectedLeagueId]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    if (selectedLeagueId && hasSetDefaultTeam) {
+      dispatch(setLeaderboardPagination({ offset: 0, limit: 50 }));
+    }
+  }, [
+    selectedLeagueId,
+    selectedTeamFilter,
+    sortBy,
+    sortOrder,
+    hasSetDefaultTeam,
+    dispatch,
+  ]);
+
+  // Fetch leaderboard when league, team filter, sort, or pagination changes
+  // Fetch once we have a league selected and teams/player data has been initialized
+  useEffect(() => {
+    if (selectedLeagueId && hasSetDefaultTeam) {
+      dispatch(
+        getLeagueLeaderboard({
+          leagueId: selectedLeagueId,
+          teamId:
+            selectedTeamFilter === "all"
+              ? undefined
+              : parseInt(selectedTeamFilter, 10),
+          sortBy: sortBy,
+          sortOrder: sortOrder,
+          offset: leaderboardPagination.offset,
+          limit: leaderboardPagination.limit,
+        }) as any
+      );
+    }
+  }, [
+    selectedLeagueId,
+    selectedTeamFilter,
+    sortBy,
+    sortOrder,
+    leaderboardPagination.offset,
+    leaderboardPagination.limit,
+    hasSetDefaultTeam,
+    dispatch,
+  ]);
 
   // Fetch individual player if playerId is provided and player not in list
   useEffect(() => {
     if (playerId) {
       const parsedId = parseInt(playerId, 10);
       const playerExists = players.find((p) => p.id === parsedId);
-      if (!playerExists && !playerLoadingState.loadingPlayer) {
+      const playerExistsInSingle = player && player.id === parsedId;
+      const alreadyFetched = fetchedPlayerIds.current.has(parsedId);
+
+      if (
+        !playerExists &&
+        !playerExistsInSingle &&
+        !alreadyFetched &&
+        !playerLoadingState.loadingPlayer
+      ) {
+        fetchedPlayerIds.current.add(parsedId);
         dispatch(getPlayer(parsedId) as any);
       }
     }
-  }, [playerId, players, playerLoadingState.loadingPlayer, dispatch]);
+  }, [playerId, players, player, playerLoadingState.loadingPlayer, dispatch]);
 
+  // Clear player stats when playerId changes to prevent stale data
   useEffect(() => {
-    if (
-      myPlayer &&
-      myPlayer.teamId &&
-      selectedTeamFilter === "all" &&
-      teams.length > 0
-    ) {
-      const myTeam = teams.find((t) => t.id === myPlayer.teamId);
-      if (myTeam) {
-        setSelectedTeamFilter(myPlayer.teamId.toString());
-      }
+    if (playerId) {
+      dispatch(clearPlayerStats());
     }
-  }, [myPlayer, teams]);
+  }, [playerId, dispatch]);
 
-  // Aggregate stats from Redux
-  const playersWithStats = aggregatePlayerStats(
-    gameStats,
-    games,
-    players,
-    teams
-  );
+  // Fetch player aggregated stats when playerId is provided
+  useEffect(() => {
+    if (playerId) {
+      const parsedId = parseInt(playerId, 10);
+      dispatch(
+        getPlayerStats({
+          playerId: parsedId,
+        }) as any
+      );
+    }
+  }, [playerId, dispatch]);
+
+  // Fetch player game-by-game stats when playerId is provided
+  useEffect(() => {
+    if (playerId) {
+      const parsedId = parseInt(playerId, 10);
+      dispatch(
+        getPlayerGameStats({
+          playerId: parsedId,
+          offset: 0,
+          limit: 100,
+        }) as any
+      );
+    }
+  }, [playerId, dispatch]);
+
+  // Set default team filter to my team if available (only once), otherwise keep "all"
+  // Always mark as initialized so leaderboard can be shown even without a player/team
+  useEffect(() => {
+    if (!hasSetDefaultTeam && teams.length > 0) {
+      if (myPlayer && myPlayer.teamId && selectedTeamFilter === "all") {
+        const myTeam = teams.find((t) => t.id === myPlayer.teamId);
+        if (myTeam) {
+          setSelectedTeamFilter(myPlayer.teamId.toString());
+        }
+      }
+      // Always mark as set so we can show leaderboard even without a player/team
+      setHasSetDefaultTeam(true);
+    }
+  }, [myPlayer, teams, selectedTeamFilter, hasSetDefaultTeam]);
 
   // Helper to create a player object with zero stats
   const createPlayerWithZeroStats = (player: any): Player => {
@@ -317,13 +266,84 @@ const PlayerStats: React.FC = () => {
     };
   };
 
-  // Determine selected player - check playersWithStats first, then players array, then single player
+  // Convert leaderboard entry to Player format for selected player view
+  const leaderboardEntryToPlayer = (entry: any): Player => {
+    const team = teams.find((t) => t.id === entry.teamId);
+    return {
+      id: entry.playerId,
+      name: entry.displayName || entry.nickname || `Player ${entry.playerId}`,
+      number: entry.playerNumber ?? entry.playerId,
+      team: team?.name || "Unknown",
+      teamId: entry.teamId, // Preserve teamId for getPlayerTeam
+      position: "N/A", // Position not provided in leaderboard API
+      pictureUrl: entry.pictureUrl || undefined,
+      stats: {
+        gamesPlayed: entry.gamesPlayed || 0,
+        points: entry.pointsPerGame || 0,
+        rebounds: entry.reboundsPerGame || 0,
+        assists: entry.assistsPerGame || 0,
+        steals: entry.stealsPerGame || 0,
+        blocks: entry.blocksPerGame || 0,
+        fouls: entry.foulsPerGame || 0,
+        fieldGoalPercentage: entry.fieldGoalPercentage || 0,
+        threePointPercentage: entry.threePointPercentage || 0,
+        freeThrowPercentage: entry.freeThrowPercentage || 0,
+      },
+      gameStats: [], // Leaderboard doesn't provide per-game stats
+    };
+  };
+
+  // Convert player stats API response to Player format
+  const playerStatsToPlayer = (stats: any, playerData: any): Player => {
+    const teamId = playerData?.teamId || stats?.teamId;
+    const team = teams.find((t) => t.id === teamId);
+    return {
+      id: stats.playerId || playerData?.id,
+      name:
+        playerData?.displayName ||
+        playerData?.name ||
+        playerData?.nickname ||
+        `Player ${stats.playerId}`,
+      number: playerData?.playerNumber ?? stats.playerId,
+      team: team?.name || "Unknown",
+      teamId: teamId, // Preserve teamId for getPlayerTeam
+      position: playerData?.primaryPosition || "N/A",
+      pictureUrl: playerData?.pictureUrl || stats?.pictureUrl || undefined,
+      stats: {
+        gamesPlayed: stats.gamesPlayed || 0,
+        points: stats.pointsPerGame || 0,
+        rebounds: stats.reboundsPerGame || 0,
+        assists: stats.assistsPerGame || 0,
+        steals: stats.stealsPerGame || 0,
+        blocks: stats.blocksPerGame || 0,
+        fouls: stats.foulsPerGame || 0,
+        fieldGoalPercentage: stats.fieldGoalPercentage || 0,
+        threePointPercentage: stats.threePointPercentage || 0,
+        freeThrowPercentage: stats.freeThrowPercentage || 0,
+      },
+      gameStats: [], // Game-by-game stats come from separate API
+    };
+  };
+
+  // Determine selected player - prioritize playerStats API response, then leaderboard, then players array
   const selectedPlayer = playerId
     ? (() => {
         const parsedId = parseInt(playerId, 10);
-        // First check if player has stats
-        const playerWithStats = playersWithStats.find((p) => p.id === parsedId);
-        if (playerWithStats) return playerWithStats;
+        // First check if we have player stats from the API (most accurate)
+        if (playerStats && playerStats.playerId === parsedId) {
+          return playerStatsToPlayer(
+            playerStats,
+            player || players.find((p) => p.id === parsedId)
+          );
+        }
+
+        // If not found in player stats, check if player is in leaderboard
+        const leaderboardEntry = leaderboard.find(
+          (e) => e.playerId === parsedId
+        );
+        if (leaderboardEntry) {
+          return leaderboardEntryToPlayer(leaderboardEntry);
+        }
 
         // If not found in stats, check if player exists in players array
         const playerFromRedux = players.find((p) => p.id === parsedId);
@@ -342,44 +362,77 @@ const PlayerStats: React.FC = () => {
 
   // Reset game filter when player changes
   useEffect(() => {
-    setSelectedGameFilter("all");
-  }, [selectedPlayer?.id]);
+    if (playerId) {
+      setSelectedGameFilter("all");
+    }
+  }, [playerId]);
 
-  // Helper to get team for a player
+  // Helper to get team for a player (handles all data sources)
   const getPlayerTeam = (player: any) => {
+    // First check if player has teamId directly (from leaderboard or stats API)
+    if (player.teamId) {
+      return teams.find((t) => t.id === player.teamId) || null;
+    }
+    // Fall back to Redux players array
     const playerFromRedux = players.find((p) => p.id === player.id);
-    if (!playerFromRedux?.teamId) return null;
-    return teams.find((t) => t.id === playerFromRedux.teamId) || null;
+    if (playerFromRedux?.teamId) {
+      return teams.find((t) => t.id === playerFromRedux.teamId) || null;
+    }
+    return null;
   };
 
   const getMyPlayerStats = (): Player | null => {
     if (!myPlayer) return null;
-    return playersWithStats.find((p) => p.id === myPlayer.id) || null;
+    const leaderboardEntry = leaderboard.find(
+      (e) => e.playerId === myPlayer.id
+    );
+    if (leaderboardEntry) {
+      return leaderboardEntryToPlayer(leaderboardEntry);
+    }
+    return null;
   };
 
   const myPlayerStats = getMyPlayerStats();
 
   // Fetch highlights when a player is selected or game filter changes
   useEffect(() => {
-    if (selectedPlayer) {
+    if (playerId) {
+      const parsedId = parseInt(playerId, 10);
       dispatch(
         getHighlightsByPlayer({
-          playerId: selectedPlayer.id,
+          playerId: parsedId,
           offset: 0,
           limit: 100,
           gameId: selectedGameFilter === "all" ? undefined : selectedGameFilter,
         }) as any
       );
     }
-  }, [selectedPlayer?.id, selectedGameFilter, dispatch]);
+  }, [playerId, selectedGameFilter, dispatch]);
 
   if (selectedPlayer) {
-    const chartData = selectedPlayer.gameStats.map((game) => ({
-      game: `vs ${game.opponent}`,
-      points: game.points,
-      rebounds: game.rebounds,
-      assists: game.assists,
-    }));
+    // Build chart data from game-by-game stats (using game info directly from API)
+    const chartData: any[] =
+      playerGameStats?.content?.map((gameStat: any, index: number) => {
+        // Determine opponent team name from API response
+        const playerTeamId = gameStat.teamId;
+        const opponentTeamName =
+          playerTeamId === gameStat.homeTeamId
+            ? gameStat.awayTeamName
+            : gameStat.homeTeamName;
+        return {
+          game: `Game ${index + 1}`,
+          opponent: opponentTeamName || "Unknown",
+          date: gameStat.gameDate
+            ? new Date(gameStat.gameDate).toLocaleDateString()
+            : "Unknown",
+          points: gameStat.points || 0,
+          rebounds: gameStat.rebounds || 0,
+          assists: gameStat.assists || 0,
+          steals: gameStat.steals || 0,
+          blocks: gameStat.blocks || 0,
+          gameId: gameStat.gameId,
+        };
+      }) || [];
 
     return (
       <div
@@ -624,6 +677,64 @@ const PlayerStats: React.FC = () => {
                     fontWeight: 500,
                   }}
                 >
+                  Steals/Game
+                </div>
+                <div
+                  style={{
+                    fontSize: "2.5rem",
+                    fontWeight: 700,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  {selectedPlayer.stats.steals.toFixed(1)}
+                </div>
+              </div>
+              <div
+                style={{
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                  border: `1px solid ${COLORS.border.default}`,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.875rem",
+                    color: COLORS.text.secondary,
+                    marginBottom: "0.75rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  Blocks/Game
+                </div>
+                <div
+                  style={{
+                    fontSize: "2.5rem",
+                    fontWeight: 700,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  {selectedPlayer.stats.blocks.toFixed(1)}
+                </div>
+              </div>
+              <div
+                style={{
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                  border: `1px solid ${COLORS.border.default}`,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.875rem",
+                    color: COLORS.text.secondary,
+                    marginBottom: "0.75rem",
+                    fontWeight: 500,
+                  }}
+                >
                   FG%
                 </div>
                 <div
@@ -634,6 +745,64 @@ const PlayerStats: React.FC = () => {
                   }}
                 >
                   {selectedPlayer.stats.fieldGoalPercentage.toFixed(1)}%
+                </div>
+              </div>
+              <div
+                style={{
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                  border: `1px solid ${COLORS.border.default}`,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.875rem",
+                    color: COLORS.text.secondary,
+                    marginBottom: "0.75rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  3PT%
+                </div>
+                <div
+                  style={{
+                    fontSize: "2.5rem",
+                    fontWeight: 700,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  {selectedPlayer.stats.threePointPercentage.toFixed(1)}%
+                </div>
+              </div>
+              <div
+                style={{
+                  backgroundColor: COLORS.background.light,
+                  padding: "1.5rem",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                  border: `1px solid ${COLORS.border.default}`,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.875rem",
+                    color: COLORS.text.secondary,
+                    marginBottom: "0.75rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  FT%
+                </div>
+                <div
+                  style={{
+                    fontSize: "2.5rem",
+                    fontWeight: 700,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  {selectedPlayer.stats.freeThrowPercentage.toFixed(1)}%
                 </div>
               </div>
             </div>
@@ -812,63 +981,220 @@ const PlayerStats: React.FC = () => {
                       >
                         Assists
                       </th>
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
+                        Steals
+                      </th>
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
+                        Blocks
+                      </th>
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
+                        Fouls
+                      </th>
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
+                        FG%
+                      </th>
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
+                        3PT%
+                      </th>
+                      <th
+                        style={{
+                          padding: "0.75rem 0.5rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.primary,
+                        }}
+                      >
+                        FT%
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedPlayer.gameStats.map((game, idx) => (
-                      <tr
-                        key={idx}
-                        style={{
-                          borderBottom: `1px solid ${COLORS.border.light}`,
-                        }}
-                      >
+                    {playerGameStats?.content &&
+                    playerGameStats.content.length > 0 ? (
+                      playerGameStats.content.map(
+                        (gameStat: any, idx: number) => {
+                          // Use game info directly from API response
+                          const playerTeamId = gameStat.teamId;
+                          const opponentTeamName =
+                            playerTeamId === gameStat.homeTeamId
+                              ? gameStat.awayTeamName
+                              : gameStat.homeTeamName;
+                          return (
+                            <tr
+                              key={idx}
+                              style={{
+                                borderBottom: `1px solid ${COLORS.border.light}`,
+                              }}
+                            >
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  fontWeight: 600,
+                                  color: COLORS.text.primary,
+                                }}
+                              >
+                                {opponentTeamName || "Unknown"}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  color: COLORS.text.secondary,
+                                }}
+                              >
+                                {gameStat.gameDate
+                                  ? new Date(
+                                      gameStat.gameDate
+                                    ).toLocaleDateString()
+                                  : "Unknown"}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  textAlign: "center",
+                                  fontWeight: 600,
+                                  color: COLORS.success,
+                                }}
+                              >
+                                {gameStat.points || 0}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  textAlign: "center",
+                                  color: COLORS.text.primary,
+                                }}
+                              >
+                                {gameStat.rebounds || 0}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  textAlign: "center",
+                                  color: COLORS.text.primary,
+                                }}
+                              >
+                                {gameStat.assists || 0}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  textAlign: "center",
+                                  color: COLORS.text.primary,
+                                }}
+                              >
+                                {gameStat.steals || 0}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  textAlign: "center",
+                                  color: COLORS.text.primary,
+                                }}
+                              >
+                                {gameStat.blocks || 0}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  textAlign: "center",
+                                  color: COLORS.text.primary,
+                                }}
+                              >
+                                {gameStat.fouls || 0}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  textAlign: "center",
+                                  color: COLORS.text.primary,
+                                }}
+                              >
+                                {gameStat.fieldGoalPercentage?.toFixed(1) ||
+                                  "0.0"}
+                                %
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  textAlign: "center",
+                                  color: COLORS.text.primary,
+                                }}
+                              >
+                                {gameStat.threePointPercentage?.toFixed(1) ||
+                                  "0.0"}
+                                %
+                              </td>
+                              <td
+                                style={{
+                                  padding: "0.75rem 0.5rem",
+                                  textAlign: "center",
+                                  color: COLORS.text.primary,
+                                }}
+                              >
+                                {gameStat.freeThrowPercentage?.toFixed(1) ||
+                                  "0.0"}
+                                %
+                              </td>
+                            </tr>
+                          );
+                        }
+                      )
+                    ) : (
+                      <tr>
                         <td
+                          colSpan={10}
                           style={{
-                            padding: "0.75rem 0.5rem",
-                            fontWeight: 600,
-                            color: COLORS.text.primary,
-                          }}
-                        >
-                          {game.opponent}
-                        </td>
-                        <td
-                          style={{
-                            padding: "0.75rem 0.5rem",
+                            padding: "2rem",
+                            textAlign: "center",
                             color: COLORS.text.secondary,
                           }}
                         >
-                          {new Date(game.date).toLocaleDateString()}
-                        </td>
-                        <td
-                          style={{
-                            padding: "0.75rem 0.5rem",
-                            textAlign: "center",
-                            fontWeight: 600,
-                            color: COLORS.success,
-                          }}
-                        >
-                          {game.points}
-                        </td>
-                        <td
-                          style={{
-                            padding: "0.75rem 0.5rem",
-                            textAlign: "center",
-                            color: COLORS.text.primary,
-                          }}
-                        >
-                          {game.rebounds}
-                        </td>
-                        <td
-                          style={{
-                            padding: "0.75rem 0.5rem",
-                            textAlign: "center",
-                            color: COLORS.text.primary,
-                          }}
-                        >
-                          {game.assists}
+                          Per-game statistics are not available from the
+                          leaderboard API.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -942,44 +1268,54 @@ const PlayerStats: React.FC = () => {
                         }}
                       >
                         <MenuItem value="all">All Games</MenuItem>
-                        {games
-                          .filter((game) => {
-                            // Only show games that have highlights for this player
-                            const highlights =
-                              playerHighlights[selectedPlayer.id] || [];
-                            return highlights.some((h) => h.gameId === game.id);
+                        {playerGameStats?.content
+                          ?.map((gameStat: any) => {
+                            // Use game info directly from API response
+                            const playerTeamId = gameStat.teamId;
+                            const opponentTeamName =
+                              playerTeamId === gameStat.homeTeamId
+                                ? gameStat.awayTeamName
+                                : gameStat.homeTeamName;
+                            const playerTeamName =
+                              playerTeamId === gameStat.homeTeamId
+                                ? gameStat.homeTeamName
+                                : gameStat.awayTeamName;
+                            const gameDate = gameStat.gameDate
+                              ? new Date(gameStat.gameDate).toLocaleDateString()
+                              : "";
+                            return {
+                              gameId: gameStat.gameId,
+                              playerTeamName,
+                              opponentTeamName,
+                              gameDate,
+                            };
                           })
-                          .sort((a, b) => {
+                          .sort((a: any, b: any) => {
                             // Sort by date, most recent first
-                            const dateA = new Date(
-                              (a as any).startTime || 0
-                            ).getTime();
-                            const dateB = new Date(
-                              (b as any).startTime || 0
-                            ).getTime();
+                            const gameStatA = playerGameStats?.content?.find(
+                              (gs: any) => gs.gameId === a.gameId
+                            );
+                            const gameStatB = playerGameStats?.content?.find(
+                              (gs: any) => gs.gameId === b.gameId
+                            );
+                            const dateA = gameStatA?.gameDate
+                              ? new Date(gameStatA.gameDate).getTime()
+                              : 0;
+                            const dateB = gameStatB?.gameDate
+                              ? new Date(gameStatB.gameDate).getTime()
+                              : 0;
                             return dateB - dateA;
                           })
-                          .map((game) => {
-                            const homeTeam = teams.find(
-                              (t) => t.id === (game as any).homeTeamId
-                            );
-                            const awayTeam = teams.find(
-                              (t) => t.id === (game as any).awayTeamId
-                            );
-                            const homeTeamName = homeTeam?.name || "Home";
-                            const awayTeamName = awayTeam?.name || "Away";
-                            const gameDate = (game as any).startTime
-                              ? new Date(
-                                  (game as any).startTime
-                                ).toLocaleDateString()
-                              : "";
-                            return (
-                              <MenuItem key={game.id} value={game.id}>
-                                {homeTeamName} vs {awayTeamName}{" "}
-                                {gameDate && `(${gameDate})`}
-                              </MenuItem>
-                            );
-                          })}
+                          .map((gameInfo: any) => (
+                            <MenuItem
+                              key={gameInfo.gameId}
+                              value={gameInfo.gameId}
+                            >
+                              {gameInfo.playerTeamName} vs{" "}
+                              {gameInfo.opponentTeamName}{" "}
+                              {gameInfo.gameDate && `(${gameInfo.gameDate})`}
+                            </MenuItem>
+                          ))}
                       </Select>
                     </FormControl>
                   </div>
@@ -1008,58 +1344,18 @@ const PlayerStats: React.FC = () => {
     );
   }
 
-  if (playerLoadingState.loadingMyPlayer || teamLoadingState.loadingTeams) {
+  // Only show full page loading on initial load when we don't have teams yet
+  // Once teams are loaded, always show the page (use loading overlays for table operations)
+  if (teamLoadingState.loadingTeams && teams.length === 0) {
     return <Loading />;
   }
 
-  const getFilteredPlayers = () => {
-    let filtered = [...playersWithStats];
+  // Convert leaderboard entries to Player format for table display
+  const leaderboardPlayers = leaderboard.map((entry) =>
+    leaderboardEntryToPlayer(entry)
+  );
 
-    if (selectedTeamFilter === "all") {
-      return filtered;
-    }
-
-    const selectedTeam = teams.find(
-      (t) => t.id === parseInt(selectedTeamFilter, 10)
-    );
-    if (selectedTeam) {
-      return filtered.filter((p) => p.team === selectedTeam.name);
-    }
-
-    return filtered;
-  };
-
-  const filteredPlayers = getFilteredPlayers();
-  const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    let aValue: number;
-    let bValue: number;
-
-    switch (sortBy) {
-      case "points":
-        aValue = a.stats.points;
-        bValue = b.stats.points;
-        break;
-      case "rebounds":
-        aValue = a.stats.rebounds;
-        bValue = b.stats.rebounds;
-        break;
-      case "assists":
-        aValue = a.stats.assists;
-        bValue = b.stats.assists;
-        break;
-      case "fieldGoalPercentage":
-        aValue = a.stats.fieldGoalPercentage;
-        bValue = b.stats.fieldGoalPercentage;
-        break;
-      default:
-        aValue = a.stats.points;
-        bValue = b.stats.points;
-    }
-
-    return sortOrder === "desc" ? bValue - aValue : aValue - bValue;
-  });
-
-  const handleSort = (newSortBy: typeof sortBy) => {
+  const handleSort = (newSortBy: string) => {
     if (sortBy === newSortBy) {
       setSortOrder(sortOrder === "desc" ? "asc" : "desc");
     } else {
@@ -1068,10 +1364,36 @@ const PlayerStats: React.FC = () => {
     }
   };
 
-  const getSortIcon = (column: typeof sortBy) => {
+  const getSortIcon = (column: string) => {
     if (sortBy !== column) return null;
     return sortOrder === "desc" ? "↓" : "↑";
   };
+
+  const handleTeamFilterChange = (teamId: string) => {
+    setSelectedTeamFilter(teamId);
+  };
+
+  const handlePageChange = (direction: "prev" | "next") => {
+    const newOffset =
+      direction === "next"
+        ? leaderboardPagination.offset + leaderboardPagination.limit
+        : Math.max(
+            0,
+            leaderboardPagination.offset - leaderboardPagination.limit
+          );
+    dispatch(
+      setLeaderboardPagination({
+        offset: newOffset,
+        limit: leaderboardPagination.limit,
+      })
+    );
+  };
+
+  const currentPage =
+    Math.floor(leaderboardPagination.offset / leaderboardPagination.limit) + 1;
+  const totalPages = Math.ceil(
+    leaderboardPagination.totalCount / leaderboardPagination.limit
+  );
 
   const renderPlayerCard = (player: Player) => (
     <div
@@ -1129,7 +1451,7 @@ const PlayerStats: React.FC = () => {
               color: COLORS.text.secondary,
             }}
           >
-            {player.team} • {player.position}
+            {player.team}
           </div>
         </div>
       </div>
@@ -1286,7 +1608,7 @@ const PlayerStats: React.FC = () => {
             >
               Player Statistics
             </h1>
-            {playersWithStats.length > 0 && (
+            {leaderboard.length > 0 && (
               <div
                 style={{
                   display: "flex",
@@ -1376,7 +1698,7 @@ const PlayerStats: React.FC = () => {
           </div>
         )}
 
-        {sortedPlayers.length > 0 && (
+        {leaderboardPlayers.length > 0 && (
           <div style={{ width: "100%" }}>
             <div
               style={{
@@ -1406,7 +1728,7 @@ const PlayerStats: React.FC = () => {
                       marginLeft: "0.5rem",
                     }}
                   >
-                    ({sortedPlayers.length})
+                    ({leaderboardPlayers.length})
                   </span>
                 )}
               </h2>
@@ -1418,8 +1740,48 @@ const PlayerStats: React.FC = () => {
                 border: `1px solid ${COLORS.border.default}`,
                 overflow: "hidden",
                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                position: "relative",
               }}
             >
+              {leagueLoadingState.loadingLeaderboard && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 10,
+                    borderRadius: "12px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      color: COLORS.text.secondary,
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        border: `2px solid ${COLORS.border.default}`,
+                        borderTopColor: COLORS.primary,
+                        borderRadius: "50%",
+                        animation: "spin 0.8s linear infinite",
+                      }}
+                    />
+                    Loading...
+                  </div>
+                </div>
+              )}
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
@@ -1463,7 +1825,7 @@ const PlayerStats: React.FC = () => {
                           whiteSpace: "nowrap",
                           cursor: "pointer",
                         }}
-                        onClick={() => handleSort("points")}
+                        onClick={() => handleSort("pointsPerGame")}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.color = COLORS.primary;
                         }}
@@ -1471,7 +1833,7 @@ const PlayerStats: React.FC = () => {
                           e.currentTarget.style.color = COLORS.text.secondary;
                         }}
                       >
-                        PPG {getSortIcon("points")}
+                        PPG {getSortIcon("pointsPerGame")}
                       </th>
                       <th
                         style={{
@@ -1483,7 +1845,7 @@ const PlayerStats: React.FC = () => {
                           whiteSpace: "nowrap",
                           cursor: "pointer",
                         }}
-                        onClick={() => handleSort("rebounds")}
+                        onClick={() => handleSort("reboundsPerGame")}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.color = COLORS.primary;
                         }}
@@ -1491,7 +1853,7 @@ const PlayerStats: React.FC = () => {
                           e.currentTarget.style.color = COLORS.text.secondary;
                         }}
                       >
-                        RPG {getSortIcon("rebounds")}
+                        RPG {getSortIcon("reboundsPerGame")}
                       </th>
                       <th
                         style={{
@@ -1503,7 +1865,7 @@ const PlayerStats: React.FC = () => {
                           whiteSpace: "nowrap",
                           cursor: "pointer",
                         }}
-                        onClick={() => handleSort("assists")}
+                        onClick={() => handleSort("assistsPerGame")}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.color = COLORS.primary;
                         }}
@@ -1511,7 +1873,7 @@ const PlayerStats: React.FC = () => {
                           e.currentTarget.style.color = COLORS.text.secondary;
                         }}
                       >
-                        APG {getSortIcon("assists")}
+                        APG {getSortIcon("assistsPerGame")}
                       </th>
                       <th
                         style={{
@@ -1541,6 +1903,86 @@ const PlayerStats: React.FC = () => {
                           fontWeight: 600,
                           color: COLORS.text.secondary,
                           whiteSpace: "nowrap",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleSort("threePointPercentage")}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.primary;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.text.secondary;
+                        }}
+                      >
+                        3PT% {getSortIcon("threePointPercentage")}
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleSort("freeThrowPercentage")}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.primary;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.text.secondary;
+                        }}
+                      >
+                        FT% {getSortIcon("freeThrowPercentage")}
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleSort("stealsPerGame")}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.primary;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.text.secondary;
+                        }}
+                      >
+                        SPG {getSortIcon("stealsPerGame")}
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleSort("blocksPerGame")}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.primary;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.text.secondary;
+                        }}
+                      >
+                        BPG {getSortIcon("blocksPerGame")}
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          color: COLORS.text.secondary,
+                          whiteSpace: "nowrap",
                         }}
                       >
                         Games
@@ -1548,7 +1990,7 @@ const PlayerStats: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedPlayers
+                    {leaderboardPlayers
                       .filter(
                         (p) => !myPlayerStats || p.id !== myPlayerStats.id
                       )
@@ -1625,7 +2067,7 @@ const PlayerStats: React.FC = () => {
                                       color: COLORS.text.secondary,
                                     }}
                                   >
-                                    {player.team} • {player.position}
+                                    {player.team}
                                   </div>
                                 </div>
                               </div>
@@ -1679,6 +2121,50 @@ const PlayerStats: React.FC = () => {
                                 padding: "1rem",
                                 textAlign: "center",
                                 fontSize: "1rem",
+                                fontWeight: 600,
+                                color: COLORS.text.primary,
+                              }}
+                            >
+                              {player.stats.threePointPercentage.toFixed(1)}%
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem",
+                                textAlign: "center",
+                                fontSize: "1rem",
+                                fontWeight: 600,
+                                color: COLORS.text.primary,
+                              }}
+                            >
+                              {player.stats.freeThrowPercentage.toFixed(1)}%
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem",
+                                textAlign: "center",
+                                fontSize: "1rem",
+                                fontWeight: 600,
+                                color: COLORS.text.primary,
+                              }}
+                            >
+                              {player.stats.steals.toFixed(1)}
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem",
+                                textAlign: "center",
+                                fontSize: "1rem",
+                                fontWeight: 600,
+                                color: COLORS.text.primary,
+                              }}
+                            >
+                              {player.stats.blocks.toFixed(1)}
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem",
+                                textAlign: "center",
+                                fontSize: "1rem",
                                 color: COLORS.text.secondary,
                               }}
                             >
@@ -1694,7 +2180,7 @@ const PlayerStats: React.FC = () => {
           </div>
         )}
 
-        {sortedPlayers.length === 0 && (
+        {leaderboardPlayers.length === 0 && (
           <div
             style={{
               textAlign: "center",
@@ -1704,6 +2190,113 @@ const PlayerStats: React.FC = () => {
             }}
           >
             No players found for the selected filter.
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "0.5rem",
+              marginTop: "2rem",
+            }}
+          >
+            <button
+              onClick={() => handlePageChange("prev")}
+              disabled={
+                leaderboardPagination.offset === 0 ||
+                leagueLoadingState.loadingLeaderboard
+              }
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor:
+                  leaderboardPagination.offset === 0
+                    ? COLORS.secondary
+                    : COLORS.primary,
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor:
+                  leaderboardPagination.offset === 0
+                    ? "not-allowed"
+                    : "pointer",
+                fontSize: "0.875rem",
+                opacity: leagueLoadingState.loadingLeaderboard ? 0.6 : 1,
+                transition: "background-color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                if (
+                  leaderboardPagination.offset !== 0 &&
+                  !leagueLoadingState.loadingLeaderboard
+                ) {
+                  e.currentTarget.style.backgroundColor = COLORS.primaryHover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (leaderboardPagination.offset !== 0) {
+                  e.currentTarget.style.backgroundColor = COLORS.primary;
+                }
+              }}
+            >
+              Previous
+            </button>
+            <span
+              style={{
+                fontSize: "0.875rem",
+                color: COLORS.text.secondary,
+              }}
+            >
+              Page {currentPage} of {totalPages} (
+              {leaderboardPagination.totalCount} total)
+            </span>
+            <button
+              onClick={() => handlePageChange("next")}
+              disabled={
+                leaderboardPagination.offset + leaderboardPagination.limit >=
+                  leaderboardPagination.totalCount ||
+                leagueLoadingState.loadingLeaderboard
+              }
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor:
+                  leaderboardPagination.offset + leaderboardPagination.limit >=
+                  leaderboardPagination.totalCount
+                    ? COLORS.secondary
+                    : COLORS.primary,
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor:
+                  leaderboardPagination.offset + leaderboardPagination.limit >=
+                  leaderboardPagination.totalCount
+                    ? "not-allowed"
+                    : "pointer",
+                fontSize: "0.875rem",
+                opacity: leagueLoadingState.loadingLeaderboard ? 0.6 : 1,
+                transition: "background-color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                if (
+                  leaderboardPagination.offset + leaderboardPagination.limit <
+                    leaderboardPagination.totalCount &&
+                  !leagueLoadingState.loadingLeaderboard
+                ) {
+                  e.currentTarget.style.backgroundColor = COLORS.primaryHover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (
+                  leaderboardPagination.offset + leaderboardPagination.limit <
+                  leaderboardPagination.totalCount
+                ) {
+                  e.currentTarget.style.backgroundColor = COLORS.primary;
+                }
+              }}
+            >
+              Next
+            </button>
           </div>
         )}
       </div>

@@ -9,10 +9,48 @@ export interface Player {
   [key: string]: any; // Allow for additional fields from API
 }
 
+export interface PlayerStats {
+  playerId: number;
+  teamId: number | null;
+  gamesPlayed: number;
+  points: number;
+  rebounds: number;
+  assists: number;
+  steals: number;
+  blocks: number;
+  fouls: number;
+  fieldGoalsMade: number;
+  fieldGoalsAttempted: number;
+  threePointersMade: number;
+  threePointersAttempted: number;
+  freeThrowsMade: number;
+  freeThrowsAttempted: number;
+  pointsPerGame: number;
+  reboundsPerGame: number;
+  assistsPerGame: number;
+  stealsPerGame: number;
+  blocksPerGame: number;
+  foulsPerGame: number;
+  fieldGoalPercentage: number;
+  threePointPercentage: number;
+  freeThrowPercentage: number;
+  [key: string]: any;
+}
+
+export interface PlayerGameStats {
+  content: PlayerStats[];
+  totalCount: number;
+  count: number;
+  offset: number;
+  limit: number;
+}
+
 export interface PlayersState {
   players: Player[];
   player: Player | null;
   myPlayer: Player | null;
+  playerStats: PlayerStats | null;
+  playerGameStats: PlayerGameStats | null;
   pagination: {
     totalCount: number;
     count: number;
@@ -27,6 +65,8 @@ export interface PlayersState {
     loadingCreate: boolean;
     loadingUpdate: boolean;
     loadingDelete: boolean;
+    loadingPlayerStats: boolean;
+    loadingPlayerGameStats: boolean;
   };
   error: string | null;
 }
@@ -36,6 +76,71 @@ export const getPlayer = createAsyncThunk(
   async (playerId: number) => {
     const { data } = await axiosInstance.get(`/api/v1/players/${playerId}`);
     return data;
+  }
+);
+
+export const getPlayerStats = createAsyncThunk(
+  "players/getStats",
+  async (
+    params: {
+      playerId: number;
+      teamId?: number;
+      gameId?: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { playerId, teamId, gameId } = params;
+      const queryParams = new URLSearchParams();
+      if (teamId !== undefined)
+        queryParams.append("team_id", teamId.toString());
+      if (gameId !== undefined) queryParams.append("game_id", gameId.toString());
+      const queryString = queryParams.toString();
+      const url = `/api/v1/players/${playerId}/stats${
+        queryString ? `?${queryString}` : ""
+      }`;
+      const { data } = await axiosInstance.get(url);
+      return data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return rejectWithValue({ ...error, silentError: true });
+      }
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getPlayerGameStats = createAsyncThunk(
+  "players/getGameStats",
+  async (
+    params: {
+      playerId: number;
+      teamId?: number;
+      offset?: number;
+      limit?: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { playerId, teamId, offset, limit } = params;
+      const queryParams = new URLSearchParams();
+      if (teamId !== undefined)
+        queryParams.append("team_id", teamId.toString());
+      if (offset !== undefined)
+        queryParams.append("offset", offset.toString());
+      if (limit !== undefined) queryParams.append("limit", limit.toString());
+      const queryString = queryParams.toString();
+      const url = `/api/v1/players/${playerId}/stats/games${
+        queryString ? `?${queryString}` : ""
+      }`;
+      const { data } = await axiosInstance.get(url);
+      return data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return rejectWithValue({ ...error, silentError: true });
+      }
+      return rejectWithValue(error);
+    }
   }
 );
 
@@ -163,6 +268,8 @@ const playerSlice = createSlice({
     players: [],
     player: null,
     myPlayer: null,
+    playerStats: null,
+    playerGameStats: null,
     pagination: {
       totalCount: 0,
       count: 0,
@@ -177,12 +284,18 @@ const playerSlice = createSlice({
       loadingCreate: false,
       loadingUpdate: false,
       loadingDelete: false,
+      loadingPlayerStats: false,
+      loadingPlayerGameStats: false,
     },
     error: null,
   } as PlayersState,
   reducers: {
     clearPlayer: (state) => {
       state.player = null;
+    },
+    clearPlayerStats: (state) => {
+      state.playerStats = null;
+      state.playerGameStats = null;
     },
   },
   extraReducers: (builder) => {
@@ -191,6 +304,8 @@ const playerSlice = createSlice({
     ): keyof PlayersState["loadingState"] | null => {
       if (actionType.includes("/getByTeam")) return "loadingByTeam";
       if (actionType.includes("/getMe")) return "loadingMyPlayer";
+      if (actionType.includes("/getGameStats")) return "loadingPlayerGameStats";
+      if (actionType.includes("/getStats")) return "loadingPlayerStats";
       if (actionType.includes("/getAll")) return "loadingPlayers";
       if (actionType.includes("/get")) return "loadingPlayer";
       if (actionType.includes("/create")) return "loadingCreate";
@@ -203,6 +318,30 @@ const playerSlice = createSlice({
       .addCase(getPlayer.fulfilled, (state, { payload }) => {
         state.player = payload;
         state.loadingState.loadingPlayer = false;
+      })
+      .addCase(getPlayerStats.fulfilled, (state, { payload }) => {
+        state.playerStats = payload;
+        state.loadingState.loadingPlayerStats = false;
+      })
+      .addCase(getPlayerStats.rejected, (state, action) => {
+        state.loadingState.loadingPlayerStats = false;
+        const actionAny = action as any;
+        if (!actionAny.payload?.silentError) {
+          const errorMessage = actionAny.error?.message;
+          state.error = errorMessage || "An error occurred";
+        }
+      })
+      .addCase(getPlayerGameStats.fulfilled, (state, { payload }) => {
+        state.playerGameStats = payload;
+        state.loadingState.loadingPlayerGameStats = false;
+      })
+      .addCase(getPlayerGameStats.rejected, (state, action) => {
+        state.loadingState.loadingPlayerGameStats = false;
+        const actionAny = action as any;
+        if (!actionAny.payload?.silentError) {
+          const errorMessage = actionAny.error?.message;
+          state.error = errorMessage || "An error occurred";
+        }
       })
       .addCase(getMyPlayer.fulfilled, (state, { payload }) => {
         state.myPlayer = payload;
@@ -300,5 +439,5 @@ const playerSlice = createSlice({
   },
 });
 
-export const { clearPlayer } = playerSlice.actions;
+export const { clearPlayer, clearPlayerStats } = playerSlice.actions;
 export default playerSlice.reducer;

@@ -6,6 +6,7 @@ import {
   BUTTON_STYLES,
   getButtonHoverStyle,
   TILE_STYLE,
+  SHADOWS,
 } from "../config/styles";
 import InviteUser from "../components/InviteUser";
 import CreateLeague from "../components/CreateLeague";
@@ -96,7 +97,7 @@ const Home: React.FC = () => {
               fontSize: "2.5rem",
               fontWeight: 600,
               margin: 0,
-              color: "#212529",
+              color: COLORS.text.primary,
             }}
           >
             Welcome, {getUserDisplayName()}!
@@ -125,7 +126,7 @@ const Home: React.FC = () => {
                       width: "48px",
                       height: "48px",
                       borderRadius: "50%",
-                      backgroundColor: "#e3f2fd",
+                      backgroundColor: `${COLORS.primary}33`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -140,7 +141,7 @@ const Home: React.FC = () => {
                         margin: 0,
                         fontSize: "1.25rem",
                         fontWeight: 600,
-                        color: "#212529",
+                        color: COLORS.text.primary,
                       }}
                     >
                       Create League
@@ -149,7 +150,7 @@ const Home: React.FC = () => {
                       style={{
                         margin: 0,
                         fontSize: "0.875rem",
-                        color: "#6c757d",
+                        color: COLORS.text.secondary,
                       }}
                     >
                       Start a new league
@@ -177,7 +178,7 @@ const Home: React.FC = () => {
                         width: "48px",
                         height: "48px",
                         borderRadius: "50%",
-                        backgroundColor: "#fff3e0",
+                        backgroundColor: `${COLORS.warning}33`,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -192,7 +193,7 @@ const Home: React.FC = () => {
                           margin: 0,
                           fontSize: "1.25rem",
                           fontWeight: 600,
-                          color: "#212529",
+                          color: COLORS.text.primary,
                         }}
                       >
                         Create Team
@@ -201,7 +202,7 @@ const Home: React.FC = () => {
                         style={{
                           margin: 0,
                           fontSize: "0.875rem",
-                          color: "#6c757d",
+                          color: COLORS.text.secondary,
                         }}
                       >
                         Add a new team to {existingLeague.name}
@@ -218,11 +219,11 @@ const Home: React.FC = () => {
             <AuthAware roles={["League Admin", "Admin"]}>
               <div
                 style={{
-                  backgroundColor: "white",
+                  backgroundColor: COLORS.background.default,
                   borderRadius: "12px",
                   padding: "1.5rem",
-                  border: "1px solid #dee2e6",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                  border: `1px solid ${COLORS.border.default}`,
+                  boxShadow: SHADOWS.md,
                   display: "flex",
                   flexDirection: "column",
                   gap: "1rem",
@@ -259,7 +260,7 @@ const Home: React.FC = () => {
                         margin: 0,
                         fontSize: "1.25rem",
                         fontWeight: 600,
-                        color: "#212529",
+                        color: COLORS.text.primary,
                       }}
                     >
                       Invite Users
@@ -268,7 +269,7 @@ const Home: React.FC = () => {
                       style={{
                         margin: 0,
                         fontSize: "0.875rem",
-                        color: "#6c757d",
+                        color: COLORS.text.secondary,
                       }}
                     >
                       Send invitations to join
@@ -286,11 +287,11 @@ const Home: React.FC = () => {
             ) : (
               <div
                 style={{
-                  backgroundColor: "white",
+                  backgroundColor: COLORS.background.default,
                   borderRadius: "12px",
                   padding: "1.5rem",
-                  border: "1px solid #dee2e6",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                  border: `1px solid ${COLORS.border.default}`,
+                  boxShadow: SHADOWS.md,
                   display: "flex",
                   flexDirection: "column",
                   gap: "1rem",
@@ -327,7 +328,7 @@ const Home: React.FC = () => {
                         margin: 0,
                         fontSize: "1.25rem",
                         fontWeight: 600,
-                        color: "#212529",
+                        color: COLORS.text.primary,
                       }}
                     >
                       Create Player Profile
@@ -336,7 +337,7 @@ const Home: React.FC = () => {
                       style={{
                         margin: 0,
                         fontSize: "0.875rem",
-                        color: "#6c757d",
+                        color: COLORS.text.secondary,
                       }}
                     >
                       Set up your player profile to get started
@@ -346,7 +347,7 @@ const Home: React.FC = () => {
                 <div
                   style={{
                     paddingTop: "1rem",
-                    borderTop: "1px solid #e9ecef",
+                    borderTop: `1px solid ${COLORS.border.default}`,
                     marginTop: "auto",
                     display: "flex",
                     flexDirection: "column",
@@ -357,7 +358,7 @@ const Home: React.FC = () => {
                     style={{
                       margin: 0,
                       fontSize: "0.9375rem",
-                      color: "#6c757d",
+                      color: COLORS.text.primary,
                       lineHeight: "1.5",
                     }}
                   >

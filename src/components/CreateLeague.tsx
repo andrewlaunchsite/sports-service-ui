@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createLeague, getLeagues } from "../models/leagueSlice";
 import { AppDispatch, RootState } from "../models/store";
-import { BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
+import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
 
 interface FormState {
   name: string;
@@ -105,7 +105,7 @@ const CreateLeague: React.FC = () => {
             marginBottom: "0.5rem",
             fontWeight: 500,
             fontSize: "0.9375rem",
-            color: "#212529",
+            color: COLORS.text.primary,
           }}
         >
           League Name
@@ -119,17 +119,19 @@ const CreateLeague: React.FC = () => {
           style={{
             width: "100%",
             padding: "0.625rem 0.75rem",
-            border: "1px solid #dee2e6",
-            borderRadius: "6px",
+            border: `1px solid ${COLORS.border.default}`,
+            borderRadius: "8px",
             fontSize: "0.9375rem",
+            backgroundColor: COLORS.background.lighter,
+            color: COLORS.text.primary,
             transition: "border-color 0.2s, box-shadow 0.2s",
           }}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = "#007bff";
-            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
+            e.currentTarget.style.borderColor = COLORS.primary;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primary}33`;
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = "#dee2e6";
+            e.currentTarget.style.borderColor = COLORS.border.default;
             e.currentTarget.style.boxShadow = "none";
           }}
         />
@@ -142,7 +144,7 @@ const CreateLeague: React.FC = () => {
             marginBottom: "0.5rem",
             fontWeight: 500,
             fontSize: "0.9375rem",
-            color: "#212529",
+            color: COLORS.text.primary,
           }}
         >
           Logo (JPEG, JPG, or PNG)
@@ -155,7 +157,7 @@ const CreateLeague: React.FC = () => {
           style={{
             width: "100%",
             padding: "0.625rem 0.75rem",
-            border: "1px solid #dee2e6",
+            border: `1px solid ${COLORS.border.default}`,
             borderRadius: "6px",
             fontSize: "0.9375rem",
             transition: "border-color 0.2s, box-shadow 0.2s",
@@ -165,7 +167,7 @@ const CreateLeague: React.FC = () => {
             e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = "#dee2e6";
+            e.currentTarget.style.borderColor = COLORS.border.default;
             e.currentTarget.style.boxShadow = "none";
           }}
         />
@@ -178,7 +180,7 @@ const CreateLeague: React.FC = () => {
                 maxWidth: "200px",
                 maxHeight: "200px",
                 borderRadius: "8px",
-                border: "1px solid #dee2e6",
+                border: `1px solid ${COLORS.border.default}`,
                 objectFit: "contain",
               }}
             />

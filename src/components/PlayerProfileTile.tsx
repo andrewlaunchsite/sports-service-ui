@@ -236,7 +236,7 @@ const PlayerProfileTile: React.FC<PlayerProfileTileProps> = ({
             color: COLORS.text.secondary,
             marginTop: "0.5rem",
             padding: "0.75rem",
-            backgroundColor: COLORS.background.light || "#f8f9fa",
+            backgroundColor: COLORS.background.lighter,
             borderRadius: "8px",
           }}
         >

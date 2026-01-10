@@ -135,13 +135,15 @@ const CreateTeam: React.FC<CreateTeamProps> = ({ leagueId }) => {
             width: "100%",
             padding: "0.625rem 0.75rem",
             border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
+            borderRadius: "8px",
             fontSize: "0.9375rem",
+            backgroundColor: COLORS.background.lighter,
+            color: COLORS.text.primary,
             transition: "border-color 0.2s, box-shadow 0.2s",
           }}
           onFocus={(e) => {
             e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primary}33`;
           }}
           onBlur={(e) => {
             e.currentTarget.style.borderColor = COLORS.border.default;

@@ -1698,7 +1698,8 @@ const PlayerStats: React.FC = () => {
           </div>
         )}
 
-        {leaderboardPlayers.length > 0 && (
+        {(leaderboardPlayers.length > 0 ||
+          leagueLoadingState.loadingLeaderboard) && (
           <div style={{ width: "100%" }}>
             <div
               style={{
@@ -1719,18 +1720,19 @@ const PlayerStats: React.FC = () => {
                 }}
               >
                 Leaderboard
-                {selectedTeamFilter !== "all" && (
-                  <span
-                    style={{
-                      fontSize: "1rem",
-                      fontWeight: 400,
-                      color: COLORS.text.secondary,
-                      marginLeft: "0.5rem",
-                    }}
-                  >
-                    ({leaderboardPlayers.length})
-                  </span>
-                )}
+                {selectedTeamFilter !== "all" &&
+                  !leagueLoadingState.loadingLeaderboard && (
+                    <span
+                      style={{
+                        fontSize: "1rem",
+                        fontWeight: 400,
+                        color: COLORS.text.secondary,
+                        marginLeft: "0.5rem",
+                      }}
+                    >
+                      ({leaderboardPlayers.length})
+                    </span>
+                  )}
               </h2>
             </div>
             <div
@@ -1751,34 +1753,37 @@ const PlayerStats: React.FC = () => {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    backgroundColor: "rgba(26, 32, 44, 0.95)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    zIndex: 10,
+                    zIndex: 100,
                     borderRadius: "12px",
+                    backdropFilter: "blur(2px)",
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "0.5rem",
-                      color: COLORS.text.secondary,
+                      gap: "0.75rem",
+                      color: COLORS.text.primary,
                       fontSize: "0.875rem",
+                      fontWeight: 500,
                     }}
                   >
                     <div
                       style={{
-                        width: "16px",
-                        height: "16px",
-                        border: `2px solid ${COLORS.border.default}`,
+                        width: "24px",
+                        height: "24px",
+                        border: `3px solid rgba(107, 127, 168, 0.2)`,
                         borderTopColor: COLORS.primary,
                         borderRadius: "50%",
                         animation: "spin 0.8s linear infinite",
+                        flexShrink: 0,
                       }}
                     />
-                    Loading...
+                    <span>Loading...</span>
                   </div>
                 </div>
               )}
@@ -1990,48 +1995,30 @@ const PlayerStats: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {leaderboardPlayers
-                      .filter(
-                        (p) => !myPlayerStats || p.id !== myPlayerStats.id
-                      )
-                      .map((player, index) => {
-                        const rank = index + 1;
-                        const isMyPlayer =
-                          myPlayerStats && player.id === myPlayerStats.id;
-                        return (
+                    {leagueLoadingState.loadingLeaderboard &&
+                    leaderboardPlayers.length === 0
+                      ? // Show skeleton rows while loading
+                        Array.from({ length: 5 }).map((_, idx) => (
                           <tr
-                            key={player.id}
-                            onClick={() =>
-                              setSearchParams({ id: player.id.toString() })
-                            }
+                            key={`skeleton-${idx}`}
                             style={{
                               borderBottom: `1px solid ${COLORS.border.light}`,
-                              cursor: "pointer",
-                              transition: "background-color 0.2s",
-                              backgroundColor: isMyPlayer
-                                ? COLORS.primaryLight
-                                : "transparent",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = isMyPlayer
-                                ? COLORS.primaryLight
-                                : COLORS.background.lighter;
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = isMyPlayer
-                                ? COLORS.primaryLight
-                                : "transparent";
                             }}
                           >
                             <td
                               style={{
                                 padding: "1rem",
-                                fontSize: "1rem",
-                                fontWeight: 600,
-                                color: COLORS.text.primary,
+                                textAlign: "left",
                               }}
                             >
-                              {rank}
+                              <div
+                                style={{
+                                  width: "40px",
+                                  height: "16px",
+                                  backgroundColor: COLORS.background.lighter,
+                                  borderRadius: "4px",
+                                }}
+                              />
                             </td>
                             <td style={{ padding: "1rem" }}>
                               <div
@@ -2041,138 +2028,244 @@ const PlayerStats: React.FC = () => {
                                   gap: "0.75rem",
                                 }}
                               >
-                                <PlayerAvatar
-                                  player={{
-                                    name: player.name,
-                                    pictureUrl: (player as any).pictureUrl,
-                                    number: player.number,
+                                <div
+                                  style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    borderRadius: "50%",
+                                    backgroundColor: COLORS.background.lighter,
                                   }}
-                                  team={getPlayerTeam(player)}
-                                  size="small"
                                 />
                                 <div>
                                   <div
                                     style={{
-                                      fontSize: "1rem",
-                                      fontWeight: 600,
-                                      color: COLORS.text.primary,
+                                      width: "120px",
+                                      height: "16px",
+                                      backgroundColor:
+                                        COLORS.background.lighter,
+                                      borderRadius: "4px",
                                       marginBottom: "0.25rem",
                                     }}
-                                  >
-                                    {player.name}
-                                  </div>
+                                  />
                                   <div
                                     style={{
-                                      fontSize: "0.875rem",
-                                      color: COLORS.text.secondary,
+                                      width: "80px",
+                                      height: "12px",
+                                      backgroundColor:
+                                        COLORS.background.lighter,
+                                      borderRadius: "4px",
                                     }}
-                                  >
-                                    {player.team}
-                                  </div>
+                                  />
                                 </div>
                               </div>
                             </td>
-                            <td
-                              style={{
-                                padding: "1rem",
-                                textAlign: "center",
-                                fontSize: "1rem",
-                                fontWeight: 600,
-                                color: COLORS.success,
-                              }}
-                            >
-                              {player.stats.points.toFixed(1)}
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem",
-                                textAlign: "center",
-                                fontSize: "1rem",
-                                fontWeight: 600,
-                                color: COLORS.primary,
-                              }}
-                            >
-                              {player.stats.rebounds.toFixed(1)}
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem",
-                                textAlign: "center",
-                                fontSize: "1rem",
-                                fontWeight: 600,
-                                color: COLORS.warning,
-                              }}
-                            >
-                              {player.stats.assists.toFixed(1)}
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem",
-                                textAlign: "center",
-                                fontSize: "1rem",
-                                fontWeight: 600,
-                                color: COLORS.text.primary,
-                              }}
-                            >
-                              {player.stats.fieldGoalPercentage.toFixed(1)}%
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem",
-                                textAlign: "center",
-                                fontSize: "1rem",
-                                fontWeight: 600,
-                                color: COLORS.text.primary,
-                              }}
-                            >
-                              {player.stats.threePointPercentage.toFixed(1)}%
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem",
-                                textAlign: "center",
-                                fontSize: "1rem",
-                                fontWeight: 600,
-                                color: COLORS.text.primary,
-                              }}
-                            >
-                              {player.stats.freeThrowPercentage.toFixed(1)}%
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem",
-                                textAlign: "center",
-                                fontSize: "1rem",
-                                fontWeight: 600,
-                                color: COLORS.text.primary,
-                              }}
-                            >
-                              {player.stats.steals.toFixed(1)}
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem",
-                                textAlign: "center",
-                                fontSize: "1rem",
-                                fontWeight: 600,
-                                color: COLORS.text.primary,
-                              }}
-                            >
-                              {player.stats.blocks.toFixed(1)}
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem",
-                                textAlign: "center",
-                                fontSize: "1rem",
-                                color: COLORS.text.secondary,
-                              }}
-                            >
-                              {player.stats.gamesPlayed}
-                            </td>
+                            {Array.from({ length: 8 }).map((_, colIdx) => (
+                              <td
+                                key={colIdx}
+                                style={{
+                                  padding: "1rem",
+                                  textAlign: "center",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: "50px",
+                                    height: "16px",
+                                    backgroundColor: COLORS.background.lighter,
+                                    borderRadius: "4px",
+                                    margin: "0 auto",
+                                  }}
+                                />
+                              </td>
+                            ))}
                           </tr>
-                        );
-                      })}
+                        ))
+                      : leaderboardPlayers
+                          .filter(
+                            (p) => !myPlayerStats || p.id !== myPlayerStats.id
+                          )
+                          .map((player, index) => {
+                            const rank = index + 1;
+                            const isMyPlayer =
+                              myPlayerStats && player.id === myPlayerStats.id;
+                            return (
+                              <tr
+                                key={player.id}
+                                onClick={() =>
+                                  setSearchParams({ id: player.id.toString() })
+                                }
+                                style={{
+                                  borderBottom: `1px solid ${COLORS.border.light}`,
+                                  cursor: "pointer",
+                                  transition: "background-color 0.2s",
+                                  backgroundColor: isMyPlayer
+                                    ? COLORS.primaryLight
+                                    : "transparent",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    isMyPlayer
+                                      ? COLORS.primaryLight
+                                      : COLORS.background.lighter;
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    isMyPlayer
+                                      ? COLORS.primaryLight
+                                      : "transparent";
+                                }}
+                              >
+                                <td
+                                  style={{
+                                    padding: "1rem",
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                    color: COLORS.text.primary,
+                                  }}
+                                >
+                                  {rank}
+                                </td>
+                                <td style={{ padding: "1rem" }}>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "0.75rem",
+                                    }}
+                                  >
+                                    <PlayerAvatar
+                                      player={{
+                                        name: player.name,
+                                        pictureUrl: (player as any).pictureUrl,
+                                        number: player.number,
+                                      }}
+                                      team={getPlayerTeam(player)}
+                                      size="small"
+                                    />
+                                    <div>
+                                      <div
+                                        style={{
+                                          fontSize: "1rem",
+                                          fontWeight: 600,
+                                          color: COLORS.text.primary,
+                                          marginBottom: "0.25rem",
+                                        }}
+                                      >
+                                        {player.name}
+                                      </div>
+                                      <div
+                                        style={{
+                                          fontSize: "0.875rem",
+                                          color: COLORS.text.secondary,
+                                        }}
+                                      >
+                                        {player.team}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "1rem",
+                                    textAlign: "center",
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                    color: COLORS.success,
+                                  }}
+                                >
+                                  {player.stats.points.toFixed(1)}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "1rem",
+                                    textAlign: "center",
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                    color: COLORS.primary,
+                                  }}
+                                >
+                                  {player.stats.rebounds.toFixed(1)}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "1rem",
+                                    textAlign: "center",
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                    color: COLORS.warning,
+                                  }}
+                                >
+                                  {player.stats.assists.toFixed(1)}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "1rem",
+                                    textAlign: "center",
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                    color: COLORS.text.primary,
+                                  }}
+                                >
+                                  {player.stats.fieldGoalPercentage.toFixed(1)}%
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "1rem",
+                                    textAlign: "center",
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                    color: COLORS.text.primary,
+                                  }}
+                                >
+                                  {player.stats.threePointPercentage.toFixed(1)}
+                                  %
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "1rem",
+                                    textAlign: "center",
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                    color: COLORS.text.primary,
+                                  }}
+                                >
+                                  {player.stats.freeThrowPercentage.toFixed(1)}%
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "1rem",
+                                    textAlign: "center",
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                    color: COLORS.text.primary,
+                                  }}
+                                >
+                                  {player.stats.steals.toFixed(1)}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "1rem",
+                                    textAlign: "center",
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                    color: COLORS.text.primary,
+                                  }}
+                                >
+                                  {player.stats.blocks.toFixed(1)}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "1rem",
+                                    textAlign: "center",
+                                    fontSize: "1rem",
+                                    color: COLORS.text.secondary,
+                                  }}
+                                >
+                                  {player.stats.gamesPlayed}
+                                </td>
+                              </tr>
+                            );
+                          })}
                   </tbody>
                 </table>
               </div>
@@ -2180,18 +2273,21 @@ const PlayerStats: React.FC = () => {
           </div>
         )}
 
-        {leaderboardPlayers.length === 0 && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "3rem 2rem",
-              color: COLORS.text.secondary,
-              fontSize: "1rem",
-            }}
-          >
-            No players found for the selected filter.
-          </div>
-        )}
+        {leaderboardPlayers.length === 0 &&
+          !leagueLoadingState.loadingLeaderboard &&
+          !teamLoadingState.loadingTeams &&
+          hasSetDefaultTeam && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "3rem 2rem",
+                color: COLORS.text.secondary,
+                fontSize: "1rem",
+              }}
+            >
+              No players found for the selected filter.
+            </div>
+          )}
 
         {totalPages > 1 && (
           <div

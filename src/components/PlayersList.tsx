@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getPlayersByTeam } from "../models/playerSlice";
 import { AppDispatch, RootState } from "../models/store";
-import { COLORS } from "../config/styles";
+import { COLORS, SHADOWS } from "../config/styles";
 import { ROUTES } from "../config/constants";
 import Loading from "./Loading";
 import PlayerAvatar from "./PlayerAvatar";
@@ -128,11 +128,11 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
               key={player.id}
               onClick={() => navigate(`${ROUTES.PLAYER_STATS}?id=${player.id}`)}
               style={{
-                backgroundColor: "white",
+                backgroundColor: COLORS.background.default,
                 borderRadius: "8px",
                 padding: "1.25rem",
-                border: "1px solid #dee2e6",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                border: `1px solid ${COLORS.border.default}`,
+                boxShadow: SHADOWS.sm,
                 transition: "transform 0.2s, box-shadow 0.2s",
                 cursor: "pointer",
               }}
@@ -169,6 +169,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                     fontWeight: 600,
                     fontSize: "1.1rem",
                     marginBottom: "0.25rem",
+                    color: COLORS.text.primary,
                   }}
                 >
                   {displayName || player.name}
@@ -177,7 +178,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                   <div
                     style={{
                       fontSize: "0.875rem",
-                      color: "#6c757d",
+                      color: COLORS.text.secondary,
                       marginBottom: "0.5rem",
                     }}
                   >
@@ -206,7 +207,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ teamId }) => {
                     width: "100%",
                     marginTop: "0.5rem",
                     paddingTop: "0.5rem",
-                    borderTop: "1px solid #e9ecef",
+                    borderTop: `1px solid ${COLORS.border.default}`,
                   }}
                 >
                   {heightInches && (

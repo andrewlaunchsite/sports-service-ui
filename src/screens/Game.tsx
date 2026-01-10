@@ -1629,6 +1629,10 @@ const Game: React.FC = () => {
                                       flexDirection: "column",
                                       gap: "0.25rem",
                                       alignItems: "center",
+                                      padding: "0.5rem",
+                                      backgroundColor: COLORS.background.light,
+                                      borderRadius: "6px",
+                                      border: `1px solid ${COLORS.border.default}`,
                                     }}
                                   >
                                     <div
@@ -1682,13 +1686,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -1723,6 +1737,16 @@ const Game: React.FC = () => {
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.successHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.success;
                                             }}
                                           >
                                             +
@@ -1764,13 +1788,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -1823,6 +1857,10 @@ const Game: React.FC = () => {
                                       flexDirection: "column",
                                       gap: "0.25rem",
                                       alignItems: "center",
+                                      padding: "0.5rem",
+                                      backgroundColor: COLORS.background.light,
+                                      borderRadius: "6px",
+                                      border: `1px solid ${COLORS.border.default}`,
                                     }}
                                   >
                                     <div
@@ -1876,13 +1914,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -1916,6 +1964,16 @@ const Game: React.FC = () => {
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.successHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.success;
                                             }}
                                           >
                                             +
@@ -1957,13 +2015,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -2014,6 +2082,10 @@ const Game: React.FC = () => {
                                       flexDirection: "column",
                                       gap: "0.25rem",
                                       alignItems: "center",
+                                      padding: "0.5rem",
+                                      backgroundColor: COLORS.background.light,
+                                      borderRadius: "6px",
+                                      border: `1px solid ${COLORS.border.default}`,
                                     }}
                                   >
                                     <div
@@ -2067,13 +2139,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -2107,6 +2189,16 @@ const Game: React.FC = () => {
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.successHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.success;
                                             }}
                                           >
                                             +
@@ -2148,13 +2240,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -2667,6 +2769,10 @@ const Game: React.FC = () => {
                                       flexDirection: "column",
                                       gap: "0.25rem",
                                       alignItems: "center",
+                                      padding: "0.5rem",
+                                      backgroundColor: COLORS.background.light,
+                                      borderRadius: "6px",
+                                      border: `1px solid ${COLORS.border.default}`,
                                     }}
                                   >
                                     <div
@@ -2720,13 +2826,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -2761,6 +2877,16 @@ const Game: React.FC = () => {
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.successHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.success;
                                             }}
                                           >
                                             +
@@ -2802,13 +2928,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -2861,6 +2997,10 @@ const Game: React.FC = () => {
                                       flexDirection: "column",
                                       gap: "0.25rem",
                                       alignItems: "center",
+                                      padding: "0.5rem",
+                                      backgroundColor: COLORS.background.light,
+                                      borderRadius: "6px",
+                                      border: `1px solid ${COLORS.border.default}`,
                                     }}
                                   >
                                     <div
@@ -2914,13 +3054,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -2954,6 +3104,16 @@ const Game: React.FC = () => {
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.successHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.success;
                                             }}
                                           >
                                             +
@@ -2995,13 +3155,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -3052,6 +3222,10 @@ const Game: React.FC = () => {
                                       flexDirection: "column",
                                       gap: "0.25rem",
                                       alignItems: "center",
+                                      padding: "0.5rem",
+                                      backgroundColor: COLORS.background.light,
+                                      borderRadius: "6px",
+                                      border: `1px solid ${COLORS.border.default}`,
                                     }}
                                   >
                                     <div
@@ -3105,13 +3279,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -
@@ -3145,6 +3329,16 @@ const Game: React.FC = () => {
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.successHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.success;
                                             }}
                                           >
                                             +
@@ -3186,13 +3380,23 @@ const Game: React.FC = () => {
                                             }
                                             style={{
                                               padding: "0.125rem 0.25rem",
-                                              backgroundColor: awayPrimaryColor,
+                                              backgroundColor: COLORS.danger,
                                               color: "white",
                                               border: "none",
                                               borderRadius: "2px",
                                               cursor: "pointer",
                                               fontSize: "0.65rem",
                                               minWidth: "20px",
+                                              transition:
+                                                "background-color 0.2s",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.dangerHover;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor =
+                                                COLORS.danger;
                                             }}
                                           >
                                             -

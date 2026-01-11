@@ -336,34 +336,19 @@ const Team: React.FC = () => {
                 {team.name}
               </span>
             </div>
-            <h1
+            <div
               style={{
-                fontSize: "2.5rem",
-                fontWeight: 600,
-                margin: 0,
-                color: COLORS.text.primary,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
               }}
             >
-              {team.name}
-            </h1>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "1.5rem",
-              width: "100%",
-              alignItems: "flex-start",
-            }}
-          >
-            <div style={TILE_STYLE}>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.75rem",
-                  marginBottom: "1rem",
+                  gap: "1rem",
                 }}
               >
                 {(() => {
@@ -377,9 +362,9 @@ const Team: React.FC = () => {
                       src={logoUrl}
                       alt={team.name}
                       style={{
-                        width: "48px",
-                        height: "48px",
-                        borderRadius: "8px",
+                        width: "64px",
+                        height: "64px",
+                        borderRadius: "12px",
                         objectFit: "cover",
                         border: `2px solid ${primaryColor}`,
                       }}
@@ -387,15 +372,15 @@ const Team: React.FC = () => {
                   ) : (
                     <div
                       style={{
-                        width: "48px",
-                        height: "48px",
-                        borderRadius: "8px",
+                        width: "64px",
+                        height: "64px",
+                        borderRadius: "12px",
                         backgroundColor: primaryColor,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         color: "white",
-                        fontSize: "1.5rem",
+                        fontSize: "2rem",
                         fontWeight: 700,
                       }}
                     >
@@ -403,35 +388,35 @@ const Team: React.FC = () => {
                     </div>
                   );
                 })()}
-                <div style={{ flex: 1 }}>
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: "1.25rem",
-                      fontWeight: 600,
-                      color: COLORS.text.primary,
-                    }}
-                  >
-                    {team.name}
-                  </h3>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "0.875rem",
-                      color: COLORS.text.secondary,
-                    }}
-                  >
-                    Team Details
-                  </p>
-                </div>
-                <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
-                  <EditTeam team={team} />
-                </AuthAware>
+                <h1
+                  style={{
+                    fontSize: "2.5rem",
+                    fontWeight: 600,
+                    margin: 0,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  {team.name}
+                </h1>
               </div>
               <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
-                <EditTeam team={team} renderFormOnly />
+                <EditTeam team={team} />
               </AuthAware>
             </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "1.5rem",
+              width: "100%",
+              alignItems: "flex-start",
+            }}
+          >
+            <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
+              <EditTeam team={team} renderFormOnly />
+            </AuthAware>
             {myPlayer && myPlayer.teamId === team.id ? (
               <PlayerProfileTile player={myPlayer} team={team || null} />
             ) : !myPlayer ? (

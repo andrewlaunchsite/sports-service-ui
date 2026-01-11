@@ -438,12 +438,25 @@ const PlayerStats: React.FC = () => {
           playerTeamId === gameStat.homeTeamId
             ? gameStat.awayTeamName
             : gameStat.homeTeamName;
+        const playerTeamName =
+          playerTeamId === gameStat.homeTeamId
+            ? gameStat.homeTeamName
+            : gameStat.awayTeamName;
+        const gameDate = gameStat.gameDate
+          ? new Date(gameStat.gameDate).toLocaleDateString()
+          : "Unknown";
+        // Use opponent name for chart display, truncate if too long
+        const displayLabel = opponentTeamName
+          ? opponentTeamName.length > 12
+            ? `${opponentTeamName.substring(0, 10)}...`
+            : opponentTeamName
+          : "Unknown";
         return {
-          game: `Game ${index + 1}`,
+          game: displayLabel,
           opponent: opponentTeamName || "Unknown",
-          date: gameStat.gameDate
-            ? new Date(gameStat.gameDate).toLocaleDateString()
-            : "Unknown",
+          playerTeam: playerTeamName || "Unknown",
+          date: gameDate,
+          fullLabel: opponentTeamName ? `vs ${opponentTeamName}` : "Unknown",
           points: gameStat.points || 0,
           rebounds: gameStat.rebounds || 0,
           assists: gameStat.assists || 0,
@@ -859,9 +872,24 @@ const PlayerStats: React.FC = () => {
                       strokeDasharray="3 3"
                       stroke={COLORS.border.default}
                     />
-                    <XAxis dataKey="game" stroke={COLORS.text.secondary} />
+                    <XAxis
+                      dataKey="game"
+                      stroke={COLORS.text.secondary}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
                     <YAxis stroke={COLORS.text.secondary} />
-                    <Tooltip />
+                    <Tooltip
+                      formatter={(value: any, name: string) => [value, name]}
+                      labelFormatter={(label: string, payload: any) => {
+                        if (payload && payload[0]) {
+                          const data = payload[0].payload;
+                          return `${data.fullLabel} (${data.date})`;
+                        }
+                        return label;
+                      }}
+                    />
                     <Legend />
                     <Line
                       type="monotone"
@@ -898,9 +926,24 @@ const PlayerStats: React.FC = () => {
                       strokeDasharray="3 3"
                       stroke={COLORS.border.default}
                     />
-                    <XAxis dataKey="game" stroke={COLORS.text.secondary} />
+                    <XAxis
+                      dataKey="game"
+                      stroke={COLORS.text.secondary}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
                     <YAxis stroke={COLORS.text.secondary} />
-                    <Tooltip />
+                    <Tooltip
+                      formatter={(value: any, name: string) => [value, name]}
+                      labelFormatter={(label: string, payload: any) => {
+                        if (payload && payload[0]) {
+                          const data = payload[0].payload;
+                          return `${data.fullLabel} (${data.date})`;
+                        }
+                        return label;
+                      }}
+                    />
                     <Legend />
                     <Bar dataKey="points" fill={COLORS.success} name="Points" />
                     <Bar

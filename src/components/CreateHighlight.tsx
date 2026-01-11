@@ -2,7 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createHighlight, getHighlightsByGame } from "../models/highlightSlice";
 import { AppDispatch, RootState } from "../models/store";
-import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
+import {
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  COLORS,
+  TEXT_FIELD_STYLES,
+} from "../config/styles";
 import PlayerAvatar from "./PlayerAvatar";
 import { TextField } from "@mui/material";
 
@@ -252,18 +257,7 @@ const CreateHighlight: React.FC<CreateHighlightProps> = ({
             required
             fullWidth
             variant="outlined"
-            style={{
-              backgroundColor: COLORS.background.default,
-            }}
-            InputLabelProps={{
-              style: { color: COLORS.text.secondary },
-            }}
-            InputProps={{
-              style: {
-                color: COLORS.text.primary,
-                backgroundColor: COLORS.background.lighter,
-              },
-            }}
+            {...TEXT_FIELD_STYLES}
           />
 
           <TextField
@@ -274,18 +268,7 @@ const CreateHighlight: React.FC<CreateHighlightProps> = ({
             rows={3}
             fullWidth
             variant="outlined"
-            style={{
-              backgroundColor: COLORS.background.default,
-            }}
-            InputLabelProps={{
-              style: { color: COLORS.text.secondary },
-            }}
-            InputProps={{
-              style: {
-                color: COLORS.text.primary,
-                backgroundColor: COLORS.background.lighter,
-              },
-            }}
+            {...TEXT_FIELD_STYLES}
           />
 
           <div
@@ -304,18 +287,7 @@ const CreateHighlight: React.FC<CreateHighlightProps> = ({
               inputProps={{ min: 1 }}
               helperText="1-4 for quarters, 5+ for OT"
               variant="outlined"
-              InputLabelProps={{
-                style: { color: COLORS.text.secondary },
-              }}
-              InputProps={{
-                style: {
-                  color: COLORS.text.primary,
-                  backgroundColor: COLORS.background.lighter,
-                },
-              }}
-              FormHelperTextProps={{
-                style: { color: COLORS.text.muted },
-              }}
+              {...TEXT_FIELD_STYLES}
             />
             <TextField
               label="Minutes"
@@ -325,15 +297,7 @@ const CreateHighlight: React.FC<CreateHighlightProps> = ({
               required
               inputProps={{ min: 0, max: 12 }}
               variant="outlined"
-              InputLabelProps={{
-                style: { color: COLORS.text.secondary },
-              }}
-              InputProps={{
-                style: {
-                  color: COLORS.text.primary,
-                  backgroundColor: COLORS.background.lighter,
-                },
-              }}
+              {...TEXT_FIELD_STYLES}
             />
             <TextField
               label="Seconds"
@@ -343,15 +307,7 @@ const CreateHighlight: React.FC<CreateHighlightProps> = ({
               required
               inputProps={{ min: 0, max: 59 }}
               variant="outlined"
-              InputLabelProps={{
-                style: { color: COLORS.text.secondary },
-              }}
-              InputProps={{
-                style: {
-                  color: COLORS.text.primary,
-                  backgroundColor: COLORS.background.lighter,
-                },
-              }}
+              {...TEXT_FIELD_STYLES}
             />
           </div>
 

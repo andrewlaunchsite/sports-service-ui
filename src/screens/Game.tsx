@@ -30,7 +30,12 @@ import GameCard from "../components/GameCard";
 import CreateHighlight from "../components/CreateHighlight";
 import HighlightsGallery from "../components/HighlightsGallery";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
-import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
+import {
+  COLORS,
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  SELECT_STYLES,
+} from "../config/styles";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import EventIcon from "@mui/icons-material/Event";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -4077,7 +4082,7 @@ const Game: React.FC = () => {
               <FormControl style={{ minWidth: "180px" }}>
                 <InputLabel
                   id="league-filter-label"
-                  style={{ color: COLORS.text.secondary }}
+                  style={SELECT_STYLES.InputLabelProps.style}
                 >
                   Filter by League
                 </InputLabel>
@@ -4088,10 +4093,8 @@ const Game: React.FC = () => {
                     setSelectedLeague(e.target.value as number | "all")
                   }
                   label="Filter by League"
-                  style={{
-                    backgroundColor: COLORS.background.default,
-                    color: COLORS.text.primary,
-                  }}
+                  style={SELECT_STYLES.style}
+                  sx={SELECT_STYLES.sx}
                 >
                   <MenuItem value="all">All Leagues</MenuItem>
                   {leagues.map((l) => (
@@ -4106,7 +4109,7 @@ const Game: React.FC = () => {
               <FormControl style={{ minWidth: "180px" }}>
                 <InputLabel
                   id="status-filter-label"
-                  style={{ color: COLORS.text.secondary }}
+                  style={SELECT_STYLES.InputLabelProps.style}
                 >
                   Filter by Status
                 </InputLabel>
@@ -4115,10 +4118,8 @@ const Game: React.FC = () => {
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value as string)}
                   label="Filter by Status"
-                  style={{
-                    backgroundColor: COLORS.background.default,
-                    color: COLORS.text.primary,
-                  }}
+                  style={SELECT_STYLES.style}
+                  sx={SELECT_STYLES.sx}
                 >
                   <MenuItem value="all">All Games</MenuItem>
                   {allStatuses.map((status) => (

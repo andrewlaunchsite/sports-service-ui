@@ -156,3 +156,51 @@ export const TILE_STYLE = {
 
 // Emoji circle background - consistent across all tiles
 export const EMOJI_CIRCLE_BG = `${COLORS.primary}33`; // Primary color with ~20% opacity
+
+// TextField styling - consistent across all text inputs
+export const TEXT_FIELD_STYLES = {
+  style: {
+    backgroundColor: COLORS.background.default,
+  },
+  InputLabelProps: {
+    style: { color: COLORS.text.secondary },
+  },
+  InputProps: {
+    style: {
+      color: COLORS.text.primary,
+      backgroundColor: COLORS.background.lighter,
+    },
+  },
+  FormHelperTextProps: {
+    style: { color: COLORS.text.muted },
+  },
+} as const;
+
+// Select styling - consistent across all select dropdowns
+export const SELECT_STYLES = {
+  style: {
+    backgroundColor: COLORS.background.default,
+    color: COLORS.text.primary,
+  },
+  InputLabelProps: {
+    style: { color: COLORS.text.secondary },
+  },
+  sx: {
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: COLORS.border.default,
+    },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: COLORS.primary,
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: COLORS.primary,
+    },
+    "& .MuiSelect-select": {
+      backgroundColor: COLORS.background.lighter,
+      color: COLORS.text.primary,
+    },
+    "& .MuiSelect-icon": {
+      color: COLORS.text.secondary,
+    },
+  },
+} as const;

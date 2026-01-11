@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createInvitation } from "../models/invitationSlice";
 import { AppDispatch, RootState } from "../models/store";
-import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
+import {
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  COLORS,
+  TEXT_FIELD_STYLES,
+  SELECT_STYLES,
+} from "../config/styles";
 import {
   TextField,
   Select,
@@ -60,7 +66,8 @@ const InviteUser: React.FC<InviteUserProps> = ({
   // Check if team is required for current role
   const isTeamRequired = formState.role === "Player" || requireTeam;
   const hasTeams = teams.length > 0;
-  const canSubmit = !isTeamRequired || (isTeamRequired && formState.teamId !== "");
+  const canSubmit =
+    !isTeamRequired || (isTeamRequired && formState.teamId !== "");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,15 +92,15 @@ const InviteUser: React.FC<InviteUserProps> = ({
     setFormState((prev) => ({ ...prev, email: e.target.value }));
   };
 
-  const handleSelectChange = (field: "role" | "teamId") => (
-    e: SelectChangeEvent<string | number>
-  ) => {
-    const value = e.target.value;
-    setFormState((prev) => ({
-      ...prev,
-      [field]: field === "teamId" ? (value === "" ? "" : Number(value)) : value,
-    }));
-  };
+  const handleSelectChange =
+    (field: "role" | "teamId") => (e: SelectChangeEvent<string | number>) => {
+      const value = e.target.value;
+      setFormState((prev) => ({
+        ...prev,
+        [field]:
+          field === "teamId" ? (value === "" ? "" : Number(value)) : value,
+      }));
+    };
 
   if (!showForm) {
     return (
@@ -120,20 +127,21 @@ const InviteUser: React.FC<InviteUserProps> = ({
         required
         fullWidth
         variant="outlined"
+        {...TEXT_FIELD_STYLES}
       />
 
       <FormControl fullWidth>
-        <InputLabel id="role-label">Role</InputLabel>
+        <InputLabel id="role-label" style={SELECT_STYLES.InputLabelProps.style}>
+          Role
+        </InputLabel>
         <Select
           labelId="role-label"
           value={formState.role}
           onChange={handleSelectChange("role")}
           label="Role"
           required
-          style={{
-            backgroundColor: COLORS.background.default,
-            color: COLORS.text.primary,
-          }}
+          style={SELECT_STYLES.style}
+          sx={SELECT_STYLES.sx}
         >
           <MenuItem value="Admin">Admin</MenuItem>
           <MenuItem value="League Admin">League Admin</MenuItem>
@@ -145,7 +153,12 @@ const InviteUser: React.FC<InviteUserProps> = ({
 
       {isTeamRequired && (
         <FormControl fullWidth required={isTeamRequired}>
-          <InputLabel id="team-label">Team</InputLabel>
+          <InputLabel
+            id="team-label"
+            style={SELECT_STYLES.InputLabelProps.style}
+          >
+            Team
+          </InputLabel>
           <Select
             labelId="team-label"
             value={formState.teamId}
@@ -153,10 +166,8 @@ const InviteUser: React.FC<InviteUserProps> = ({
             label="Team"
             required={isTeamRequired}
             disabled={!hasTeams}
-            style={{
-              backgroundColor: COLORS.background.default,
-              color: COLORS.text.primary,
-            }}
+            style={SELECT_STYLES.style}
+            sx={SELECT_STYLES.sx}
           >
             {teams.map((team) => (
               <MenuItem key={team.id} value={team.id}>
@@ -200,7 +211,11 @@ const InviteUser: React.FC<InviteUserProps> = ({
           type="button"
           onClick={() => {
             setShowForm(false);
-            setFormState({ email: "", role: defaultRole, teamId: teamId || "" });
+            setFormState({
+              email: "",
+              role: defaultRole,
+              teamId: teamId || "",
+            });
           }}
           style={BUTTON_STYLES.secondaryFull}
           {...getButtonHoverStyle("secondary")}

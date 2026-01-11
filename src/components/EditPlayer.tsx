@@ -2,7 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updatePlayer, getMyPlayer } from "../models/playerSlice";
 import { AppDispatch, RootState } from "../models/store";
-import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
+import {
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  COLORS,
+  TEXT_FIELD_STYLES,
+  SELECT_STYLES,
+} from "../config/styles";
 import {
   TextField,
   Select,
@@ -28,7 +34,11 @@ interface FormState {
   picture: File | null;
 }
 
-const EditPlayer: React.FC<EditPlayerProps> = ({ player, onCancel, onSuccess }) => {
+const EditPlayer: React.FC<EditPlayerProps> = ({
+  player,
+  onCancel,
+  onSuccess,
+}) => {
   const dispatch = useDispatch<AppDispatch>();
   const loadingState = useSelector(
     (state: RootState) => state.player.loadingState
@@ -93,7 +103,9 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player, onCancel, onSuccess }) 
     if (formState.picture) payload.picture = formState.picture;
 
     try {
-      await dispatch(updatePlayer({ id: player.id, data: payload }) as any).unwrap();
+      await dispatch(
+        updatePlayer({ id: player.id, data: payload }) as any
+      ).unwrap();
       if (picturePreviewRef.current) {
         URL.revokeObjectURL(picturePreviewRef.current);
         picturePreviewRef.current = null;
@@ -111,11 +123,10 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player, onCancel, onSuccess }) 
     return validTypes.includes(file.type);
   };
 
-  const handleTextChange = (field: keyof FormState) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormState((prev) => ({ ...prev, [field]: e.target.value }));
-  };
+  const handleTextChange =
+    (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormState((prev) => ({ ...prev, [field]: e.target.value }));
+    };
 
   const handleSelectChange = (e: SelectChangeEvent<string>) => {
     setFormState((prev) => ({ ...prev, primaryPosition: e.target.value }));
@@ -163,6 +174,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player, onCancel, onSuccess }) 
         inputProps={{ maxLength: 50 }}
         fullWidth
         variant="outlined"
+        {...TEXT_FIELD_STYLES}
       />
 
       <TextField
@@ -174,6 +186,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player, onCancel, onSuccess }) 
         fullWidth
         variant="outlined"
         helperText="0-99"
+        {...TEXT_FIELD_STYLES}
       />
 
       <TextField
@@ -185,6 +198,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player, onCancel, onSuccess }) 
         fullWidth
         variant="outlined"
         helperText="48-108 inches"
+        {...TEXT_FIELD_STYLES}
       />
 
       <TextField
@@ -196,6 +210,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player, onCancel, onSuccess }) 
         fullWidth
         variant="outlined"
         helperText="100-500 lbs"
+        {...TEXT_FIELD_STYLES}
       />
 
       <TextField
@@ -206,21 +221,27 @@ const EditPlayer: React.FC<EditPlayerProps> = ({ player, onCancel, onSuccess }) 
         fullWidth
         variant="outlined"
         InputLabelProps={{
+          ...TEXT_FIELD_STYLES.InputLabelProps,
           shrink: true,
         }}
+        InputProps={TEXT_FIELD_STYLES.InputProps}
+        style={TEXT_FIELD_STYLES.style}
       />
 
       <FormControl fullWidth>
-        <InputLabel id="position-label">Primary Position</InputLabel>
+        <InputLabel
+          id="position-label"
+          style={SELECT_STYLES.InputLabelProps.style}
+        >
+          Primary Position
+        </InputLabel>
         <Select
           labelId="position-label"
           value={formState.primaryPosition}
           onChange={handleSelectChange}
           label="Primary Position"
-          style={{
-            backgroundColor: COLORS.background.default,
-            color: COLORS.text.primary,
-          }}
+          style={SELECT_STYLES.style}
+          sx={SELECT_STYLES.sx}
         >
           <MenuItem value="">Select position</MenuItem>
           <MenuItem value="PG">PG - Point Guard</MenuItem>

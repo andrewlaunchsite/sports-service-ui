@@ -18,7 +18,7 @@ import AuthAware from "../components/AuthAware";
 import GameCard from "../components/GameCard";
 import PlayerProfileTile from "../components/PlayerProfileTile";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
-import { COLORS, TILE_STYLE } from "../config/styles";
+import { COLORS, TILE_STYLE, SELECT_STYLES } from "../config/styles";
 import Tile from "../components/Tile";
 import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -168,7 +168,7 @@ const Team: React.FC = () => {
               <FormControl style={{ minWidth: "180px" }}>
                 <InputLabel
                   id="league-filter-label"
-                  style={{ color: COLORS.text.secondary }}
+                  style={SELECT_STYLES.InputLabelProps.style}
                 >
                   Filter by League
                 </InputLabel>
@@ -185,10 +185,8 @@ const Team: React.FC = () => {
                     setSearchParams(searchParams);
                   }}
                   label="Filter by League"
-                  style={{
-                    backgroundColor: COLORS.background.default,
-                    color: COLORS.text.primary,
-                  }}
+                  style={SELECT_STYLES.style}
+                  sx={SELECT_STYLES.sx}
                 >
                   <MenuItem value="all">All Leagues</MenuItem>
                   {leagues.map((l) => (

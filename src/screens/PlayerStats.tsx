@@ -14,7 +14,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
-import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
+import {
+  COLORS,
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  SELECT_STYLES,
+} from "../config/styles";
 import {
   getMyPlayer,
   getPlayers,
@@ -1309,7 +1314,7 @@ const PlayerStats: React.FC = () => {
                     <FormControl style={{ minWidth: "200px" }}>
                       <InputLabel
                         id="game-filter-label"
-                        style={{ color: COLORS.text.secondary }}
+                        style={SELECT_STYLES.InputLabelProps.style}
                       >
                         Filter by Game
                       </InputLabel>
@@ -1324,10 +1329,8 @@ const PlayerStats: React.FC = () => {
                           )
                         }
                         label="Filter by Game"
-                        style={{
-                          backgroundColor: COLORS.background.default,
-                          color: COLORS.text.primary,
-                        }}
+                        style={SELECT_STYLES.style}
+                        sx={SELECT_STYLES.sx}
                       >
                         <MenuItem value="all">All Games</MenuItem>
                         {playerGameStats?.content
@@ -1727,9 +1730,7 @@ const PlayerStats: React.FC = () => {
                 >
                   <InputLabel
                     id="team-filter-label"
-                    style={{
-                      color: COLORS.text.secondary,
-                    }}
+                    style={SELECT_STYLES.InputLabelProps.style}
                   >
                     Filter by Team
                   </InputLabel>
@@ -1738,10 +1739,8 @@ const PlayerStats: React.FC = () => {
                     value={selectedTeamFilter}
                     onChange={(e) => setSelectedTeamFilter(e.target.value)}
                     label="Filter by Team"
-                    style={{
-                      backgroundColor: COLORS.background.default,
-                      color: COLORS.text.primary,
-                    }}
+                    style={SELECT_STYLES.style}
+                    sx={SELECT_STYLES.sx}
                   >
                     <MenuItem value="all">All Teams</MenuItem>
                     {teams

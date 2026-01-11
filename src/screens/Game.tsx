@@ -1040,28 +1040,42 @@ const Game: React.FC = () => {
                 display: "flex",
                 justifyContent: "space-around",
                 alignItems: "center",
-                backgroundColor: COLORS.text.primary,
-                color: "white",
-                padding: "1rem",
+                backgroundColor: COLORS.background.light,
+                border: `1px solid ${COLORS.border.default}`,
+                color: COLORS.text.primary,
+                padding: "1.5rem",
                 borderRadius: "12px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
               }}
             >
               <div style={{ textAlign: "center", flex: 1 }}>
                 <div
                   style={{
                     fontSize: "0.875rem",
-                    opacity: 0.8,
+                    color: COLORS.text.secondary,
                     marginBottom: "0.5rem",
                   }}
                 >
                   {homeTeam?.name || "Home"}
                 </div>
-                <div style={{ fontSize: "3rem", fontWeight: 700 }}>
+                <div
+                  style={{
+                    fontSize: "3rem",
+                    fontWeight: 700,
+                    color: COLORS.text.primary,
+                  }}
+                >
                   {homeScore}
                 </div>
               </div>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>
+                <div
+                  style={{
+                    fontSize: "1.25rem",
+                    marginBottom: "0.5rem",
+                    color: COLORS.text.secondary,
+                  }}
+                >
                   Period {period}
                 </div>
                 <div
@@ -1069,6 +1083,7 @@ const Game: React.FC = () => {
                     fontSize: "2.5rem",
                     fontWeight: 700,
                     fontFamily: "monospace",
+                    color: COLORS.text.primary,
                   }}
                 >
                   {formatTime(gameTime)}
@@ -1078,13 +1093,19 @@ const Game: React.FC = () => {
                 <div
                   style={{
                     fontSize: "0.875rem",
-                    opacity: 0.8,
+                    color: COLORS.text.secondary,
                     marginBottom: "0.5rem",
                   }}
                 >
                   {awayTeam?.name || "Away"}
                 </div>
-                <div style={{ fontSize: "3rem", fontWeight: 700 }}>
+                <div
+                  style={{
+                    fontSize: "3rem",
+                    fontWeight: 700,
+                    color: COLORS.text.primary,
+                  }}
+                >
                   {awayScore}
                 </div>
               </div>
@@ -1233,8 +1254,9 @@ const Game: React.FC = () => {
                         </div>
                         <div
                           style={{
-                            fontSize: "0.7rem",
-                            color: "#6c757d",
+                            fontSize: "0.75rem",
+                            color: COLORS.text.primary,
+                            fontWeight: 600,
                           }}
                         >
                           {player.position}
@@ -4036,82 +4058,80 @@ const Game: React.FC = () => {
             >
               Games
             </h1>
-            {games.length > 0 && (
-              <div
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                flexWrap: "wrap",
+              }}
+            >
+              <FilterListIcon
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  flexWrap: "wrap",
+                  fontSize: "1.25rem",
+                  color: COLORS.text.secondary,
                 }}
-              >
-                <FilterListIcon
+              />
+
+              {/* League Filter */}
+              <FormControl style={{ minWidth: "180px" }}>
+                <InputLabel
+                  id="league-filter-label"
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  Filter by League
+                </InputLabel>
+                <Select
+                  labelId="league-filter-label"
+                  value={selectedLeague}
+                  onChange={(e) =>
+                    setSelectedLeague(e.target.value as number | "all")
+                  }
+                  label="Filter by League"
                   style={{
-                    fontSize: "1.25rem",
-                    color: COLORS.text.secondary,
+                    backgroundColor: COLORS.background.default,
+                    color: COLORS.text.primary,
                   }}
-                />
+                >
+                  <MenuItem value="all">All Leagues</MenuItem>
+                  {leagues.map((l) => (
+                    <MenuItem key={l.id} value={l.id}>
+                      {l.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-                {/* League Filter */}
-                <FormControl style={{ minWidth: "180px" }}>
-                  <InputLabel
-                    id="league-filter-label"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    Filter by League
-                  </InputLabel>
-                  <Select
-                    labelId="league-filter-label"
-                    value={selectedLeague}
-                    onChange={(e) =>
-                      setSelectedLeague(e.target.value as number | "all")
-                    }
-                    label="Filter by League"
-                    style={{
-                      backgroundColor: COLORS.background.default,
-                      color: COLORS.text.primary,
-                    }}
-                  >
-                    <MenuItem value="all">All Leagues</MenuItem>
-                    {leagues.map((l) => (
-                      <MenuItem key={l.id} value={l.id}>
-                        {l.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+              {/* Status Filter */}
+              <FormControl style={{ minWidth: "180px" }}>
+                <InputLabel
+                  id="status-filter-label"
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  Filter by Status
+                </InputLabel>
+                <Select
+                  labelId="status-filter-label"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value as string)}
+                  label="Filter by Status"
+                  style={{
+                    backgroundColor: COLORS.background.default,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  <MenuItem value="all">All Games</MenuItem>
+                  {allStatuses.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {getStatusLabel(status)} (
+                      {groupedGames[status]?.length || 0})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-                {/* Status Filter */}
-                <FormControl style={{ minWidth: "180px" }}>
-                  <InputLabel
-                    id="status-filter-label"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    Filter by Status
-                  </InputLabel>
-                  <Select
-                    labelId="status-filter-label"
-                    value={selectedStatus}
-                    onChange={(e) =>
-                      setSelectedStatus(e.target.value as string)
-                    }
-                    label="Filter by Status"
-                    style={{
-                      backgroundColor: COLORS.background.default,
-                      color: COLORS.text.primary,
-                    }}
-                  >
-                    <MenuItem value="all">All Games</MenuItem>
-                    {allStatuses.map((status) => (
-                      <MenuItem key={status} value={status}>
-                        {getStatusLabel(status)} (
-                        {groupedGames[status]?.length || 0})
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                {/* Mine Toggle */}
+              {/* Mine Toggle */}
+              <FormControl style={{ minWidth: "140px" }}>
                 <label
                   style={{
                     display: "flex",
@@ -4121,27 +4141,34 @@ const Game: React.FC = () => {
                     fontSize: "0.875rem",
                     color: COLORS.text.primary,
                     fontWeight: 500,
-                    padding: "0.5rem",
-                    borderRadius: "8px",
+                    height: "56px", // Match MUI Select height
+                    padding: "0 14px", // Match MUI Select padding
+                    borderRadius: "4px",
                     border: `1px solid ${
                       showMineOnly ? COLORS.primary : COLORS.border.default
                     }`,
                     backgroundColor: showMineOnly
                       ? `${COLORS.primary}10`
-                      : "transparent",
+                      : COLORS.background.default,
                     transition: "all 0.2s",
+                    boxSizing: "border-box",
                   }}
                 >
                   <input
                     type="checkbox"
                     checked={showMineOnly}
                     onChange={(e) => setShowMineOnly(e.target.checked)}
-                    style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      cursor: "pointer",
+                      margin: 0,
+                    }}
                   />
                   My Games
                 </label>
-              </div>
-            )}
+              </FormControl>
+            </div>
           </div>
         </div>
 

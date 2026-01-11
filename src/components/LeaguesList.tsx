@@ -135,17 +135,17 @@ const LeaguesList: React.FC = () => {
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: "1rem",
-                }}
-              >
-                <div
-                  style={{
-                    fontWeight: 600,
-                    fontSize: "1.25rem",
-                    color: COLORS.text.primary,
-                      flex: 1,
                   }}
                 >
-                  {league.name}
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "1.25rem",
+                      color: COLORS.text.primary,
+                      flex: 1,
+                    }}
+                  >
+                    {league.name}
                   </div>
                   <AuthAware roles={["League Admin", "Admin"]}>
                     <div onClick={(e) => e.stopPropagation()}>
@@ -169,26 +169,19 @@ const LeaguesList: React.FC = () => {
                   >
                     <div
                       style={{
-                        display: "flex",
-                        justifyContent: "space-between",
                         marginBottom: "0.25rem",
                       }}
                     >
-                      <span>Created:</span>
-                      <span style={{ fontWeight: 500 }}>
+                      <span style={{ fontWeight: 500 }}>Created: </span>
+                      <span style={{ fontStyle: "italic" }}>
                         {formatDate(createdDateTime)}
                       </span>
                     </div>
                     {lastModifiedDateTime &&
                       lastModifiedDateTime !== createdDateTime && (
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span>Updated:</span>
-                          <span style={{ fontWeight: 500 }}>
+                        <div>
+                          <span style={{ fontWeight: 500 }}>Updated: </span>
+                          <span style={{ fontStyle: "italic" }}>
                             {formatDate(lastModifiedDateTime)}
                           </span>
                         </div>

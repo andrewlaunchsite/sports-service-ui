@@ -153,3 +153,6 @@ export const TILE_STYLE = {
   boxSizing: "border-box",
   color: COLORS.text.primary, // Ensure text is visible
 } as const;
+
+// Emoji circle background - consistent across all tiles
+export const EMOJI_CIRCLE_BG = `${COLORS.primary}33`; // Primary color with ~20% opacity

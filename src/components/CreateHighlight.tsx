@@ -252,6 +252,18 @@ const CreateHighlight: React.FC<CreateHighlightProps> = ({
             required
             fullWidth
             variant="outlined"
+            style={{
+              backgroundColor: COLORS.background.default,
+            }}
+            InputLabelProps={{
+              style: { color: COLORS.text.secondary },
+            }}
+            InputProps={{
+              style: {
+                color: COLORS.text.primary,
+                backgroundColor: COLORS.background.lighter,
+              },
+            }}
           />
 
           <TextField
@@ -262,6 +274,18 @@ const CreateHighlight: React.FC<CreateHighlightProps> = ({
             rows={3}
             fullWidth
             variant="outlined"
+            style={{
+              backgroundColor: COLORS.background.default,
+            }}
+            InputLabelProps={{
+              style: { color: COLORS.text.secondary },
+            }}
+            InputProps={{
+              style: {
+                color: COLORS.text.primary,
+                backgroundColor: COLORS.background.lighter,
+              },
+            }}
           />
 
           <div
@@ -280,6 +304,18 @@ const CreateHighlight: React.FC<CreateHighlightProps> = ({
               inputProps={{ min: 1 }}
               helperText="1-4 for quarters, 5+ for OT"
               variant="outlined"
+              InputLabelProps={{
+                style: { color: COLORS.text.secondary },
+              }}
+              InputProps={{
+                style: {
+                  color: COLORS.text.primary,
+                  backgroundColor: COLORS.background.lighter,
+                },
+              }}
+              FormHelperTextProps={{
+                style: { color: COLORS.text.muted },
+              }}
             />
             <TextField
               label="Minutes"
@@ -289,6 +325,15 @@ const CreateHighlight: React.FC<CreateHighlightProps> = ({
               required
               inputProps={{ min: 0, max: 12 }}
               variant="outlined"
+              InputLabelProps={{
+                style: { color: COLORS.text.secondary },
+              }}
+              InputProps={{
+                style: {
+                  color: COLORS.text.primary,
+                  backgroundColor: COLORS.background.lighter,
+                },
+              }}
             />
             <TextField
               label="Seconds"
@@ -298,6 +343,15 @@ const CreateHighlight: React.FC<CreateHighlightProps> = ({
               required
               inputProps={{ min: 0, max: 59 }}
               variant="outlined"
+              InputLabelProps={{
+                style: { color: COLORS.text.secondary },
+              }}
+              InputProps={{
+                style: {
+                  color: COLORS.text.primary,
+                  backgroundColor: COLORS.background.lighter,
+                },
+              }}
             />
           </div>
 

@@ -12,6 +12,7 @@ import EditLeague from "../components/EditLeague";
 import AuthAware from "../components/AuthAware";
 import { NAVBAR_HEIGHT } from "../config/constants";
 import { COLORS, TILE_STYLE } from "../config/styles";
+import Tile from "../components/Tile";
 
 const League: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -43,8 +44,6 @@ const League: React.FC = () => {
     }
   }, [leagueId, dispatch]);
 
-  const existingLeague = !leagueId && leagues.length > 0 ? leagues[0] : null;
-
   if (!leagueId) {
     return (
       <div
@@ -58,6 +57,7 @@ const League: React.FC = () => {
           gap: "2rem",
           maxWidth: "1400px",
           margin: "0 auto",
+          backgroundColor: COLORS.background.light,
         }}
       >
         <div
@@ -78,71 +78,23 @@ const League: React.FC = () => {
           >
             Leagues
           </h1>
-          {!existingLeague && (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "1.5rem",
+            }}
+          >
             <AuthAware roles={["League Admin", "Admin"]}>
-              <div
-                style={{
-                  backgroundColor: COLORS.background.default,
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                  border: `1px solid ${COLORS.border.default}`,
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  minHeight: "200px",
-                  maxWidth: "500px",
-                }}
+              <Tile
+                emoji="🏀"
+                title="Create League"
+                description="Start a new league"
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      backgroundColor: COLORS.primaryLight,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.5rem",
-                    }}
-                  >
-                    🏀
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      Create League
-                    </h3>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.875rem",
-                        color: COLORS.text.secondary,
-                      }}
-                    >
-                      Start a new league
-                    </p>
-                  </div>
-                </div>
-                <div style={{ marginTop: "auto" }}>
-                  <CreateLeague />
-                </div>
-              </div>
+                <CreateLeague />
+              </Tile>
             </AuthAware>
-          )}
+          </div>
         </div>
         <div style={{ width: "100%" }}>
           <LeaguesList />
@@ -217,54 +169,16 @@ const League: React.FC = () => {
               gap: "1.5rem",
             }}
           >
-            <div style={TILE_STYLE}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  marginBottom: "1rem",
-                }}
-              >
-                <div
-                  style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "50%",
-                    backgroundColor: "#e3f2fd",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "1.5rem",
-                  }}
-                >
-                  🏀
-                </div>
-                <div style={{ flex: 1 }}>
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: "1.25rem",
-                      fontWeight: 600,
-                      color: COLORS.text.primary,
-                    }}
-                  >
-                    League Details
-                  </h3>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "0.875rem",
-                      color: COLORS.text.secondary,
-                    }}
-                  >
-                    Manage your league information
-                  </p>
-                </div>
+            <Tile
+              emoji="🏀"
+              title="League Details"
+              description="Manage your league information"
+              headerAction={
                 <AuthAware roles={["League Admin", "Admin"]}>
                   <EditLeague league={league} />
                 </AuthAware>
-              </div>
+              }
+            >
               <AuthAware roles={["League Admin", "Admin"]}>
                 <EditLeague league={league} renderFormOnly />
               </AuthAware>
@@ -287,72 +201,18 @@ const League: React.FC = () => {
                   />
                 </div>
               )}
-            </div>
-          </div>
+            </Tile>
 
-          <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
-            <div
-              style={{
-                backgroundColor: COLORS.background.default,
-                borderRadius: "12px",
-                padding: "1.5rem",
-                border: `1px solid ${COLORS.border.default}`,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-                minHeight: "200px",
-                maxWidth: "500px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                }}
+            <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
+              <Tile
+                emoji="👥"
+                title="Create Team"
+                description={`Add a new team to ${league.name}`}
               >
-                <div
-                  style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "50%",
-                    backgroundColor: "#e0f2fe",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "1.5rem",
-                  }}
-                >
-                  👥
-                </div>
-                <div>
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: "1.25rem",
-                      fontWeight: 600,
-                      color: COLORS.text.primary,
-                    }}
-                  >
-                    Create Team
-                  </h3>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "0.875rem",
-                      color: COLORS.text.secondary,
-                    }}
-                  >
-                    Add a new team to this league
-                  </p>
-                </div>
-              </div>
-              <div style={{ marginTop: "auto" }}>
                 <CreateTeam leagueId={league.id} />
-              </div>
-            </div>
-          </AuthAware>
+              </Tile>
+            </AuthAware>
+          </div>
         </div>
         <div style={{ width: "100%" }}>
           <TeamsList leagueId={league.id} />

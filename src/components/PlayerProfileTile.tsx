@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { COLORS, TILE_STYLE, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
+import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
 import { ROUTES } from "../config/constants";
 import PlayerAvatar from "./PlayerAvatar";
 import EditPlayer from "./EditPlayer";
+import Tile from "./Tile";
 
 interface Team {
   id: number;
@@ -66,107 +67,49 @@ const PlayerProfileTile: React.FC<PlayerProfileTileProps> = ({
 
   if (isEditing) {
     return (
-      <div style={TILE_STYLE}>
+      <Tile
+        emoji="👤"
+        title="Your Player Profile"
+        description="Edit your player details"
+      >
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            marginBottom: "1rem",
+            paddingTop: "1rem",
+            borderTop: `1px solid ${COLORS.border.default}`,
           }}
         >
-          <div
-            style={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "50%",
-              backgroundColor: COLORS.primaryLight,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.5rem",
-            }}
-          >
-            👤
-          </div>
-          <div>
-            <h3
-              style={{
-                margin: 0,
-                fontSize: "1.25rem",
-                fontWeight: 600,
-                color: COLORS.text.primary,
-              }}
-            >
-              Your Player Profile
-            </h3>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "0.875rem",
-                color: COLORS.text.secondary,
-              }}
-            >
-              Edit your player details
-            </p>
-          </div>
+          <EditPlayer
+            key={`edit-player-${player.id}-${isEditing}`}
+            player={player}
+            onCancel={() => setIsEditing(false)}
+            onSuccess={() => setIsEditing(false)}
+          />
         </div>
-        <EditPlayer
-          key={`edit-player-${player.id}-${isEditing}`}
-          player={player}
-          onCancel={() => setIsEditing(false)}
-          onSuccess={() => setIsEditing(false)}
-        />
-      </div>
+      </Tile>
     );
   }
 
   return (
-    <div style={TILE_STYLE}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-          marginBottom: "1rem",
-        }}
-      >
-        <div
-          style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "50%",
-            backgroundColor: COLORS.primaryLight,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "1.5rem",
-          }}
-        >
-          👤
-        </div>
-        <div>
-          <h3
+    <Tile
+      emoji="👤"
+      title="Your Player Profile"
+      description="View your player details"
+      headerAction={
+        showEditButton ? (
+          <button
+            onClick={() => setIsEditing(true)}
             style={{
-              margin: 0,
-              fontSize: "1.25rem",
-              fontWeight: 600,
-              color: COLORS.text.primary,
-            }}
-          >
-            Your Player Profile
-          </h3>
-          <p
-            style={{
-              margin: 0,
+              ...BUTTON_STYLES.secondary,
+              padding: "0.5rem 0.75rem",
               fontSize: "0.875rem",
-              color: COLORS.text.secondary,
             }}
+            {...getButtonHoverStyle("secondary")}
           >
-            View your player details
-          </p>
-        </div>
-      </div>
+            ✏️ Edit
+          </button>
+        ) : undefined
+      }
+    >
       <div
         style={{
           display: "flex",
@@ -278,19 +221,6 @@ const PlayerProfileTile: React.FC<PlayerProfileTileProps> = ({
             marginTop: "0.5rem",
           }}
         >
-          {showEditButton && (
-            <button
-              onClick={() => setIsEditing(true)}
-              style={{
-                ...BUTTON_STYLES.secondary,
-                padding: "0.5rem 0.75rem",
-                fontSize: "0.875rem",
-              }}
-              {...getButtonHoverStyle("secondary")}
-            >
-              ✏️ Edit
-            </button>
-          )}
           <button
             onClick={handleViewStats}
             style={{
@@ -304,9 +234,8 @@ const PlayerProfileTile: React.FC<PlayerProfileTileProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </Tile>
   );
 };
 
 export default PlayerProfileTile;
-

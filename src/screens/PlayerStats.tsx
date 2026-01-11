@@ -29,12 +29,19 @@ import {
   getLeagues,
   getLeagueLeaderboard,
   setLeaderboardPagination,
+  getMyLeague,
 } from "../models/leagueSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import PlayerAvatar from "../components/PlayerAvatar";
 import HighlightsGallery from "../components/HighlightsGallery";
-import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import {
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
+} from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { getHighlightsByPlayer } from "../models/highlightSlice";
 
@@ -87,6 +94,7 @@ const PlayerStats: React.FC = () => {
   const { games } = useSelector((state: RootState) => state.game);
   const {
     leagues,
+    league: myLeague,
     leaderboard,
     leaderboardPagination,
     loadingState: leagueLoadingState,
@@ -116,14 +124,25 @@ const PlayerStats: React.FC = () => {
   useEffect(() => {
     dispatch(getTeams({ offset: 0, limit: 100 }) as any);
     dispatch(getLeagues({ offset: 0, limit: 100 }) as any);
+    dispatch(getMyLeague() as any);
   }, [dispatch]);
 
-  // Set default league when leagues are loaded
+  // Set default league when my league is loaded
+  // Prioritize myLeague over the first league in the list
   useEffect(() => {
-    if (leagues.length > 0 && !selectedLeagueId) {
+    if (myLeague && !selectedLeagueId) {
+      // Use my league if available
+      setSelectedLeagueId(myLeague.id);
+    } else if (
+      !myLeague &&
+      !leagueLoadingState.loadingLeague &&
+      leagues.length > 0 &&
+      !selectedLeagueId
+    ) {
+      // Only fallback to first league if myLeague is not loading and not available
       setSelectedLeagueId(leagues[0].id);
     }
-  }, [leagues, selectedLeagueId]);
+  }, [myLeague, leagues, selectedLeagueId, leagueLoadingState.loadingLeague]);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -419,12 +438,25 @@ const PlayerStats: React.FC = () => {
           playerTeamId === gameStat.homeTeamId
             ? gameStat.awayTeamName
             : gameStat.homeTeamName;
+        const playerTeamName =
+          playerTeamId === gameStat.homeTeamId
+            ? gameStat.homeTeamName
+            : gameStat.awayTeamName;
+        const gameDate = gameStat.gameDate
+          ? new Date(gameStat.gameDate).toLocaleDateString()
+          : "Unknown";
+        // Use opponent name for chart display, truncate if too long
+        const displayLabel = opponentTeamName
+          ? opponentTeamName.length > 12
+            ? `${opponentTeamName.substring(0, 10)}...`
+            : opponentTeamName
+          : "Unknown";
         return {
-          game: `Game ${index + 1}`,
+          game: displayLabel,
           opponent: opponentTeamName || "Unknown",
-          date: gameStat.gameDate
-            ? new Date(gameStat.gameDate).toLocaleDateString()
-            : "Unknown",
+          playerTeam: playerTeamName || "Unknown",
+          date: gameDate,
+          fullLabel: opponentTeamName ? `vs ${opponentTeamName}` : "Unknown",
           points: gameStat.points || 0,
           rebounds: gameStat.rebounds || 0,
           assists: gameStat.assists || 0,
@@ -840,9 +872,24 @@ const PlayerStats: React.FC = () => {
                       strokeDasharray="3 3"
                       stroke={COLORS.border.default}
                     />
-                    <XAxis dataKey="game" stroke={COLORS.text.secondary} />
+                    <XAxis
+                      dataKey="game"
+                      stroke={COLORS.text.secondary}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
                     <YAxis stroke={COLORS.text.secondary} />
-                    <Tooltip />
+                    <Tooltip
+                      formatter={(value: any, name: string) => [value, name]}
+                      labelFormatter={(label: string, payload: any) => {
+                        if (payload && payload[0]) {
+                          const data = payload[0].payload;
+                          return `${data.fullLabel} (${data.date})`;
+                        }
+                        return label;
+                      }}
+                    />
                     <Legend />
                     <Line
                       type="monotone"
@@ -879,9 +926,24 @@ const PlayerStats: React.FC = () => {
                       strokeDasharray="3 3"
                       stroke={COLORS.border.default}
                     />
-                    <XAxis dataKey="game" stroke={COLORS.text.secondary} />
+                    <XAxis
+                      dataKey="game"
+                      stroke={COLORS.text.secondary}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
                     <YAxis stroke={COLORS.text.secondary} />
-                    <Tooltip />
+                    <Tooltip
+                      formatter={(value: any, name: string) => [value, name]}
+                      labelFormatter={(label: string, payload: any) => {
+                        if (payload && payload[0]) {
+                          const data = payload[0].payload;
+                          return `${data.fullLabel} (${data.date})`;
+                        }
+                        return label;
+                      }}
+                    />
                     <Legend />
                     <Bar dataKey="points" fill={COLORS.success} name="Points" />
                     <Bar
@@ -1608,21 +1670,56 @@ const PlayerStats: React.FC = () => {
             >
               Player Statistics
             </h1>
-            {leaderboard.length > 0 && (
-              <div
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                flexWrap: "wrap",
+              }}
+            >
+              <FilterListIcon
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  flexWrap: "wrap",
+                  fontSize: "1.25rem",
+                  color: COLORS.text.secondary,
+                }}
+              />
+              <FormControl
+                style={{
+                  minWidth: "200px",
                 }}
               >
-                <FilterListIcon
+                <InputLabel
+                  id="league-filter-label"
                   style={{
-                    fontSize: "1.25rem",
                     color: COLORS.text.secondary,
                   }}
-                />
+                >
+                  Filter by League
+                </InputLabel>
+                <Select
+                  labelId="league-filter-label"
+                  value={selectedLeagueId ?? ""}
+                  onChange={(e: SelectChangeEvent<number | "">) => {
+                    const value = e.target.value;
+                    setSelectedLeagueId(
+                      value === "" || value === null ? null : Number(value)
+                    );
+                  }}
+                  label="Filter by League"
+                  style={{
+                    backgroundColor: COLORS.background.default,
+                    color: COLORS.text.primary,
+                  }}
+                >
+                  {leagues.map((league) => (
+                    <MenuItem key={league.id} value={league.id}>
+                      {league.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {selectedLeagueId && (
                 <FormControl
                   style={{
                     minWidth: "200px",
@@ -1647,18 +1744,29 @@ const PlayerStats: React.FC = () => {
                     }}
                   >
                     <MenuItem value="all">All Teams</MenuItem>
-                    {teams.map((team) => (
-                      <MenuItem key={team.id} value={team.id.toString()}>
-                        {team.name}
-                        {myPlayer &&
-                          myPlayer.teamId === team.id &&
-                          " (My Team)"}
-                      </MenuItem>
-                    ))}
+                    {teams
+                      .filter((team) => {
+                        // Filter teams by selected league if league has teams
+                        const leagueTeams = teams.filter(
+                          (t) => (t as any).league_id === selectedLeagueId
+                        );
+                        return (
+                          leagueTeams.length === 0 ||
+                          leagueTeams.some((lt) => lt.id === team.id)
+                        );
+                      })
+                      .map((team) => (
+                        <MenuItem key={team.id} value={team.id.toString()}>
+                          {team.name}
+                          {myPlayer &&
+                            myPlayer.teamId === team.id &&
+                            " (My Team)"}
+                        </MenuItem>
+                      ))}
                   </Select>
                 </FormControl>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 

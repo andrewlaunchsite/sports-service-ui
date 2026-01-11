@@ -80,6 +80,21 @@ export const getLeague = createAsyncThunk(
   }
 );
 
+export const getMyLeague = createAsyncThunk(
+  "leagues/getMyLeague",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosInstance.get(`/api/v1/leagues/me`);
+      return data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return rejectWithValue({ ...error, silentError: true });
+      }
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const getLeagues = createAsyncThunk(
   "leagues/getAll",
   async (params?: { offset?: number; limit?: number }) => {
@@ -167,6 +182,7 @@ export const getLeagueLeaderboard = createAsyncThunk(
     params: {
       leagueId: number;
       teamId?: number | null;
+      gameId?: number | null;
       sortBy?: string;
       sortOrder?: "asc" | "desc";
       offset?: number;
@@ -174,10 +190,13 @@ export const getLeagueLeaderboard = createAsyncThunk(
     },
     { rejectWithValue }
   ) => {
-    const { leagueId, teamId, sortBy, sortOrder, offset, limit } = params;
+    const { leagueId, teamId, gameId, sortBy, sortOrder, offset, limit } =
+      params;
     const queryParams = new URLSearchParams();
     if (teamId !== undefined && teamId !== null)
       queryParams.append("team_id", teamId.toString());
+    if (gameId !== undefined && gameId !== null)
+      queryParams.append("game_id", gameId.toString());
     if (sortBy !== undefined) queryParams.append("sort_by", sortBy);
     if (sortOrder !== undefined) queryParams.append("sort_order", sortOrder);
     if (offset !== undefined) queryParams.append("offset", offset.toString());
@@ -258,6 +277,14 @@ const leagueSlice = createSlice({
       .addCase(getLeague.fulfilled, (state, { payload }) => {
         state.league = payload;
         state.loadingState.loadingLeague = false;
+      })
+      .addCase(getMyLeague.fulfilled, (state, { payload }) => {
+        state.league = payload;
+        state.loadingState.loadingLeague = false;
+      })
+      .addCase(getMyLeague.rejected, (state) => {
+        state.loadingState.loadingLeague = false;
+        // Don't set error for 404s - it's okay if user has no league
       })
       .addCase(getLeagues.fulfilled, (state, { payload }) => {
         if (payload.content && Array.isArray(payload.content)) {

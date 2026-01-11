@@ -6,7 +6,6 @@ import {
   BUTTON_STYLES,
   getButtonHoverStyle,
   TILE_STYLE,
-  SHADOWS,
 } from "../config/styles";
 import InviteUser from "../components/InviteUser";
 import CreateLeague from "../components/CreateLeague";
@@ -19,6 +18,7 @@ import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
 import CreateTeam from "../components/CreateTeam";
 import PlayerProfileTile from "../components/PlayerProfileTile";
+import Tile from "../components/Tile";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
@@ -112,243 +112,49 @@ const Home: React.FC = () => {
             }}
           >
             <AuthAware roles={["League Admin", "Admin"]}>
-              <div style={TILE_STYLE}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      backgroundColor: `${COLORS.primary}33`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.5rem",
-                    }}
-                  >
-                    🏀
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      Create League
-                    </h3>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.875rem",
-                        color: COLORS.text.secondary,
-                      }}
-                    >
-                      Start a new league
-                    </p>
-                  </div>
-                </div>
-                <div style={{ marginTop: "auto" }}>
-                  <CreateLeague />
-                </div>
-              </div>
+              <Tile
+                emoji="🏀"
+                title="Create League"
+                description="Start a new league"
+              >
+                <CreateLeague />
+              </Tile>
             </AuthAware>
 
             {existingLeague && (
               <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
-                <div style={TILE_STYLE}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.75rem",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "48px",
-                        height: "48px",
-                        borderRadius: "50%",
-                        backgroundColor: `${COLORS.warning}33`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "1.5rem",
-                      }}
-                    >
-                      👥
-                    </div>
-                    <div>
-                      <h3
-                        style={{
-                          margin: 0,
-                          fontSize: "1.25rem",
-                          fontWeight: 600,
-                          color: COLORS.text.primary,
-                        }}
-                      >
-                        Create Team
-                      </h3>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "0.875rem",
-                          color: COLORS.text.secondary,
-                        }}
-                      >
-                        Add a new team to {existingLeague.name}
-                      </p>
-                    </div>
-                  </div>
-                  <div style={{ marginTop: "auto" }}>
-                    <CreateTeam leagueId={existingLeague.id} />
-                  </div>
-                </div>
+                <Tile
+                  emoji="👥"
+                  title="Create Team"
+                  description={`Add a new team to ${existingLeague.name}`}
+                >
+                  <CreateTeam leagueId={existingLeague.id} />
+                </Tile>
               </AuthAware>
             )}
 
             <AuthAware roles={["League Admin", "Admin"]}>
-              <div
-                style={{
-                  backgroundColor: COLORS.background.default,
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                  border: `1px solid ${COLORS.border.default}`,
-                  boxShadow: SHADOWS.md,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  minHeight: "200px",
-                  width: "500px",
-                  maxWidth: "500px",
-                  boxSizing: "border-box",
-                }}
+              <Tile
+                emoji="✉️"
+                title="Invite Users"
+                description="Send invitations to join"
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      backgroundColor: "#fff3e0",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.5rem",
-                    }}
-                  >
-                    ✉️
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      Invite Users
-                    </h3>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.875rem",
-                        color: COLORS.text.secondary,
-                      }}
-                    >
-                      Send invitations to join
-                    </p>
-                  </div>
-                </div>
-                <div style={{ marginTop: "auto" }}>
-                  <InviteUser teams={teams} requireTeam={false} />
-                </div>
-              </div>
+                <InviteUser teams={teams} requireTeam={false} />
+              </Tile>
             </AuthAware>
 
             {playerLoadingState.loadingMyPlayer ? null : myPlayer ? (
               <PlayerProfileTile player={myPlayer} team={myTeam || null} />
             ) : (
-              <div
-                style={{
-                  backgroundColor: COLORS.background.default,
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                  border: `1px solid ${COLORS.border.default}`,
-                  boxShadow: SHADOWS.md,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  minHeight: "200px",
-                  width: "500px",
-                  maxWidth: "500px",
-                  boxSizing: "border-box",
-                }}
+              <Tile
+                emoji="🚀"
+                title="Create Player Profile"
+                description="Set up your player profile to get started"
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      backgroundColor: "#e8f5e9",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.5rem",
-                    }}
-                  >
-                    🚀
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      Create Player Profile
-                    </h3>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.875rem",
-                        color: COLORS.text.secondary,
-                      }}
-                    >
-                      Set up your player profile to get started
-                    </p>
-                  </div>
-                </div>
                 <div
                   style={{
                     paddingTop: "1rem",
                     borderTop: `1px solid ${COLORS.border.default}`,
-                    marginTop: "auto",
                     display: "flex",
                     flexDirection: "column",
                     gap: "1rem",
@@ -374,7 +180,7 @@ const Home: React.FC = () => {
                     Go to Teams
                   </button>
                 </div>
-              </div>
+              </Tile>
             )}
           </div>
         </div>

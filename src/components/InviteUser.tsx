@@ -147,22 +147,6 @@ const InviteUser: React.FC<InviteUserProps> = ({
           sx={SELECT_STYLES.sx}
           MenuProps={SELECT_STYLES.MenuProps}
         >
-          <MenuItem value="Admin">
-            <div>
-              <div style={{ fontWeight: 600, color: COLORS.text.primary }}>
-                Admin
-              </div>
-              <div
-                style={{
-                  fontSize: "0.75rem",
-                  color: COLORS.text.secondary,
-                  marginTop: "0.25rem",
-                }}
-              >
-                Full access to all features
-              </div>
-            </div>
-          </MenuItem>
           <MenuItem value="League Admin">
             <div>
               <div style={{ fontWeight: 600, color: COLORS.text.primary }}>

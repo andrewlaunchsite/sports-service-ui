@@ -27,6 +27,7 @@ import {
   getPlayerStats,
   getPlayerGameStats,
   clearPlayerStats,
+  clearPlayer,
 } from "../models/playerSlice";
 import { getTeams } from "../models/teamSlice";
 import { getGames } from "../models/gameSlice";
@@ -212,9 +213,10 @@ const PlayerStats: React.FC = () => {
     }
   }, [playerId, players, player, playerLoadingState.loadingPlayer, dispatch]);
 
-  // Clear player stats when playerId changes to prevent stale data
+  // Clear player and player stats when playerId changes to prevent stale data
   useEffect(() => {
     if (playerId) {
+      dispatch(clearPlayer());
       dispatch(clearPlayerStats());
     }
   }, [playerId, dispatch]);

@@ -87,8 +87,12 @@ export const getMyLeague = createAsyncThunk(
       const { data } = await axiosInstance.get(`/api/v1/leagues/me`);
       return data;
     } catch (error: any) {
-      if (error?.response?.status === 404) {
-        return rejectWithValue({ ...error, silentError: true });
+      if (error?.status === 404) {
+        const silentPayload: any = {
+          ...error,
+          silentError: true,
+        };
+        return rejectWithValue(silentPayload);
       }
       return rejectWithValue(error);
     }

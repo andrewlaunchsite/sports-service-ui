@@ -12,7 +12,7 @@ import CreateLeague from "../components/CreateLeague";
 import LeaguesList from "../components/LeaguesList";
 import AuthAware from "../components/AuthAware";
 import { getMyPlayer } from "../models/playerSlice";
-import { getLeagues } from "../models/leagueSlice";
+import { getLeagues, getMyLeague } from "../models/leagueSlice";
 import { getTeams } from "../models/teamSlice";
 import { AppDispatch, RootState } from "../models/store";
 import Loading from "../components/Loading";
@@ -31,9 +31,11 @@ const Home: React.FC = () => {
   const { myPlayer, loadingState: playerLoadingState } = useSelector(
     (state: RootState) => state.player
   );
-  const { leagues, loadingState: leagueLoadingState } = useSelector(
-    (state: RootState) => state.league
-  );
+  const {
+    leagues,
+    league: myLeague,
+    loadingState: leagueLoadingState,
+  } = useSelector((state: RootState) => state.league);
   const { teams } = useSelector((state: RootState) => state.team);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ const Home: React.FC = () => {
     if (!hasFetchedLeagues.current && !leagueLoadingState.loadingLeagues) {
       hasFetchedLeagues.current = true;
       dispatch(getLeagues({ offset: 0, limit: 10 }) as any);
+      dispatch(getMyLeague() as any);
     }
   }, [leagueLoadingState.loadingLeagues, dispatch]);
 
@@ -58,7 +61,8 @@ const Home: React.FC = () => {
     ? teams.find((t) => t.id === myPlayer.teamId)
     : null;
 
-  const existingLeague = leagues.length > 0 ? leagues[0] : null;
+  // Use myLeague if available, otherwise fall back to first league
+  const existingLeague = myLeague || (leagues.length > 0 ? leagues[0] : null);
 
   const getUserDisplayName = () => {
     console.log("user", user);

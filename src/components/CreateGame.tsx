@@ -3,7 +3,20 @@ import { useDispatch, useSelector } from "react-redux";
 import { createGame, getGamesByTeam } from "../models/gameSlice";
 import { getTeams } from "../models/teamSlice";
 import { AppDispatch, RootState } from "../models/store";
-import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
+import {
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  COLORS,
+  TEXT_FIELD_STYLES,
+  SELECT_STYLES,
+} from "../config/styles";
+import {
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
 
 interface CreateGameProps {
   teamId: number;
@@ -53,10 +66,14 @@ const CreateGame: React.FC<CreateGameProps> = ({ teamId }) => {
     dispatch(getGamesByTeam({ teamId, offset: 0, limit: 100 }) as any);
   };
 
-  const handleChange =
-    (field: keyof FormState) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleTextChange =
+    (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setFormState((prev) => ({ ...prev, [field]: e.target.value }));
+    };
+
+  const handleSelectChange =
+    (field: keyof FormState) => (e: { target: { value: unknown } }) => {
+      setFormState((prev) => ({ ...prev, [field]: e.target.value as string }));
     };
 
   if (!showForm) {
@@ -76,130 +93,87 @@ const CreateGame: React.FC<CreateGameProps> = ({ teamId }) => {
       onSubmit={handleSubmit}
       style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
     >
-      <div>
-        <label
-          htmlFor="awayTeamId"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
+      <FormControl fullWidth required>
+        <InputLabel
+          id="awayTeamId-label"
+          style={SELECT_STYLES.InputLabelProps.style}
         >
           Away Team
-        </label>
-        <select
-          id="awayTeamId"
+        </InputLabel>
+        <Select
+          labelId="awayTeamId-label"
           value={formState.awayTeamId}
-          onChange={handleChange("awayTeamId")}
-          required
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            backgroundColor: "white",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
+          onChange={handleSelectChange("awayTeamId")}
+          label="Away Team"
+          style={SELECT_STYLES.style}
+          sx={SELECT_STYLES.sx}
+          MenuProps={SELECT_STYLES.MenuProps}
         >
-          <option value="">Select away team</option>
           {teams
             .filter((team) => team.id !== teamId)
             .map((team) => (
-              <option key={team.id} value={team.id}>
+              <MenuItem key={team.id} value={team.id.toString()}>
                 {team.name}
-              </option>
+              </MenuItem>
             ))}
-        </select>
-      </div>
-      <div>
-        <label
-          htmlFor="scheduledDateTime"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
+        </Select>
+      </FormControl>
+      <TextField
+        label="Scheduled Date & Time"
+        type="datetime-local"
+        value={formState.scheduledDateTime}
+        onChange={handleTextChange("scheduledDateTime")}
+        required
+        fullWidth
+        InputLabelProps={{
+          ...TEXT_FIELD_STYLES.InputLabelProps,
+          shrink: true,
+        }}
+        InputProps={{
+          ...TEXT_FIELD_STYLES.InputProps,
+          style: {
+            ...TEXT_FIELD_STYLES.InputProps.style,
             color: COLORS.text.primary,
-          }}
-        >
-          Scheduled Date & Time
-        </label>
-        <input
-          id="scheduledDateTime"
-          type="datetime-local"
-          value={formState.scheduledDateTime}
-          onChange={handleChange("scheduledDateTime")}
-          required
-          style={{
-            width: "100%",
+            fontSize: "0.9375rem",
             padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="status"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
+          },
+        }}
+        style={TEXT_FIELD_STYLES.style}
+        sx={{
+          "& input[type='datetime-local']": {
             color: COLORS.text.primary,
-          }}
+            fontSize: "0.9375rem",
+            padding: "0.625rem 0.75rem",
+            fontFamily: "inherit",
+          },
+          "& input[type='datetime-local']::-webkit-calendar-picker-indicator": {
+            filter: "invert(1)",
+            cursor: "pointer",
+          },
+        }}
+      />
+      <FormControl fullWidth>
+        <InputLabel
+          id="status-label"
+          style={SELECT_STYLES.InputLabelProps.style}
         >
           Status
-        </label>
-        <select
-          id="status"
+        </InputLabel>
+        <Select
+          labelId="status-label"
           value={formState.status}
-          onChange={handleChange("status")}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            backgroundColor: "white",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
+          onChange={handleSelectChange("status")}
+          label="Status"
+          style={SELECT_STYLES.style}
+          sx={SELECT_STYLES.sx}
+          MenuProps={SELECT_STYLES.MenuProps}
         >
-          <option value="scheduled">Scheduled</option>
-          <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-      </div>
+          <MenuItem value="scheduled">Scheduled</MenuItem>
+          <MenuItem value="in_progress">In Progress</MenuItem>
+          <MenuItem value="completed">Completed</MenuItem>
+          <MenuItem value="cancelled">Cancelled</MenuItem>
+        </Select>
+      </FormControl>
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <button
           type="submit"

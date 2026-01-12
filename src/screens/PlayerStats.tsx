@@ -1331,6 +1331,7 @@ const PlayerStats: React.FC = () => {
                         label="Filter by Game"
                         style={SELECT_STYLES.style}
                         sx={SELECT_STYLES.sx}
+                        MenuProps={SELECT_STYLES.MenuProps}
                       >
                         <MenuItem value="all">All Games</MenuItem>
                         {playerGameStats?.content
@@ -1741,6 +1742,7 @@ const PlayerStats: React.FC = () => {
                     label="Filter by Team"
                     style={SELECT_STYLES.style}
                     sx={SELECT_STYLES.sx}
+                    MenuProps={SELECT_STYLES.MenuProps}
                   >
                     <MenuItem value="all">All Teams</MenuItem>
                     {teams

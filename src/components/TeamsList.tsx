@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getTeams } from "../models/teamSlice";
@@ -14,10 +14,23 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { teams, loadingState } = useSelector((state: RootState) => state.team);
+  const prevLoadingCreate = useRef(loadingState.loadingCreate);
 
   useEffect(() => {
     dispatch(getTeams({ league_id: leagueId, offset: 0, limit: 100 }) as any);
   }, [dispatch, leagueId]);
+
+  // Refetch when a team creation completes (to show the new team in the list)
+  useEffect(() => {
+    if (
+      prevLoadingCreate.current === true &&
+      loadingState.loadingCreate === false
+    ) {
+      // Team creation just finished, refetch with current filter
+      dispatch(getTeams({ league_id: leagueId, offset: 0, limit: 100 }) as any);
+    }
+    prevLoadingCreate.current = loadingState.loadingCreate;
+  }, [dispatch, leagueId, loadingState.loadingCreate]);
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return null;
@@ -76,7 +89,8 @@ const TeamsList: React.FC<TeamsListProps> = ({ leagueId }) => {
           const createdDateTime = (team as any).createdDateTime;
           const lastModifiedDateTime = (team as any).lastModifiedDateTime;
           const teamAny = team as any;
-          const logoUrl = teamAny.logoUrl || teamAny.logo || teamAny.logo_url || null;
+          const logoUrl =
+            teamAny.logoUrl || teamAny.logo || teamAny.logo_url || null;
           const primaryColor = teamAny.primaryColor || COLORS.primary;
           const secondaryColor = teamAny.secondaryColor || "white";
 

@@ -242,6 +242,7 @@ const EditPlayer: React.FC<EditPlayerProps> = ({
           label="Primary Position"
           style={SELECT_STYLES.style}
           sx={SELECT_STYLES.sx}
+          MenuProps={SELECT_STYLES.MenuProps}
         >
           <MenuItem value="">Select position</MenuItem>
           <MenuItem value="PG">PG - Point Guard</MenuItem>

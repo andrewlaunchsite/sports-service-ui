@@ -6,7 +6,20 @@ import {
   getPlayersByTeam,
 } from "../models/playerSlice";
 import { AppDispatch, RootState } from "../models/store";
-import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
+import {
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  COLORS,
+  TEXT_FIELD_STYLES,
+  SELECT_STYLES,
+} from "../config/styles";
+import {
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
 
 interface CreatePlayerProps {
   teamId: number;
@@ -100,9 +113,13 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
   };
 
   const handleTextChange =
-    (field: keyof FormState) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setFormState((prev) => ({ ...prev, [field]: e.target.value }));
+    };
+
+  const handleSelectChange =
+    (field: keyof FormState) => (e: { target: { value: unknown } }) => {
+      setFormState((prev) => ({ ...prev, [field]: e.target.value as string }));
     };
 
   const handleFileChange =
@@ -135,236 +152,86 @@ const CreatePlayer: React.FC<CreatePlayerProps> = ({ teamId }) => {
       onSubmit={handleSubmit}
       style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
     >
-      <div>
-        <label
-          htmlFor="nickname"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Nickname
-        </label>
-        <input
-          id="nickname"
-          type="text"
-          value={formState.nickname}
-          onChange={handleTextChange("nickname")}
-          maxLength={50}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="heightInches"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Height (inches, 48-108)
-        </label>
-        <input
-          id="heightInches"
-          type="number"
-          value={formState.heightInches}
-          onChange={handleTextChange("heightInches")}
-          min={48}
-          max={108}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="weightLbs"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Weight (lbs, 100-500)
-        </label>
-        <input
-          id="weightLbs"
-          type="number"
-          value={formState.weightLbs}
-          onChange={handleTextChange("weightLbs")}
-          min={100}
-          max={500}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="playerNumber"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Jersey Number (0-99)
-        </label>
-        <input
-          id="playerNumber"
-          type="number"
-          value={formState.playerNumber}
-          onChange={handleTextChange("playerNumber")}
-          min={0}
-          max={99}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="dateOfBirth"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
-        >
-          Date of Birth
-        </label>
-        <input
-          id="dateOfBirth"
-          type="date"
-          value={formState.dateOfBirth}
-          onChange={handleTextChange("dateOfBirth")}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="primaryPosition"
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: COLORS.text.primary,
-          }}
+      <TextField
+        label="Nickname"
+        value={formState.nickname}
+        onChange={handleTextChange("nickname")}
+        inputProps={{ maxLength: 50 }}
+        fullWidth
+        InputLabelProps={TEXT_FIELD_STYLES.InputLabelProps}
+        InputProps={TEXT_FIELD_STYLES.InputProps}
+        style={TEXT_FIELD_STYLES.style}
+      />
+      <TextField
+        label="Height (inches, 48-108)"
+        type="number"
+        value={formState.heightInches}
+        onChange={handleTextChange("heightInches")}
+        inputProps={{ min: 48, max: 108 }}
+        fullWidth
+        InputLabelProps={TEXT_FIELD_STYLES.InputLabelProps}
+        InputProps={TEXT_FIELD_STYLES.InputProps}
+        style={TEXT_FIELD_STYLES.style}
+      />
+      <TextField
+        label="Weight (lbs, 100-500)"
+        type="number"
+        value={formState.weightLbs}
+        onChange={handleTextChange("weightLbs")}
+        inputProps={{ min: 100, max: 500 }}
+        fullWidth
+        InputLabelProps={TEXT_FIELD_STYLES.InputLabelProps}
+        InputProps={TEXT_FIELD_STYLES.InputProps}
+        style={TEXT_FIELD_STYLES.style}
+      />
+      <TextField
+        label="Jersey Number (0-99)"
+        type="number"
+        value={formState.playerNumber}
+        onChange={handleTextChange("playerNumber")}
+        inputProps={{ min: 0, max: 99 }}
+        fullWidth
+        InputLabelProps={TEXT_FIELD_STYLES.InputLabelProps}
+        InputProps={TEXT_FIELD_STYLES.InputProps}
+        style={TEXT_FIELD_STYLES.style}
+      />
+      <TextField
+        label="Date of Birth"
+        type="date"
+        value={formState.dateOfBirth}
+        onChange={handleTextChange("dateOfBirth")}
+        fullWidth
+        InputLabelProps={{
+          ...TEXT_FIELD_STYLES.InputLabelProps,
+          shrink: true,
+        }}
+        InputProps={TEXT_FIELD_STYLES.InputProps}
+        style={TEXT_FIELD_STYLES.style}
+      />
+      <FormControl fullWidth>
+        <InputLabel
+          id="primaryPosition-label"
+          style={SELECT_STYLES.InputLabelProps.style}
         >
           Primary Position
-        </label>
-        <select
-          id="primaryPosition"
+        </InputLabel>
+        <Select
+          labelId="primaryPosition-label"
           value={formState.primaryPosition}
-          onChange={handleTextChange("primaryPosition")}
-          style={{
-            width: "100%",
-            padding: "0.625rem 0.75rem",
-            border: `1px solid ${COLORS.border.default}`,
-            borderRadius: "6px",
-            fontSize: "0.9375rem",
-            backgroundColor: "white",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLORS.primary;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.border.default;
-            e.currentTarget.style.boxShadow = "none";
-          }}
+          onChange={handleSelectChange("primaryPosition")}
+          label="Primary Position"
+          style={SELECT_STYLES.style}
+          sx={SELECT_STYLES.sx}
+          MenuProps={SELECT_STYLES.MenuProps}
         >
-          <option value="">Select position</option>
-          <option value="PG">PG - Point Guard</option>
-          <option value="SG">SG - Shooting Guard</option>
-          <option value="SF">SF - Small Forward</option>
-          <option value="PF">PF - Power Forward</option>
-          <option value="C">C - Center</option>
-        </select>
-      </div>
+          <MenuItem value="">Select position</MenuItem>
+          <MenuItem value="PG">PG - Point Guard</MenuItem>
+          <MenuItem value="SG">SG - Shooting Guard</MenuItem>
+          <MenuItem value="SF">SF - Small Forward</MenuItem>
+          <MenuItem value="PF">PF - Power Forward</MenuItem>
+          <MenuItem value="C">C - Center</MenuItem>
+        </Select>
+      </FormControl>
       <div>
         <label
           htmlFor="picture"

@@ -29,6 +29,7 @@ import SubstitutionModal from "../components/SubstitutionModal";
 import GameCard from "../components/GameCard";
 import CreateHighlight from "../components/CreateHighlight";
 import HighlightsGallery from "../components/HighlightsGallery";
+import PlayerAvatar from "../components/PlayerAvatar";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
 import {
   COLORS,
@@ -1568,7 +1569,7 @@ const Game: React.FC = () => {
                             <tr
                               key={player.id}
                               style={{
-                                borderBottom: `1px solid ${COLORS.border.light}`,
+                                borderBottom: `2px solid ${COLORS.border.default}`,
                                 backgroundColor: player.onCourt
                                   ? `${homePrimaryColor}20`
                                   : "transparent",
@@ -1583,41 +1584,30 @@ const Game: React.FC = () => {
                                 <div
                                   style={{
                                     display: "flex",
+                                    flexDirection: "column",
                                     alignItems: "center",
-                                    gap: "0.75rem",
+                                    gap: "0.5rem",
                                   }}
                                 >
-                                  {player.pictureUrl ? (
-                                    <img
-                                      src={player.pictureUrl}
-                                      alt={player.name}
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "50%",
-                                        objectFit: "cover",
-                                        border: `2px solid ${homePrimaryColor}`,
-                                      }}
-                                    />
-                                  ) : (
-                                    <div
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "50%",
-                                        backgroundColor: homePrimaryColor,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        fontSize: "0.8rem",
-                                        border: `2px solid ${homePrimaryColor}`,
-                                        color: homeSecondaryColor,
-                                      }}
-                                    >
-                                      👤
-                                    </div>
-                                  )}
-                                  <span>{player.name}</span>
+                                  <PlayerAvatar
+                                    player={{
+                                      ...player,
+                                      name: player.name,
+                                      displayName: player.name,
+                                      pictureUrl: player.pictureUrl,
+                                      number: player.number,
+                                    }}
+                                    team={homeTeam}
+                                    size="small"
+                                  />
+                                  <span
+                                    style={{
+                                      fontSize: "0.75rem",
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    {player.name}
+                                  </span>
                                 </div>
                               </td>
                               <td
@@ -1626,14 +1616,27 @@ const Game: React.FC = () => {
                                   textAlign: "center",
                                 }}
                               >
-                                <span
+                                <div
                                   style={{
-                                    fontWeight: 600,
-                                    fontSize: "0.875rem",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "0.25rem",
+                                    alignItems: "center",
+                                    padding: "0.5rem",
+                                    backgroundColor: COLORS.background.light,
+                                    borderRadius: "6px",
+                                    border: `1px solid ${COLORS.border.default}`,
                                   }}
                                 >
-                                  {player.stats.points}
-                                </span>
+                                  <span
+                                    style={{
+                                      fontWeight: 600,
+                                      fontSize: "0.875rem",
+                                    }}
+                                  >
+                                    {player.stats.points}
+                                  </span>
+                                </div>
                               </td>
                               <td
                                 style={{
@@ -2338,63 +2341,76 @@ const Game: React.FC = () => {
                                 <div
                                   style={{
                                     display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    flexDirection: "column",
                                     gap: "0.25rem",
+                                    alignItems: "center",
+                                    padding: "0.5rem",
+                                    backgroundColor: COLORS.background.light,
+                                    borderRadius: "6px",
+                                    border: `1px solid ${COLORS.border.default}`,
                                   }}
                                 >
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "home",
-                                        player.id,
-                                        "rebounds",
-                                        -1
-                                      )
-                                    }
+                                  <div
                                     style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: awayPrimaryColor,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: "0.25rem",
                                     }}
                                   >
-                                    -
-                                  </button>
-                                  <span
-                                    style={{
-                                      minWidth: "30px",
-                                      display: "inline-block",
-                                    }}
-                                  >
-                                    {player.stats.rebounds}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "home",
-                                        player.id,
-                                        "rebounds",
-                                        1
-                                      )
-                                    }
-                                    style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.success,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
-                                    }}
-                                  >
-                                    +
-                                  </button>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "home",
+                                          player.id,
+                                          "rebounds",
+                                          -1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: awayPrimaryColor,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      -
+                                    </button>
+                                    <span
+                                      style={{
+                                        minWidth: "30px",
+                                        display: "inline-block",
+                                      }}
+                                    >
+                                      {player.stats.rebounds}
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "home",
+                                          player.id,
+                                          "rebounds",
+                                          1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: COLORS.success,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
                               <td
@@ -2406,63 +2422,76 @@ const Game: React.FC = () => {
                                 <div
                                   style={{
                                     display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    flexDirection: "column",
                                     gap: "0.25rem",
+                                    alignItems: "center",
+                                    padding: "0.5rem",
+                                    backgroundColor: COLORS.background.light,
+                                    borderRadius: "6px",
+                                    border: `1px solid ${COLORS.border.default}`,
                                   }}
                                 >
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "home",
-                                        player.id,
-                                        "assists",
-                                        -1
-                                      )
-                                    }
+                                  <div
                                     style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: awayPrimaryColor,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: "0.25rem",
                                     }}
                                   >
-                                    -
-                                  </button>
-                                  <span
-                                    style={{
-                                      minWidth: "30px",
-                                      display: "inline-block",
-                                    }}
-                                  >
-                                    {player.stats.assists}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "home",
-                                        player.id,
-                                        "assists",
-                                        1
-                                      )
-                                    }
-                                    style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.success,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
-                                    }}
-                                  >
-                                    +
-                                  </button>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "home",
+                                          player.id,
+                                          "assists",
+                                          -1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: awayPrimaryColor,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      -
+                                    </button>
+                                    <span
+                                      style={{
+                                        minWidth: "30px",
+                                        display: "inline-block",
+                                      }}
+                                    >
+                                      {player.stats.assists}
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "home",
+                                          player.id,
+                                          "assists",
+                                          1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: COLORS.success,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
                               <td
@@ -2474,63 +2503,76 @@ const Game: React.FC = () => {
                                 <div
                                   style={{
                                     display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    flexDirection: "column",
                                     gap: "0.25rem",
+                                    alignItems: "center",
+                                    padding: "0.5rem",
+                                    backgroundColor: COLORS.background.light,
+                                    borderRadius: "6px",
+                                    border: `1px solid ${COLORS.border.default}`,
                                   }}
                                 >
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "home",
-                                        player.id,
-                                        "fouls",
-                                        -1
-                                      )
-                                    }
+                                  <div
                                     style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: awayPrimaryColor,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: "0.25rem",
                                     }}
                                   >
-                                    -
-                                  </button>
-                                  <span
-                                    style={{
-                                      minWidth: "30px",
-                                      display: "inline-block",
-                                    }}
-                                  >
-                                    {player.stats.fouls}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "home",
-                                        player.id,
-                                        "fouls",
-                                        1
-                                      )
-                                    }
-                                    style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: awayPrimaryColor,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
-                                    }}
-                                  >
-                                    +
-                                  </button>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "home",
+                                          player.id,
+                                          "fouls",
+                                          -1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: awayPrimaryColor,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      -
+                                    </button>
+                                    <span
+                                      style={{
+                                        minWidth: "30px",
+                                        display: "inline-block",
+                                      }}
+                                    >
+                                      {player.stats.fouls}
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "home",
+                                          player.id,
+                                          "fouls",
+                                          1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: awayPrimaryColor,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
                               <td
@@ -2708,7 +2750,7 @@ const Game: React.FC = () => {
                             <tr
                               key={player.id}
                               style={{
-                                borderBottom: `1px solid ${COLORS.border.light}`,
+                                borderBottom: `2px solid ${COLORS.border.default}`,
                                 backgroundColor: player.onCourt
                                   ? `${awayPrimaryColor}20`
                                   : "transparent",
@@ -2723,41 +2765,30 @@ const Game: React.FC = () => {
                                 <div
                                   style={{
                                     display: "flex",
+                                    flexDirection: "column",
                                     alignItems: "center",
-                                    gap: "0.75rem",
+                                    gap: "0.5rem",
                                   }}
                                 >
-                                  {player.pictureUrl ? (
-                                    <img
-                                      src={player.pictureUrl}
-                                      alt={player.name}
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "50%",
-                                        objectFit: "cover",
-                                        border: `2px solid ${awayPrimaryColor}`,
-                                      }}
-                                    />
-                                  ) : (
-                                    <div
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "50%",
-                                        backgroundColor: awayPrimaryColor,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        fontSize: "0.8rem",
-                                        border: `2px solid ${awayPrimaryColor}`,
-                                        color: awaySecondaryColor,
-                                      }}
-                                    >
-                                      👤
-                                    </div>
-                                  )}
-                                  <span>{player.name}</span>
+                                  <PlayerAvatar
+                                    player={{
+                                      ...player,
+                                      name: player.name,
+                                      displayName: player.name,
+                                      pictureUrl: player.pictureUrl,
+                                      number: player.number,
+                                    }}
+                                    team={awayTeam}
+                                    size="small"
+                                  />
+                                  <span
+                                    style={{
+                                      fontSize: "0.75rem",
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    {player.name}
+                                  </span>
                                 </div>
                               </td>
                               <td
@@ -2766,14 +2797,27 @@ const Game: React.FC = () => {
                                   textAlign: "center",
                                 }}
                               >
-                                <span
+                                <div
                                   style={{
-                                    fontWeight: 600,
-                                    fontSize: "0.875rem",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "0.25rem",
+                                    alignItems: "center",
+                                    padding: "0.5rem",
+                                    backgroundColor: COLORS.background.light,
+                                    borderRadius: "6px",
+                                    border: `1px solid ${COLORS.border.default}`,
                                   }}
                                 >
-                                  {player.stats.points}
-                                </span>
+                                  <span
+                                    style={{
+                                      fontWeight: 600,
+                                      fontSize: "0.875rem",
+                                    }}
+                                  >
+                                    {player.stats.points}
+                                  </span>
+                                </div>
                               </td>
                               <td
                                 style={{
@@ -3477,63 +3521,76 @@ const Game: React.FC = () => {
                                 <div
                                   style={{
                                     display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    flexDirection: "column",
                                     gap: "0.25rem",
+                                    alignItems: "center",
+                                    padding: "0.5rem",
+                                    backgroundColor: COLORS.background.light,
+                                    borderRadius: "6px",
+                                    border: `1px solid ${COLORS.border.default}`,
                                   }}
                                 >
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "away",
-                                        player.id,
-                                        "rebounds",
-                                        -1
-                                      )
-                                    }
+                                  <div
                                     style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: awayPrimaryColor,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: "0.25rem",
                                     }}
                                   >
-                                    -
-                                  </button>
-                                  <span
-                                    style={{
-                                      minWidth: "30px",
-                                      display: "inline-block",
-                                    }}
-                                  >
-                                    {player.stats.rebounds}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "away",
-                                        player.id,
-                                        "rebounds",
-                                        1
-                                      )
-                                    }
-                                    style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.success,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
-                                    }}
-                                  >
-                                    +
-                                  </button>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "away",
+                                          player.id,
+                                          "rebounds",
+                                          -1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: awayPrimaryColor,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      -
+                                    </button>
+                                    <span
+                                      style={{
+                                        minWidth: "30px",
+                                        display: "inline-block",
+                                      }}
+                                    >
+                                      {player.stats.rebounds}
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "away",
+                                          player.id,
+                                          "rebounds",
+                                          1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: COLORS.success,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
                               <td
@@ -3545,63 +3602,76 @@ const Game: React.FC = () => {
                                 <div
                                   style={{
                                     display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    flexDirection: "column",
                                     gap: "0.25rem",
+                                    alignItems: "center",
+                                    padding: "0.5rem",
+                                    backgroundColor: COLORS.background.light,
+                                    borderRadius: "6px",
+                                    border: `1px solid ${COLORS.border.default}`,
                                   }}
                                 >
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "away",
-                                        player.id,
-                                        "assists",
-                                        -1
-                                      )
-                                    }
+                                  <div
                                     style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: awayPrimaryColor,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: "0.25rem",
                                     }}
                                   >
-                                    -
-                                  </button>
-                                  <span
-                                    style={{
-                                      minWidth: "30px",
-                                      display: "inline-block",
-                                    }}
-                                  >
-                                    {player.stats.assists}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "away",
-                                        player.id,
-                                        "assists",
-                                        1
-                                      )
-                                    }
-                                    style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: COLORS.success,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
-                                    }}
-                                  >
-                                    +
-                                  </button>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "away",
+                                          player.id,
+                                          "assists",
+                                          -1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: awayPrimaryColor,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      -
+                                    </button>
+                                    <span
+                                      style={{
+                                        minWidth: "30px",
+                                        display: "inline-block",
+                                      }}
+                                    >
+                                      {player.stats.assists}
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "away",
+                                          player.id,
+                                          "assists",
+                                          1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: COLORS.success,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
                               <td
@@ -3613,63 +3683,76 @@ const Game: React.FC = () => {
                                 <div
                                   style={{
                                     display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    flexDirection: "column",
                                     gap: "0.25rem",
+                                    alignItems: "center",
+                                    padding: "0.5rem",
+                                    backgroundColor: COLORS.background.light,
+                                    borderRadius: "6px",
+                                    border: `1px solid ${COLORS.border.default}`,
                                   }}
                                 >
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "away",
-                                        player.id,
-                                        "fouls",
-                                        -1
-                                      )
-                                    }
+                                  <div
                                     style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: awayPrimaryColor,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: "0.25rem",
                                     }}
                                   >
-                                    -
-                                  </button>
-                                  <span
-                                    style={{
-                                      minWidth: "30px",
-                                      display: "inline-block",
-                                    }}
-                                  >
-                                    {player.stats.fouls}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      updatePlayerStat(
-                                        "away",
-                                        player.id,
-                                        "fouls",
-                                        1
-                                      )
-                                    }
-                                    style={{
-                                      padding: "0.125rem 0.375rem",
-                                      backgroundColor: awayPrimaryColor,
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "2px",
-                                      cursor: "pointer",
-                                      fontSize: "0.7rem",
-                                      minWidth: "24px",
-                                    }}
-                                  >
-                                    +
-                                  </button>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "away",
+                                          player.id,
+                                          "fouls",
+                                          -1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: awayPrimaryColor,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      -
+                                    </button>
+                                    <span
+                                      style={{
+                                        minWidth: "30px",
+                                        display: "inline-block",
+                                      }}
+                                    >
+                                      {player.stats.fouls}
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        updatePlayerStat(
+                                          "away",
+                                          player.id,
+                                          "fouls",
+                                          1
+                                        )
+                                      }
+                                      style={{
+                                        padding: "0.125rem 0.375rem",
+                                        backgroundColor: awayPrimaryColor,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "2px",
+                                        cursor: "pointer",
+                                        fontSize: "0.7rem",
+                                        minWidth: "24px",
+                                      }}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
                               <td
@@ -3852,6 +3935,7 @@ const Game: React.FC = () => {
               homeSecondaryColor={homeSecondaryColor}
               awayPrimaryColor={awayPrimaryColor}
               awaySecondaryColor={awaySecondaryColor}
+              period={period}
               onClose={() => setShowLineupModal(false)}
               onSuccess={() => {
                 dispatch(
@@ -4095,6 +4179,7 @@ const Game: React.FC = () => {
                   label="Filter by League"
                   style={SELECT_STYLES.style}
                   sx={SELECT_STYLES.sx}
+                  MenuProps={SELECT_STYLES.MenuProps}
                 >
                   <MenuItem value="all">All Leagues</MenuItem>
                   {leagues.map((l) => (
@@ -4120,6 +4205,7 @@ const Game: React.FC = () => {
                   label="Filter by Status"
                   style={SELECT_STYLES.style}
                   sx={SELECT_STYLES.sx}
+                  MenuProps={SELECT_STYLES.MenuProps}
                 >
                   <MenuItem value="all">All Games</MenuItem>
                   {allStatuses.map((status) => (

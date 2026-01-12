@@ -1,11 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createTeam, getTeams } from "../models/teamSlice";
+import { createTeam } from "../models/teamSlice";
+import { getLeagues } from "../models/leagueSlice";
 import { AppDispatch, RootState } from "../models/store";
-import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
+import {
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  COLORS,
+  SELECT_STYLES,
+} from "../config/styles";
+import {
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
+} from "@mui/material";
 
 interface CreateTeamProps {
-  leagueId: number;
+  leagueId?: number; // Optional - if provided, will be pre-selected
 }
 
 interface FormState {
@@ -13,22 +26,34 @@ interface FormState {
   logo: File | null;
   primaryColor: string;
   secondaryColor: string;
+  leagueId: number | "";
 }
 
-const CreateTeam: React.FC<CreateTeamProps> = ({ leagueId }) => {
+const CreateTeam: React.FC<CreateTeamProps> = ({
+  leagueId: initialLeagueId,
+}) => {
   const dispatch = useDispatch<AppDispatch>();
   const loadingState = useSelector(
     (state: RootState) => state.team.loadingState
+  );
+  const { leagues, loadingState: leagueLoadingState } = useSelector(
+    (state: RootState) => state.league
   );
   const [formState, setFormState] = useState<FormState>({
     name: "",
     logo: null,
     primaryColor: "",
     secondaryColor: "",
+    leagueId: initialLeagueId || "",
   });
   const [showForm, setShowForm] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const logoPreviewRef = useRef<string | null>(null);
+
+  // Fetch leagues on mount
+  useEffect(() => {
+    dispatch(getLeagues({ offset: 0, limit: 100 }) as any);
+  }, [dispatch]);
 
   useEffect(() => {
     if (formState.logo) {
@@ -57,6 +82,14 @@ const CreateTeam: React.FC<CreateTeamProps> = ({ leagueId }) => {
       setFormState((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
+  const handleSelectChange = (e: SelectChangeEvent<number | "">) => {
+    const value = e.target.value;
+    setFormState((prev) => ({
+      ...prev,
+      leagueId: value === "" ? "" : Number(value),
+    }));
+  };
+
   const handleFileChange =
     (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -72,9 +105,16 @@ const CreateTeam: React.FC<CreateTeamProps> = ({ leagueId }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (formState.leagueId === "" || typeof formState.leagueId !== "number") {
+      alert("Please select a league");
+      return;
+    }
     const submitData: any = {
-      ...formState,
-      league_id: leagueId,
+      name: formState.name,
+      logo: formState.logo,
+      primaryColor: formState.primaryColor,
+      secondaryColor: formState.secondaryColor,
+      league_id: formState.leagueId,
     };
     if (!submitData.primaryColor) delete submitData.primaryColor;
     if (!submitData.secondaryColor) delete submitData.secondaryColor;
@@ -89,10 +129,10 @@ const CreateTeam: React.FC<CreateTeamProps> = ({ leagueId }) => {
       logo: null,
       primaryColor: "",
       secondaryColor: "",
+      leagueId: initialLeagueId || "",
     });
     setLogoPreview(null);
     setShowForm(false);
-    dispatch(getTeams({ offset: 0, limit: 100 }) as any);
   };
 
   if (!showForm) {
@@ -112,6 +152,43 @@ const CreateTeam: React.FC<CreateTeamProps> = ({ leagueId }) => {
       onSubmit={handleSubmit}
       style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
     >
+      <FormControl fullWidth required>
+        <InputLabel
+          id="league-label"
+          style={SELECT_STYLES.InputLabelProps.style}
+        >
+          League
+        </InputLabel>
+        <Select
+          labelId="league-label"
+          value={formState.leagueId}
+          onChange={handleSelectChange}
+          label="League"
+          required
+          disabled={leagueLoadingState.loadingLeagues}
+          style={SELECT_STYLES.style}
+          sx={SELECT_STYLES.sx}
+          MenuProps={SELECT_STYLES.MenuProps}
+        >
+          {leagues.map((league) => (
+            <MenuItem key={league.id} value={league.id}>
+              {league.name}
+            </MenuItem>
+          ))}
+        </Select>
+        {leagueLoadingState.loadingLeagues && (
+          <div
+            style={{
+              marginTop: "0.5rem",
+              fontSize: "0.875rem",
+              color: COLORS.text.secondary,
+            }}
+          >
+            Loading leagues...
+          </div>
+        )}
+      </FormControl>
+
       <div>
         <label
           htmlFor="name"
@@ -288,6 +365,7 @@ const CreateTeam: React.FC<CreateTeamProps> = ({ leagueId }) => {
               logo: null,
               primaryColor: "",
               secondaryColor: "",
+              leagueId: initialLeagueId || "",
             });
             setLogoPreview(null);
           }}

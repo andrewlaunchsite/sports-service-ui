@@ -6,7 +6,12 @@ import {
   LineupCreate,
   LineupPlayer,
 } from "../models/gameSlice";
-import { COLORS, BUTTON_STYLES, getButtonHoverStyle } from "../config/styles";
+import {
+  COLORS,
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  SELECT_STYLES,
+} from "../config/styles";
 
 interface LineupModalProps {
   gameId: number;
@@ -20,6 +25,7 @@ interface LineupModalProps {
   homeSecondaryColor?: string;
   awayPrimaryColor?: string;
   awaySecondaryColor?: string;
+  period?: number;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -38,6 +44,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
   homeSecondaryColor = "white",
   awayPrimaryColor = COLORS.danger,
   awaySecondaryColor = "white",
+  period = 1,
   onClose,
   onSuccess,
 }) => {
@@ -106,12 +113,12 @@ const LineupModal: React.FC<LineupModalProps> = ({
       const lineups: LineupCreate[] = [
         {
           teamId: homeTeamId,
-          period: 1,
+          period: period,
           players: homeLineupPlayers,
         },
         {
           teamId: awayTeamId,
-          period: 1,
+          period: period,
           players: awayLineupPlayers,
         },
       ];
@@ -286,16 +293,31 @@ const LineupModal: React.FC<LineupModalProps> = ({
                               ? homePrimaryColor
                               : COLORS.border.default
                           }`,
-                          backgroundColor: COLORS.background.default,
+                          backgroundColor: COLORS.background.lighter,
                           color: COLORS.text.primary,
                           fontSize: "0.9375rem",
                           cursor: "pointer",
                           marginBottom: isPositionFilled ? "1rem" : 0,
                         }}
                       >
-                        <option value="">Select player...</option>
+                        <option
+                          value=""
+                          style={{
+                            backgroundColor: COLORS.background.lighter,
+                            color: COLORS.text.primary,
+                          }}
+                        >
+                          Select player...
+                        </option>
                         {availablePlayers.map((player) => (
-                          <option key={player.id} value={player.id}>
+                          <option
+                            key={player.id}
+                            value={player.id}
+                            style={{
+                              backgroundColor: COLORS.background.lighter,
+                              color: COLORS.text.primary,
+                            }}
+                          >
                             #{player.playerNumber || player.id} -{" "}
                             {player.nickname ||
                               player.displayName ||
@@ -311,7 +333,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
                             alignItems: "center",
                             gap: "1rem",
                             padding: "0.75rem",
-                            backgroundColor: "white",
+                            backgroundColor: COLORS.background.lighter,
                             borderRadius: "12px",
                             border: `1px solid ${homePrimaryColor}`,
                           }}
@@ -478,16 +500,31 @@ const LineupModal: React.FC<LineupModalProps> = ({
                               ? awayPrimaryColor
                               : COLORS.border.default
                           }`,
-                          backgroundColor: COLORS.background.default,
+                          backgroundColor: COLORS.background.lighter,
                           color: COLORS.text.primary,
                           fontSize: "0.9375rem",
                           cursor: "pointer",
                           marginBottom: isPositionFilled ? "1rem" : 0,
                         }}
                       >
-                        <option value="">Select player...</option>
+                        <option
+                          value=""
+                          style={{
+                            backgroundColor: COLORS.background.lighter,
+                            color: COLORS.text.primary,
+                          }}
+                        >
+                          Select player...
+                        </option>
                         {availablePlayers.map((player) => (
-                          <option key={player.id} value={player.id}>
+                          <option
+                            key={player.id}
+                            value={player.id}
+                            style={{
+                              backgroundColor: COLORS.background.lighter,
+                              color: COLORS.text.primary,
+                            }}
+                          >
                             #{player.playerNumber || player.id} -{" "}
                             {player.nickname ||
                               player.displayName ||
@@ -503,7 +540,7 @@ const LineupModal: React.FC<LineupModalProps> = ({
                             alignItems: "center",
                             gap: "1rem",
                             padding: "0.75rem",
-                            backgroundColor: "white",
+                            backgroundColor: COLORS.background.lighter,
                             borderRadius: "12px",
                             border: `1px solid ${awayPrimaryColor}`,
                           }}

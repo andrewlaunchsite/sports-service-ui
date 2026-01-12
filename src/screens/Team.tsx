@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getTeam, getTeams } from "../models/teamSlice";
-import { getLeague, getLeagues } from "../models/leagueSlice";
+import { getLeague, getLeagues, getMyLeague } from "../models/leagueSlice";
 import { getMyPlayer } from "../models/playerSlice";
 import { getGamesByTeam } from "../models/gameSlice";
 import { AppDispatch, RootState } from "../models/store";
@@ -18,7 +18,7 @@ import AuthAware from "../components/AuthAware";
 import GameCard from "../components/GameCard";
 import PlayerProfileTile from "../components/PlayerProfileTile";
 import { NAVBAR_HEIGHT, ROUTES } from "../config/constants";
-import { COLORS, TILE_STYLE, SELECT_STYLES } from "../config/styles";
+import { COLORS, SELECT_STYLES } from "../config/styles";
 import Tile from "../components/Tile";
 import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -27,6 +27,7 @@ const Team: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const [showEditForm, setShowEditForm] = useState(false);
   const hasFetchedMyPlayer = useRef(false);
   const hasFetchedLeagues = useRef(false);
   const { team, loadingState: teamLoadingState } = useSelector(
@@ -34,6 +35,7 @@ const Team: React.FC = () => {
   );
   const {
     league,
+    league: myLeague,
     leagues,
     loadingState: leagueLoadingState,
   } = useSelector((state: RootState) => state.league);
@@ -76,6 +78,7 @@ const Team: React.FC = () => {
     ) {
       hasFetchedLeagues.current = true;
       dispatch(getLeagues({ offset: 0, limit: 100 }) as any);
+      dispatch(getMyLeague() as any);
     }
   }, [teamId, leagueLoadingState.loadingLeagues, dispatch]);
 
@@ -86,12 +89,19 @@ const Team: React.FC = () => {
   }, [team?.league_id, dispatch]);
 
   const getLeagueIdForCreateTeam = (): number | null => {
+    // Priority 1: Use the team's league_id if we're on a team page
     if (teamId && team?.league_id) {
       return team.league_id;
     }
+    // Priority 2: Use the user's league (from /api/v1/leagues/me)
+    if (myLeague?.id) {
+      return myLeague.id;
+    }
+    // Priority 3: Use the first team's league_id if available
     if (teams.length > 0 && (teams[0] as any).league_id) {
       return (teams[0] as any).league_id;
     }
+    // Priority 4: Fall back to first league in the list
     if (leagues.length > 0) {
       return leagues[0].id;
     }
@@ -187,6 +197,7 @@ const Team: React.FC = () => {
                   label="Filter by League"
                   style={SELECT_STYLES.style}
                   sx={SELECT_STYLES.sx}
+                  MenuProps={SELECT_STYLES.MenuProps}
                 >
                   <MenuItem value="all">All Leagues</MenuItem>
                   {leagues.map((l) => (
@@ -338,70 +349,76 @@ const Team: React.FC = () => {
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                gap: "1rem",
                 width: "100%",
               }}
             >
-              <div
+              {(() => {
+                const teamAny = team as any;
+                const logoUrl =
+                  teamAny.logoUrl || teamAny.logo || teamAny.logo_url;
+                const primaryColor = teamAny.primaryColor || COLORS.primary;
+
+                return logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt={team.name}
+                    style={{
+                      width: "64px",
+                      height: "64px",
+                      borderRadius: "12px",
+                      objectFit: "cover",
+                      border: `2px solid ${primaryColor}`,
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: "64px",
+                      height: "64px",
+                      borderRadius: "12px",
+                      backgroundColor: primaryColor,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                      fontSize: "2rem",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {team.name.charAt(0).toUpperCase()}
+                  </div>
+                );
+              })()}
+              <h1
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
+                  fontSize: "2.5rem",
+                  fontWeight: 600,
+                  margin: 0,
+                  color: COLORS.text.primary,
                 }}
               >
-                {(() => {
-                  const teamAny = team as any;
-                  const logoUrl =
-                    teamAny.logoUrl || teamAny.logo || teamAny.logo_url;
-                  const primaryColor = teamAny.primaryColor || COLORS.primary;
-
-                  return logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt={team.name}
-                      style={{
-                        width: "64px",
-                        height: "64px",
-                        borderRadius: "12px",
-                        objectFit: "cover",
-                        border: `2px solid ${primaryColor}`,
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: "64px",
-                        height: "64px",
-                        borderRadius: "12px",
-                        backgroundColor: primaryColor,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                        fontSize: "2rem",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {team.name.charAt(0).toUpperCase()}
-                    </div>
-                  );
-                })()}
-                <h1
-                  style={{
-                    fontSize: "2.5rem",
-                    fontWeight: 600,
-                    margin: 0,
-                    color: COLORS.text.primary,
-                  }}
-                >
-                  {team.name}
-                </h1>
-              </div>
+                {team.name}
+              </h1>
               <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
-                <EditTeam team={team} />
+                <EditTeam
+                  team={team}
+                  showForm={showEditForm}
+                  setShowForm={setShowEditForm}
+                />
               </AuthAware>
             </div>
           </div>
+
+          {/* Edit form appears here when Edit button is clicked */}
+          <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
+            <EditTeam
+              team={team}
+              renderFormOnly
+              showForm={showEditForm}
+              setShowForm={setShowEditForm}
+            />
+          </AuthAware>
 
           <div
             style={{
@@ -412,9 +429,6 @@ const Team: React.FC = () => {
               alignItems: "flex-start",
             }}
           >
-            <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
-              <EditTeam team={team} renderFormOnly />
-            </AuthAware>
             {myPlayer && myPlayer.teamId === team.id ? (
               <PlayerProfileTile player={myPlayer} team={team || null} />
             ) : !myPlayer ? (
@@ -446,113 +460,29 @@ const Team: React.FC = () => {
             <AuthAware
               roles={["League Admin", "Team Admin", "Team Manager", "Admin"]}
             >
-              <div style={TILE_STYLE}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      backgroundColor: "#fef3c7",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.5rem",
-                    }}
-                  >
-                    🏆
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      Create Game
-                    </h3>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.875rem",
-                        color: COLORS.text.secondary,
-                      }}
-                    >
-                      Schedule a new game
-                    </p>
-                  </div>
-                </div>
-                <div style={{ marginTop: "auto" }}>
-                  <CreateGame teamId={team.id} />
-                </div>
-              </div>
+              <Tile
+                emoji="🏆"
+                title="Create Game"
+                description="Schedule a new game"
+              >
+                <CreateGame teamId={team.id} />
+              </Tile>
             </AuthAware>
 
             <AuthAware roles={["League Admin", "Team Admin", "Admin"]}>
-              <div style={TILE_STYLE}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      backgroundColor: "#e0f2fe",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.5rem",
-                    }}
-                  >
-                    👤
-                  </div>
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      Invite Player
-                    </h3>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.875rem",
-                        color: COLORS.text.secondary,
-                      }}
-                    >
-                      Invite a player to join this team
-                    </p>
-                  </div>
-                </div>
-                <div style={{ marginTop: "auto" }}>
-                  <InviteUser
-                    defaultRole="Player"
-                    buttonText="Invite Player"
-                    teamId={team?.id || null}
-                    teams={teams}
-                    requireTeam={true}
-                  />
-                </div>
-              </div>
+              <Tile
+                emoji="👤"
+                title="Invite Player"
+                description="Invite a player to join this team"
+              >
+                <InviteUser
+                  defaultRole="Player"
+                  buttonText="Invite Player"
+                  teamId={team?.id || null}
+                  teams={teams}
+                  requireTeam={true}
+                />
+              </Tile>
             </AuthAware>
           </div>
         </div>

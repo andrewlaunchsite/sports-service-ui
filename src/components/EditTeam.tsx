@@ -2,11 +2,20 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateTeam, getTeams } from "../models/teamSlice";
 import { AppDispatch, RootState } from "../models/store";
-import { BUTTON_STYLES, getButtonHoverStyle, COLORS } from "../config/styles";
+import {
+  BUTTON_STYLES,
+  getButtonHoverStyle,
+  COLORS,
+  TEXT_FIELD_STYLES,
+  SHADOWS,
+} from "../config/styles";
+import { TextField } from "@mui/material";
 
 interface EditTeamProps {
   team: any;
   renderFormOnly?: boolean;
+  showForm?: boolean;
+  setShowForm?: (value: boolean) => void;
 }
 
 interface FormState {
@@ -16,13 +25,11 @@ interface FormState {
   secondaryColor: string;
 }
 
-// Shared state for form visibility per team
-const formVisibility = new Map<string, boolean>();
-const listeners = new Map<string, Set<() => void>>();
-
 const EditTeam: React.FC<EditTeamProps> = ({
   team,
   renderFormOnly = false,
+  showForm: showFormProp,
+  setShowForm: setShowFormProp,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { loadingState } = useSelector((state: RootState) => state.team);
@@ -32,38 +39,12 @@ const EditTeam: React.FC<EditTeamProps> = ({
     primaryColor: (team as any)?.primaryColor || "",
     secondaryColor: (team as any)?.secondaryColor || "",
   });
-  const [showForm, setShowFormState] = useState(
-    () => formVisibility.get(team?.id) || false
-  );
 
-  const setShowForm = (value: boolean) => {
-    setShowFormState(value);
-    if (team?.id) {
-      formVisibility.set(team.id, value);
-      const teamListeners = listeners.get(team.id);
-      if (teamListeners) {
-        teamListeners.forEach((listener) => listener());
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (!team?.id) return;
-    if (!listeners.has(team.id)) {
-      listeners.set(team.id, new Set());
-    }
-    const update = () => {
-      const isVisible = formVisibility.get(team.id) || false;
-      setShowFormState(isVisible);
-    };
-    listeners.get(team.id)!.add(update);
-    return () => {
-      const teamListeners = listeners.get(team.id);
-      if (teamListeners) {
-        teamListeners.delete(update);
-      }
-    };
-  }, [team?.id]);
+  // Use prop if provided, otherwise use internal state (for backwards compatibility)
+  const [internalShowForm, setInternalShowForm] = useState(false);
+  const showForm = showFormProp !== undefined ? showFormProp : internalShowForm;
+  const setShowForm =
+    setShowFormProp || ((value: boolean) => setInternalShowForm(value));
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const logoPreviewRef = useRef<string | null>(null);
   const wasUpdatingRef = useRef(false);
@@ -108,8 +89,8 @@ const EditTeam: React.FC<EditTeamProps> = ({
           null
       );
       // Reset form visibility when team data changes (after update)
-      if (formVisibility.get(team.id)) {
-        setShowForm(false);
+      if (setShowFormProp) {
+        setShowFormProp(false);
       }
     }
   }, [team]);
@@ -172,50 +153,24 @@ const EditTeam: React.FC<EditTeamProps> = ({
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "1rem",
+          gap: "0.75rem",
           width: "100%",
+          maxWidth: "500px",
           marginTop: "1rem",
           paddingTop: "1rem",
           borderTop: `1px solid ${COLORS.border.light}`,
         }}
       >
-        <div>
-          <label
-            htmlFor={`edit-name-${team.id}`}
-            style={{
-              display: "block",
-              marginBottom: "0.5rem",
-              fontWeight: 500,
-              fontSize: "0.9375rem",
-              color: COLORS.text.primary,
-            }}
-          >
-            Team Name
-          </label>
-          <input
-            id={`edit-name-${team.id}`}
-            type="text"
-            value={formState.name}
-            onChange={handleTextChange("name")}
-            required
-            style={{
-              width: "100%",
-              padding: "0.625rem 0.75rem",
-              border: `1px solid ${COLORS.border.default}`,
-              borderRadius: "6px",
-              fontSize: "0.9375rem",
-              transition: "border-color 0.2s, box-shadow 0.2s",
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = COLORS.primary;
-              e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primaryLight}`;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = COLORS.border.default;
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          />
-        </div>
+        <TextField
+          label="Team Name"
+          value={formState.name}
+          onChange={handleTextChange("name")}
+          required
+          fullWidth
+          InputLabelProps={TEXT_FIELD_STYLES.InputLabelProps}
+          InputProps={TEXT_FIELD_STYLES.InputProps}
+          style={TEXT_FIELD_STYLES.style}
+        />
         <div>
           <label
             htmlFor={`edit-logo-${team.id}`}
@@ -252,13 +207,13 @@ const EditTeam: React.FC<EditTeamProps> = ({
             }}
           />
           {logoPreview && (
-            <div style={{ marginTop: "0.75rem" }}>
+            <div style={{ marginTop: "0.5rem" }}>
               <img
                 src={logoPreview}
                 alt="Logo preview"
                 style={{
-                  maxWidth: "200px",
-                  maxHeight: "200px",
+                  maxWidth: "100px",
+                  maxHeight: "100px",
                   borderRadius: "8px",
                   border: `1px solid ${COLORS.border.default}`,
                   objectFit: "contain",
@@ -296,7 +251,7 @@ const EditTeam: React.FC<EditTeamProps> = ({
                 onChange={handleTextChange("primaryColor")}
                 style={{
                   width: "100%",
-                  height: "40px",
+                  height: "36px",
                   padding: "0.25rem",
                   border: `1px solid ${COLORS.border.default}`,
                   borderRadius: "6px",
@@ -324,7 +279,7 @@ const EditTeam: React.FC<EditTeamProps> = ({
                 onChange={handleTextChange("secondaryColor")}
                 style={{
                   width: "100%",
-                  height: "40px",
+                  height: "36px",
                   padding: "0.25rem",
                   border: `1px solid ${COLORS.border.default}`,
                   borderRadius: "6px",
@@ -380,30 +335,12 @@ const EditTeam: React.FC<EditTeamProps> = ({
     );
   }
 
-  if (!showForm) {
-    return (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowForm(true);
-        }}
-        style={{
-          ...BUTTON_STYLES.secondary,
-          padding: "0.5rem 0.75rem",
-          fontSize: "0.875rem",
-        }}
-        {...getButtonHoverStyle("secondary")}
-      >
-        ✏️ Edit
-      </button>
-    );
-  }
-
+  // Always show Edit button
   return (
     <button
       onClick={(e) => {
         e.stopPropagation();
-        setShowForm(false);
+        setShowForm(!showForm);
       }}
       style={{
         ...BUTTON_STYLES.secondary,
@@ -412,7 +349,7 @@ const EditTeam: React.FC<EditTeamProps> = ({
       }}
       {...getButtonHoverStyle("secondary")}
     >
-      ✏️ Edit
+      ✏️ {showForm ? "Cancel" : "Edit"}
     </button>
   );
 };

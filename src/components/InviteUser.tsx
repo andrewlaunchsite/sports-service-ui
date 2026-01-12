@@ -35,7 +35,7 @@ interface InviteUserProps {
   buttonText?: string;
   teamId?: number | null; // Pre-selected team (e.g., from Team page)
   teams?: Team[]; // Teams list for dropdown
-  requireTeam?: boolean; // Require team selection for Player role
+  requireTeam?: boolean; // Require team selection for Player or Team Manager roles
 }
 
 const InviteUser: React.FC<InviteUserProps> = ({
@@ -64,7 +64,10 @@ const InviteUser: React.FC<InviteUserProps> = ({
   }, [teamId]);
 
   // Check if team is required for current role
-  const isTeamRequired = formState.role === "Player" || requireTeam;
+  const isTeamRequired =
+    formState.role === "Player" ||
+    formState.role === "Team Manager" ||
+    requireTeam;
   const hasTeams = teams.length > 0;
   const canSubmit =
     !isTeamRequired || (isTeamRequired && formState.teamId !== "");
@@ -142,12 +145,90 @@ const InviteUser: React.FC<InviteUserProps> = ({
           required
           style={SELECT_STYLES.style}
           sx={SELECT_STYLES.sx}
+          MenuProps={SELECT_STYLES.MenuProps}
         >
-          <MenuItem value="Admin">Admin</MenuItem>
-          <MenuItem value="League Admin">League Admin</MenuItem>
-          <MenuItem value="Team Admin">Team Admin</MenuItem>
-          <MenuItem value="Team Manager">Team Manager</MenuItem>
-          <MenuItem value="Player">Player</MenuItem>
+          <MenuItem value="Admin">
+            <div>
+              <div style={{ fontWeight: 600, color: COLORS.text.primary }}>
+                Admin
+              </div>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: COLORS.text.secondary,
+                  marginTop: "0.25rem",
+                }}
+              >
+                Full access to all features
+              </div>
+            </div>
+          </MenuItem>
+          <MenuItem value="League Admin">
+            <div>
+              <div style={{ fontWeight: 600, color: COLORS.text.primary }}>
+                League Admin
+              </div>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: COLORS.text.secondary,
+                  marginTop: "0.25rem",
+                }}
+              >
+                Can do anything in the app, including create leagues
+              </div>
+            </div>
+          </MenuItem>
+          <MenuItem value="Team Admin">
+            <div>
+              <div style={{ fontWeight: 600, color: COLORS.text.primary }}>
+                Team Admin
+              </div>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: COLORS.text.secondary,
+                  marginTop: "0.25rem",
+                }}
+              >
+                Similar to a league admin, just can't add new leagues
+              </div>
+            </div>
+          </MenuItem>
+          <MenuItem value="Team Manager">
+            <div>
+              <div style={{ fontWeight: 600, color: COLORS.text.primary }}>
+                Team Manager
+              </div>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: COLORS.text.secondary,
+                  marginTop: "0.25rem",
+                }}
+              >
+                Has all access a Team Admin has, but can't create new teams. Can
+                just manage data related to a specific team
+              </div>
+            </div>
+          </MenuItem>
+          <MenuItem value="Player">
+            <div>
+              <div style={{ fontWeight: 600, color: COLORS.text.primary }}>
+                Player
+              </div>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: COLORS.text.secondary,
+                  marginTop: "0.25rem",
+                }}
+              >
+                Has read access to the app, like viewing games and stats. Can't
+                create teams, leagues, or enter stats
+              </div>
+            </div>
+          </MenuItem>
         </Select>
       </FormControl>
 
@@ -168,6 +249,7 @@ const InviteUser: React.FC<InviteUserProps> = ({
             disabled={!hasTeams}
             style={SELECT_STYLES.style}
             sx={SELECT_STYLES.sx}
+            MenuProps={SELECT_STYLES.MenuProps}
           >
             {teams.map((team) => (
               <MenuItem key={team.id} value={team.id}>

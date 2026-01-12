@@ -185,6 +185,15 @@ export const SELECT_STYLES = {
   InputLabelProps: {
     style: { color: COLORS.text.secondary },
   },
+  MenuProps: {
+    PaperProps: {
+      style: {
+        backgroundColor: COLORS.background.lighter,
+        color: COLORS.text.primary,
+        border: `1px solid ${COLORS.border.default}`,
+      },
+    },
+  },
   sx: {
     "& .MuiOutlinedInput-notchedOutline": {
       borderColor: COLORS.border.default,
@@ -201,6 +210,19 @@ export const SELECT_STYLES = {
     },
     "& .MuiSelect-icon": {
       color: COLORS.text.secondary,
+    },
+    "& .MuiMenuItem-root": {
+      backgroundColor: COLORS.background.lighter,
+      color: COLORS.text.primary,
+      "&:hover": {
+        backgroundColor: COLORS.background.default,
+      },
+      "&.Mui-selected": {
+        backgroundColor: `${COLORS.primary}33`,
+        "&:hover": {
+          backgroundColor: `${COLORS.primary}44`,
+        },
+      },
     },
   },
 } as const;
